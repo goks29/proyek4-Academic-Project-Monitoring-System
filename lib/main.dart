@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/tubes_model.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/model/workspace_model.dart';
 
 void main() async {
-  Hive.registerAdapter(TubesModelAdapter());
+  Hive.registerAdapter(WorkspaceModelAdapter());
   runApp(const MyApp());
 }
 

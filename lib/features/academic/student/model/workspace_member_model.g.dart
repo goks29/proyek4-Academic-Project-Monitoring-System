@@ -1,41 +1,41 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'anggota_tubes_model.dart';
+part of 'workspace_member_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class AnggotaTubesModelAdapter extends TypeAdapter<AnggotaTubesModel> {
+class WorkspaceMemberModelAdapter extends TypeAdapter<WorkspaceMemberModel> {
   @override
   final int typeId = 1;
 
   @override
-  AnggotaTubesModel read(BinaryReader reader) {
+  WorkspaceMemberModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return AnggotaTubesModel(
-      projectId: fields[0] as String,
-      profileId: fields[1] as String,
-      role: fields[2] as String,
-      joinedAt: fields[3] as DateTime,
+    return WorkspaceMemberModel(
+      id: fields[0] as String,
+      workspaceId: fields[1] as String,
+      studentId: fields[2] as String,
+      isLeader: fields[3] as bool,
     );
   }
 
   @override
-  void write(BinaryWriter writer, AnggotaTubesModel obj) {
+  void write(BinaryWriter writer, WorkspaceMemberModel obj) {
     writer
       ..writeByte(4)
       ..writeByte(0)
-      ..write(obj.projectId)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.profileId)
+      ..write(obj.workspaceId)
       ..writeByte(2)
-      ..write(obj.role)
+      ..write(obj.studentId)
       ..writeByte(3)
-      ..write(obj.joinedAt);
+      ..write(obj.isLeader);
   }
 
   @override
@@ -44,7 +44,7 @@ class AnggotaTubesModelAdapter extends TypeAdapter<AnggotaTubesModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AnggotaTubesModelAdapter &&
+      other is WorkspaceMemberModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
