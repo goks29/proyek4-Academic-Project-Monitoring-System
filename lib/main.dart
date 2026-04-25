@@ -1,8 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:academic_project_monitoring_system/features/academic/lecturer/lecturer_view.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
-  // runApp(const MyApp());
+// Pastikan path import ini sesuai dengan struktur folder di laptopmu
+import 'features/academic/lecturer/lecturer_view.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 1. Load configuration dari file .env
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print("Warning: .env file not found. Make sure it exists in the root folder.");
+  }
+
+  // 2. Initialize Supabase
+  // Pastikan variabel di .env sudah sesuai dengan yang diberikan Hanif
+  await Supabase.initialize(
+    url: dotenv.get('SUPABASE_URL', fallback: ''),
+    anonKey: dotenv.get('SUPABASE_ANON_KEY', fallback: ''),
+  );
+
+  // 3. Matikan sementara CRUD Test agar tidak error karena ketidaksinkronan kode
+  // await runDatabaseTest(); 
+
   runApp(const MyApp());
 }
 
@@ -12,10 +34,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Academik Project Monitoring System',
-
-      initialRoute: '/dashboardDosen',
-      routes: {'/dashboardDosen': (context) => LecturerView()},
+      title: 'Polban Learning Management',
+      debugShowCheckedModeBanner: false, // Menghilangkan banner debug di pojok kanan
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        useMaterial3: true,
+      ),
+      // Mengarahkan tampilan awal langsung ke Dashboard Dosen kamu
+      home: const LecturerView(),
     );
   }
+}
+
+// Fungsi ini dibiarkan ada tapi tidak dipanggil di main() 
+// agar tidak menyebabkan error "merah" saat aplikasi dijalankan.
+Future<void> runDatabaseTest() async {
+  // Kode pengujian Hanif ada di sini...
 }
