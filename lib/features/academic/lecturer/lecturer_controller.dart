@@ -1,80 +1,72 @@
+// lib/features/academic/lecturer/lecturer_controller.dart
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../models/project_model.dart';
+import '../../../models/workspace_model.dart';
+import '../../../services/project_service.dart';
+import '../../../services/workspace_service.dart';
+import 'package:uuid/uuid.dart';
+
 class LecturerController {
-  // ATTRIBUTES
-  String name;
-  String email;
-  String phoneNumber;
+  // Gunakan instance client yang benar
+  final ProjectService _projectService = ProjectService(
+    Supabase.instance.client,
+  );
+  final WorkspaceService _workspaceService = WorkspaceService(
+    Supabase.instance.client,
+  );
 
-  // CONSTRUCTOR
-  LecturerController({
-    required this.name,
-    required this.email,
-    required this.phoneNumber,
-  });
-
-  // GETTER METHOD
-  String getName() {
-    return name;
+  // Fungsi yang dipanggil oleh FutureBuilder di View
+  Future<List<ProjectModel>> getAllProjects() async {
+    try {
+      final result = await _projectService.getProjects();
+      return result;
+    } catch (e) {
+      // Jika koneksi ditolak, kita print alamat yang dicoba diakses
+      print(
+        "DEBUG ERROR: Gagal konek ke Supabase. Pastikan URL benar! Error: $e",
+      );
+      return [];
+    }
   }
 
-  String getEmail() {
-    return email;
+  Future<List<WorkspaceModel>> getWorkspacesByProject(String projectId) async {
+    try {
+      return await _workspaceService.getWorkspacesByProject(projectId);
+    } catch (e) {
+      print("DEBUG ERROR: Gagal ambil kelompok: $e");
+      return [];
+    }
   }
 
-  String getPhoneNumber() {
-    return phoneNumber;
+  double calculateProgress(WorkspaceModel workspace) {
+    return 0.7; // Progress dummy 70%
   }
 
-  // SETTER METHOD
-  void setName(String name) {
-    this.name = name;
-  }
+  Future<String?> createProject(String title, String description, String? finalInfo) async {
+  try {
+    final String lecturerId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
+    final String joinCode = _generateRandomCode(); // Generate di sini
 
-  void setEmail(String email) {
-    this.email = email;
-  }
+    final newProject = ProjectModel(
+      id: const Uuid().v4(),
+      lecturerId: lecturerId,
+      title: title,
+      description: description,
+      joinCode: joinCode,
+      finalSubmissionInfo: finalInfo,
+    );
 
-  void setPhoneNumber(String phoneNumber) {
-    this.phoneNumber = phoneNumber;
+    await _projectService.createProject(newProject);
+    return joinCode; // Kembalikan kodenya
+  } catch (e) {
+    print("Gagal membuat proyek: $e");
+    return null;
   }
 }
 
-class Task {
-  // ATTRIBUTES
-  String title;
-  int totalTask;
-  String status;
-
-  // CONSTRUCTOR
-  Task({required this.title, required this.totalTask, required this.status});
-
-  // GETTER METHOD
-  String getTitle() {
-    return title;
-  }
-
-  int getTotalTask() {
-    return totalTask;
-  }
-
-  String getStatus() {
-    return status;
-  }
-
-  // SETTER METHOD
-  void setTitle(String title) {
-    this.title = title;
-  }
-
-  void setTotalTask(int totalTask) {
-    this.totalTask = totalTask;
-  }
-
-  void setStatus(String status) {
-    this.status = status;
-  }
-
-  // METHOD
-  int countTask(int task) {
-    return totalTask + task;
+  String _generateRandomCode() {
+    return (1000 + (9999 - 1000) * (DateTime.now().millisecond / 1000))
+        .toInt()
+        .toString();
   }
 }
