@@ -1,10 +1,26 @@
-/// Entity representation for the [projects] table.
+import 'package:hive/hive.dart';
+
+part 'project_model.g.dart';
+
+// Representasi tabel projects
+@HiveType(typeId: 0)
 class ProjectModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String lecturerId;
+
+  @HiveField(2)
   final String title;
+
+  @HiveField(3)
   final String description;
+
+  @HiveField(4)
   final String joinCode;
+
+  @HiveField(5)
   final String? finalSubmissionInfo;
 
   ProjectModel({
@@ -16,7 +32,6 @@ class ProjectModel {
     this.finalSubmissionInfo,
   });
 
-  /// Maps JSON data from Supabase to the [ProjectModel] object.
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
     return ProjectModel(
       id: json['id'] as String,
@@ -28,7 +43,6 @@ class ProjectModel {
     );
   }
 
-  /// Converts the [ProjectModel] object to a JSON map for Supabase.
   Map<String, dynamic> toJson() {
     return {
       'lecturer_id': lecturerId,

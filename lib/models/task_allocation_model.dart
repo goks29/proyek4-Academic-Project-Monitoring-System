@@ -1,10 +1,26 @@
-/// Entity representation for the [task_allocations] table.
+import 'package:hive/hive.dart';
+
+part 'task_allocation_model.g.dart';
+
+// Representasi tabel task_allocations
+@HiveType(typeId: 2)
 class TaskAllocationModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String phaseId;
+
+  @HiveField(2)
   final String studentId;
+
+  @HiveField(3)
   final String taskDescription;
+
+  @HiveField(4)
   final bool isDone;
+
+  @HiveField(5)
   final String status;
 
   TaskAllocationModel({
@@ -16,7 +32,6 @@ class TaskAllocationModel {
     required this.status,
   });
 
-  /// Maps JSON data from Supabase to the [TaskAllocationModel] object.
   factory TaskAllocationModel.fromJson(Map<String, dynamic> json) {
     return TaskAllocationModel(
       id: json['id'] as String,
@@ -28,7 +43,6 @@ class TaskAllocationModel {
     );
   }
 
-  /// Converts the [TaskAllocationModel] object to a JSON map for Supabase.
   Map<String, dynamic> toJson() {
     return {
       'phase_id': phaseId,
