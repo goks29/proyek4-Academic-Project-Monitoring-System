@@ -1,57 +1,102 @@
+import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/workspace_model.dart';
+import 'package:uuid/uuid.dart';
+import 'package:academic_project_monitoring_system/models/workspace_model.dart';
+import 'package:academic_project_monitoring_system/models/workspace_member_model.dart';
 
-/// Service handling operations for the [workspaces] table.
-///
-/// Row Level Security (RLS) Rules:
-/// - SELECT: Accessible by team members and the project lecturer.
-/// - INSERT: Can be performed by any authenticated student when joining a project.
-/// - UPDATE: Only allowed for the team leader or project lecturer.
-/// - DELETE: Not allowed through client access.
 class WorkspaceService {
-  final SupabaseClient _client;
+  final SupabaseClient _supabaseClient;
+  final String _workspaceBoxName = 'workspaces';
+  final String _memberBoxName = 'workspace_members';
+  final Uuid _uuid = const Uuid();
 
-  WorkspaceService(this._client);
+  WorkspaceService(this._supabaseClient);
 
-  /// Retrieves all workspaces visible to the current authenticated user.
-  Future<List<WorkspaceModel>> getWorkspaces() async {
-    final response = await _client.from('workspaces').select();
-    return (response as List<dynamic>)
-        .map((json) => WorkspaceModel.fromJson(json))
-        .toList();
-  }
+  Future<String> createWorkspace({
+    required String projectId,
+    required String teamName,
+    required String creatorId,
+    String? topicName,
+    String? topicDescription,
+    DateTime? serverReceivedAt
+  }) async {
+    final workspaceId = _uuid.v4();
+    
+    // Objek Model
+    final newWorkspace = WorkspaceModel(
+      id: workspaceId,
+      projectId: projectId,
+      teamName: teamName,
+      topicName: topicName,
+      topicDescription: topicDescription,
+      progressionMode: 'strict', // Default value
+      isCompleted: false,
+      clientCreatedAt: DateTime.now(),
+      serverReceivedAt: null, //belum sinkron
+    );
 
-  /// Creates a new workspace.
-  ///
-  /// Typically called when a student joins a project.
-  Future<WorkspaceModel> createWorkspace(WorkspaceModel workspace) async {
-    final response = await _client
-        .from('workspaces')
-        .insert(workspace.toJson())
-        .select()
-        .single();
-    return WorkspaceModel.fromJson(response);
-  }
+    // Hive
+    var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
+    await box.put(workspaceId, newWorkspace);
 
-  /// Updates the topic name for a specific [workspaceId].
-  ///
-  /// Only allowed for the workspace leader or the project lecturer.
-  Future<void> updateTopic(String workspaceId, String newTopic) async {
-    await _client
-        .from('workspaces')
-        .update({'topic_name': newTopic})
-        .eq('id', workspaceId);
-  }
+    // Otomatis jadi ketua kelompok
+    await addMemberToWorkspace(workspaceId, creatorId, isLeader: true);
 
-  Future<bool> testConnection() async {
     try {
-      await _client
-          .from('mahasiswa')
-          .select()
-          .limit(1);
-      return true;
+      await _supabaseClient.from('workspaces').insert(newWorkspace.toJson());
+      newWorkspace.serverReceivedAt = DateTime.now();
+      await newWorkspace.save();
     } catch (e) {
-      return false;
+      newWorkspace.serverReceivedAt = null;
+    }
+
+    return workspaceId;
+  }
+
+  Future<List<WorkspaceModel>> getAllWorkspacesLocal() async {
+    var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
+    List<WorkspaceModel> results = box.values.toList();
+    results.sort((a, b) => b.clientCreatedAt.compareTo(a.clientCreatedAt));
+    return results;
+  }
+
+  Future<List<WorkspaceModel>> fetchWorkspacesFromCloud() async {
+    try {
+      final response = await _supabaseClient.from('workspaces').select();
+      final cloudData = (response as List<dynamic>)
+          .map((json) => WorkspaceModel.fromJson(json))
+          .toList();
+      var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
+      for (var ws in cloudData) {
+        await box.put(ws.id, ws);
+      }
+      return cloudData;
+    } catch (e) {
+      return await getAllWorkspacesLocal();
+    }
+  }
+
+  Future<void> addMemberToWorkspace(
+    String workspaceId, 
+    String studentId, 
+    {bool isLeader = false}
+  ) async {
+    var box = await Hive.openBox<WorkspaceMemberModel>(_memberBoxName);
+    final memberId = _uuid.v4();
+    
+    final member = WorkspaceMemberModel(
+      id: memberId,
+      workspaceId: workspaceId,
+      studentId: studentId,
+      isLeader: isLeader,
+    );
+
+    await box.put('${workspaceId}_${studentId}', member);
+
+    try {
+      await _supabaseClient.from('workspace_members').insert(member.toJson());
+    } catch (e) {
+      // Simpan log untuk sinkronisasi nanti
     }
   }
 }

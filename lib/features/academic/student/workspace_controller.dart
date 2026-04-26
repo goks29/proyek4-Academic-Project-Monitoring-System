@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/model/workspace_model.dart';
-import 'workspace_service.dart';
+import 'package:academic_project_monitoring_system/models/workspace_model.dart';
+import 'package:academic_project_monitoring_system/services/workspace_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class WorkspaceController extends ChangeNotifier {
-  final WorkspaceService _service = WorkspaceService();
+  final WorkspaceService _service = WorkspaceService(Supabase.instance.client);
 
   List<WorkspaceModel> _myWorkspaces = [];
   bool _isLoading = false;
   String? _errorMessage;
 
-  List<WorkspaceModel> get myWorkspace => _myWorkspaces;
+  List<WorkspaceModel> get myWorkspaces => _myWorkspaces;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  Future<void> createWorkspace ({
+  Future<void> createWorkspace({
     required String projectId,
     required String teamName,
     required String nim,
@@ -31,8 +32,7 @@ class WorkspaceController extends ChangeNotifier {
         topicName: topic,
         topicDescription: description,
       );
-
-      await fetchMyWorkspaces(); 
+      await fetchMyWorkspaces(onlyLocal: true); 
     } catch (e) {
       _errorMessage = "Gagal membuat kelompok: ${e.toString()}";
     } finally {
@@ -40,11 +40,15 @@ class WorkspaceController extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchMyWorkspaces() async {
+  Future<void> fetchMyWorkspaces({bool onlyLocal = false}) async {
     _setLoading(true);
+    _errorMessage = null;
     try {
-      _myWorkspaces = await _service.getAllWorkspaces();
-      _setLoading(true);
+      _myWorkspaces = await _service.getAllWorkspacesLocal();
+      notifyListeners(); 
+      if (!onlyLocal) {
+        _myWorkspaces = await _service.fetchWorkspacesFromCloud();
+      }
     } catch (e) {
       _errorMessage = "Gagal memuat data kelompok.";
     } finally {
@@ -52,7 +56,6 @@ class WorkspaceController extends ChangeNotifier {
     }
   }
 
-  // notify UI
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();

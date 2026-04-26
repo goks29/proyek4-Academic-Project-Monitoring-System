@@ -1,9 +1,20 @@
+import 'package:hive/hive.dart';
+
+part 'workspace_member_model.g.dart';
 /// Entity representation for the [workspace_members] table.
-class WorkspaceMemberModel {
-  final String id;
-  final String workspaceId;
-  final String studentId;
-  final bool isLeader;
+@HiveType(typeId: 1)
+class WorkspaceMemberModel extends HiveObject{
+  @HiveField(0)
+  late String id;
+
+  @HiveField(1)
+  late String workspaceId; // ID Project
+
+  @HiveField(2)
+  late String studentId; // NIM
+
+  @HiveField(3)
+  late bool isLeader;
 
   WorkspaceMemberModel({
     required this.id,
