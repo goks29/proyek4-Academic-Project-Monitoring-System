@@ -7,7 +7,7 @@ import 'features/academic/lecturer/lecturer_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  
   // 1. Load configuration dari file .env
   try {
     await dotenv.load(fileName: ".env");
@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      // Mengarahkan tampilan awal langsung ke Dashboard Dosen kamu
+
       home: const LecturerView(),
     );
   }
