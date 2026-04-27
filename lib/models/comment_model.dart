@@ -1,8 +1,14 @@
 import 'package:hive/hive.dart';
 
+/*
+ * Tabel: comments
+ * Operasi & Aturan Bisnis:
+ * - SELECT / INSERT / UPDATE / DELETE: Memiliki akses penuh bagi seluruh anggota kelompok yang bersangkutan serta dosen proyek terkait karena tabel ini secara eksklusif difungsikan sebagai ruang diskusi, bimbingan, dan komunikasi kolaboratif yang memerlukan partisipasi dua arah.
+ */
+
 part 'comment_model.g.dart';
 
-// Representasi tabel comments
+/// Model data yang merepresentasikan tabel 'comments' di database.
 @HiveType(typeId: 4)
 class CommentModel {
   @HiveField(0)
@@ -24,6 +30,7 @@ class CommentModel {
     required this.commentText,
   });
 
+  /// Membuat instance CommentModel dari format JSON Supabase.
   factory CommentModel.fromJson(Map<String, dynamic> json) {
     return CommentModel(
       id: json['id'] as String,
@@ -33,6 +40,7 @@ class CommentModel {
     );
   }
 
+  /// Mengonversi instance CommentModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'submission_id': submissionId,

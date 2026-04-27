@@ -1,8 +1,17 @@
 import 'package:hive/hive.dart';
 
+/*
+ * Tabel: submissions
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh anggota kelompok dan dosen proyek terkait sebagai wadah transparansi hasil kerja (deliverables) yang telah diselesaikan.
+ * - INSERT: Dapat dilakukan oleh seluruh anggota kelompok karena setiap individu berhak mengunggah berkas hasil kerjanya masing-masing sebagai bukti kontribusi.
+ * - UPDATE: Terbatas untuk mahasiswa pengunggah dokumen tersebut dan dosen proyek terkait, untuk memastikan bahwa berkas hanya dapat dikoreksi oleh pembuatnya atau dinilai oleh dosen, serta melindunginya dari modifikasi oleh rekan kelompok lain.
+ * - DELETE: Tidak diizinkan melalui akses klien guna menjaga integritas bukti pengumpulan tugas.
+ */
+
 part 'submission_model.g.dart';
 
-// Representasi tabel submissions
+/// Model data yang merepresentasikan tabel 'submissions' di database.
 @HiveType(typeId: 3)
 class SubmissionModel {
   @HiveField(0)
@@ -40,6 +49,7 @@ class SubmissionModel {
     this.lecturerFeedback,
   });
 
+  /// Membuat instance SubmissionModel dari format JSON Supabase.
   factory SubmissionModel.fromJson(Map<String, dynamic> json) {
     return SubmissionModel(
       id: json['id'] as String,
@@ -53,6 +63,7 @@ class SubmissionModel {
     );
   }
 
+  /// Mengonversi instance SubmissionModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'phase_id': phaseId,

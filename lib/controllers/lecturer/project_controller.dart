@@ -3,6 +3,7 @@ import '../../models/project_model.dart';
 import '../../repositories/project_repository.dart';
 import 'dart:math';
 
+/// Controller untuk mengelola data proyek pada sisi dosen.
 class ProjectController extends ChangeNotifier {
   final ProjectRepository _repository;
 
@@ -12,6 +13,7 @@ class ProjectController extends ChangeNotifier {
 
   ProjectController(this._repository);
 
+  /// Mengambil daftar proyek dari repository dan memperbarui state.
   Future<void> fetchProjects() async {
     isLoading = true;
     errorMessage = null;
@@ -27,6 +29,7 @@ class ProjectController extends ChangeNotifier {
     }
   }
 
+  /// Membuat proyek baru dengan kode bergabung otomatis.
   Future<void> createProject(String lecturerId, String title, String description, String? submissionInfo) async {
     isLoading = true;
     errorMessage = null;
@@ -53,6 +56,7 @@ class ProjectController extends ChangeNotifier {
     }
   }
 
+  /// Menghasilkan 6 karakter kode acak untuk bergabung ke proyek.
   String _generateJoinCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rnd = Random();

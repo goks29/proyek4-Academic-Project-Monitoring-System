@@ -1,8 +1,17 @@
 import 'package:hive/hive.dart';
 
+/*
+ * Tabel: workspaces
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh anggota kelompok dan dosen proyek terkait guna memfasilitasi transparansi kerja dan pemantauan progres internal kelompok.
+ * - INSERT: Dapat dilakukan oleh seluruh mahasiswa yang terautentikasi saat proses bergabung ke dalam proyek sebagai bentuk mekanisme pendaftaran kelompok secara mandiri.
+ * - UPDATE: Terbatas hanya untuk ketua kelompok atau dosen proyek terkait guna memastikan bahwa perubahan data strategis (seperti topik proyek) dikoordinasikan melalui satu pintu otoritas.
+ * - DELETE: Tidak diizinkan melalui akses klien untuk mencegah hilangnya rekam jejak akademik kelompok secara tidak sengaja.
+ */
+
 part 'workspace_model.g.dart';
 
-// Representasi tabel workspaces
+/// Model data yang merepresentasikan tabel 'workspaces' di database.
 @HiveType(typeId: 6)
 class WorkspaceModel {
   @HiveField(0)
@@ -28,6 +37,7 @@ class WorkspaceModel {
     required this.progressionMode,
   });
 
+  /// Membuat instance WorkspaceModel dari format JSON Supabase.
   factory WorkspaceModel.fromJson(Map<String, dynamic> json) {
     return WorkspaceModel(
       id: json['id'] as String,
@@ -38,6 +48,7 @@ class WorkspaceModel {
     );
   }
 
+  /// Mengonversi instance WorkspaceModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'project_id': projectId,

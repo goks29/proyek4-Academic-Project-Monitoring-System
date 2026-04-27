@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'sync_action_model.g.dart';
 
-// Model untuk menyimpan aksi saat offline
+/// Model data untuk mencatat aksi mutasi (INSERT/UPDATE/DELETE) saat aplikasi offline.
 @HiveType(typeId: 8)
 class SyncActionModel extends HiveObject {
   @HiveField(0)

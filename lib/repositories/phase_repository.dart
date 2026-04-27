@@ -3,6 +3,7 @@ import '../services/remote/phase_service.dart';
 import '../models/progress_phase_model.dart';
 
 // Repository untuk mengelola fase progress
+/// Repository untuk sinkronisasi data fase kemajuan proyek.
 class PhaseRepository {
   final PhaseService _remote;
   final PhaseLocalService _local;
@@ -10,6 +11,7 @@ class PhaseRepository {
   PhaseRepository(this._remote, this._local);
 
   // Ambil daftar fase berdasarkan workspace
+  /// Mengambil daftar fase berdasarkan ID workspace dengan strategi offline-first.
   Future<List<ProgressPhaseModel>> getPhases(String workspaceId) async {
     final localData = _local.getPhasesByWorkspaceId(workspaceId);
 
@@ -24,6 +26,7 @@ class PhaseRepository {
   }
 
   // Update status fase (untuk dosen)
+  /// Memperbarui status persetujuan fase di server.
   Future<void> approvePhase(String phaseId, String status, String feedback) async {
     final Map<String, dynamic> updateData = {
       'status': status,

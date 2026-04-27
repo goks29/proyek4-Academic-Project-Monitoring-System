@@ -1,8 +1,17 @@
 import 'package:hive/hive.dart';
 
+/*
+ * Tabel: task_allocations
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh anggota kelompok dan dosen proyek terkait agar seluruh entitas di dalam tim dapat melacak distribusi beban kerja secara transparan.
+ * - INSERT: Terbatas hanya untuk ketua kelompok sebagai manifestasi dari peran ketua dalam melakukan delegasi tugas kepada anggota.
+ * - UPDATE: Terbatas untuk ketua kelompok (pembaruan deskripsi tugas), mahasiswa yang ditugaskan (pelaporan penyelesaian tugas), dan dosen proyek terkait (validasi hasil), guna menciptakan alur kerja yang akuntabel sesuai dengan porsi tanggung jawab masing-masing.
+ * - DELETE: Tidak diizinkan melalui akses klien agar riwayat kontribusi individu tidak dapat dihilangkan.
+ */
+
 part 'task_allocation_model.g.dart';
 
-// Representasi tabel task_allocations
+/// Model data yang merepresentasikan tabel 'task_allocations' di database.
 @HiveType(typeId: 2)
 class TaskAllocationModel {
   @HiveField(0)
@@ -32,6 +41,7 @@ class TaskAllocationModel {
     required this.status,
   });
 
+  /// Membuat instance TaskAllocationModel dari format JSON Supabase.
   factory TaskAllocationModel.fromJson(Map<String, dynamic> json) {
     return TaskAllocationModel(
       id: json['id'] as String,
@@ -43,6 +53,7 @@ class TaskAllocationModel {
     );
   }
 
+  /// Mengonversi instance TaskAllocationModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'phase_id': phaseId,
