@@ -3,6 +3,7 @@ import 'lecturer_controller.dart';
 import '../../../models/project_model.dart';
 import '../../../models/workspace_model.dart';
 import 'add_project_view.dart';
+import 'workspace_detail_view.dart';
 
 class LecturerView extends StatefulWidget {
   const LecturerView({super.key});
@@ -231,33 +232,64 @@ bottomNavigationBar: _selectedProject == null ? BottomNavigationBar(
   }
 
   Widget _buildGroupProgressCard(WorkspaceModel workspace, double progress) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.grey[200]!)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(workspace.teamName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: Colors.grey[200],
-                  color: Colors.indigo,
-                  minHeight: 8,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text("${(progress * 100).toInt()}%", style: const TextStyle(fontWeight: FontWeight.bold)),
-            ],
+    return GestureDetector( // <-- TAMBAHKAN INI
+      onTap: () {
+        // Navigasi ke halaman detail kelompok saat kartu diklik
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WorkspaceDetailView(
+              workspace: workspace, 
+              controller: _controller, // Lempar controller agar view tetap bodoh
+            ),
           ),
-        ],
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              workspace.teamName,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 4),
+            // Tambahkan teks Topik di bawah nama tim agar lebih informatif
+            Text(
+              workspace.topicName.isNotEmpty ? "Topik: ${workspace.topicName}" : "Topik belum ditentukan",
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey[200],
+                    color: Colors.indigo,
+                    minHeight: 8,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  "${(progress * 100).toInt()}%",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    );
+    ); //
   }
+
 
   Widget _statusBadge(String text, Color bg, Color textCol) {
     return Container(
@@ -266,4 +298,6 @@ bottomNavigationBar: _selectedProject == null ? BottomNavigationBar(
       child: Text(text, style: TextStyle(color: textCol, fontSize: 10)),
     );
   }
+
+  
 }
