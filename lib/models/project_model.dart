@@ -30,6 +30,9 @@ class ProjectModel {
   @HiveField(5)
   final String? finalSubmissionInfo;
 
+  @HiveField(6)
+  final DateTime createdAt;
+
   ProjectModel({
     required this.id,
     required this.lecturerId,
@@ -37,6 +40,7 @@ class ProjectModel {
     required this.description,
     required this.joinCode,
     this.finalSubmissionInfo,
+    required this.createdAt,
   });
 
   /// Membuat instance ProjectModel dari format JSON Supabase.
@@ -48,6 +52,7 @@ class ProjectModel {
       description: json['description'] as String? ?? '',
       joinCode: json['join_code'] as String,
       finalSubmissionInfo: json['final_submission_info'] as String?,
+      createdAt: DateTime.parse(json['created_at'] as String? ?? DateTime.now().toIso8601String()),
     );
   }
 

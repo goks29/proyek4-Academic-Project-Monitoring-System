@@ -20,18 +20,20 @@ class SubmissionModelAdapter extends TypeAdapter<SubmissionModel> {
       id: fields[0] as String,
       phaseId: fields[1] as String,
       studentId: fields[2] as String,
-      submittedAt: fields[3] as String,
+      submittedAt: fields[3] as DateTime,
       evidenceFileUrl: fields[4] as String?,
       studentNotes: fields[5] as String?,
       status: fields[6] as String,
       lecturerFeedback: fields[7] as String?,
+      lecturerId: fields[8] as String?,
+      serverReceivedAt: fields[9] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, SubmissionModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -47,7 +49,11 @@ class SubmissionModelAdapter extends TypeAdapter<SubmissionModel> {
       ..writeByte(6)
       ..write(obj.status)
       ..writeByte(7)
-      ..write(obj.lecturerFeedback);
+      ..write(obj.lecturerFeedback)
+      ..writeByte(8)
+      ..write(obj.lecturerId)
+      ..writeByte(9)
+      ..write(obj.serverReceivedAt);
   }
 
   @override

@@ -29,12 +29,28 @@ class WorkspaceModel {
   @HiveField(4)
   final String progressionMode;
 
+  @HiveField(5)
+  final String? topicDescription;
+
+  @HiveField(6)
+  final bool isCompleted;
+
+  @HiveField(7)
+  final DateTime clientCreatedAt;
+
+  @HiveField(8)
+  final DateTime? serverReceivedAt;
+
   WorkspaceModel({
     required this.id,
     required this.projectId,
     required this.teamName,
     required this.topicName,
     required this.progressionMode,
+    this.topicDescription,
+    this.isCompleted = false,
+    required this.clientCreatedAt,
+    this.serverReceivedAt,
   });
 
   /// Membuat instance WorkspaceModel dari format JSON Supabase.
@@ -44,7 +60,13 @@ class WorkspaceModel {
       projectId: json['project_id'] as String,
       teamName: json['team_name'] as String,
       topicName: json['topic_name'] as String? ?? '',
+      topicDescription: json['topic_description'] as String?,
       progressionMode: json['progression_mode'] as String,
+      isCompleted: json['is_completed'] as bool? ?? false,
+      clientCreatedAt: DateTime.parse(json['client_created_at'] as String),
+      serverReceivedAt: json['server_received_at'] != null 
+          ? DateTime.parse(json['server_received_at'] as String) 
+          : null,
     );
   }
 
@@ -54,8 +76,10 @@ class WorkspaceModel {
       'project_id': projectId,
       'team_name': teamName,
       'topic_name': topicName,
+      'topic_description': topicDescription,
       'progression_mode': progressionMode,
-      'client_created_at': DateTime.now().toIso8601String(),
+      'is_completed': isCompleted,
+      'client_created_at': clientCreatedAt.toIso8601String(),
     };
   }
 }

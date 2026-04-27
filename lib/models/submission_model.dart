@@ -24,7 +24,7 @@ class SubmissionModel {
   final String studentId;
 
   @HiveField(3)
-  final String submittedAt;
+  final DateTime submittedAt;
 
   @HiveField(4)
   final String? evidenceFileUrl;
@@ -38,6 +38,12 @@ class SubmissionModel {
   @HiveField(7)
   final String? lecturerFeedback;
 
+  @HiveField(8)
+  final String? lecturerId;
+
+  @HiveField(9)
+  final DateTime? serverReceivedAt;
+
   SubmissionModel({
     required this.id,
     required this.phaseId,
@@ -47,6 +53,8 @@ class SubmissionModel {
     this.studentNotes,
     required this.status,
     this.lecturerFeedback,
+    this.lecturerId,
+    this.serverReceivedAt,
   });
 
   /// Membuat instance SubmissionModel dari format JSON Supabase.
@@ -55,11 +63,15 @@ class SubmissionModel {
       id: json['id'] as String,
       phaseId: json['phase_id'] as String,
       studentId: json['student_id'] as String,
-      submittedAt: json['submitted_at'] as String,
+      submittedAt: DateTime.parse(json['submitted_at'] as String),
       evidenceFileUrl: json['evidence_file_url'] as String?,
       studentNotes: json['student_notes'] as String?,
       status: json['status'] as String,
       lecturerFeedback: json['lecturer_feedback'] as String?,
+      lecturerId: json['lecturer_id'] as String?,
+      serverReceivedAt: json['server_received_at'] != null 
+          ? DateTime.parse(json['server_received_at'] as String) 
+          : null,
     );
   }
 
@@ -68,9 +80,12 @@ class SubmissionModel {
     return {
       'phase_id': phaseId,
       'student_id': studentId,
-      'submitted_at': submittedAt,
+      'submitted_at': submittedAt.toIso8601String(),
       'evidence_file_url': evidenceFileUrl,
       'student_notes': studentNotes,
+      'status': status,
+      'lecturer_feedback': lecturerFeedback,
+      'lecturer_id': lecturerId,
     };
   }
 }
