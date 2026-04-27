@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
 import 'package:academic_project_monitoring_system/features/academic/auth/login_controller.dart';
 import 'package:academic_project_monitoring_system/features/academic/auth/login_view.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/student_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,12 +35,12 @@ Future<void> main() async {
   runApp(
     MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => LoginController()),
+          ChangeNotifierProvider(create: (_) => LoginController()..checkSession()),
           ChangeNotifierProvider(create: (_) => WorkspaceController()),
         ],
         child: const MyApp(),
       ),
-    );
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -51,16 +52,21 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: LoginView(),
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return const MaterialApp(
-  //     home: Scaffold(
-  //       body: Center(
-  //         child: Text('Check console for test results'),
-  //       ),
-  //     ),
+      home: Consumer<LoginController>(
+        builder: (context, controller, _) {
+          if (controller.isCheckingSession) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (controller.currentUser != null) {
+            final role = controller.currentUser?.role;
+            if (role == 'student') return StudentView();
+            // if (role == 'lecturer') return ; // Jangan lupa diisi return kemana @tim-backend-dosen
+          }
+          return LoginView();
+        },
+      ),
     );
   }
 }

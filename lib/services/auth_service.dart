@@ -2,8 +2,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hive/hive.dart';
 import 'package:academic_project_monitoring_system/models/user_model.dart';
 
-import 'package:flutter/foundation.dart';
-
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _userBoxName = 'user_profile';
@@ -31,8 +29,6 @@ class AuthService {
     } catch (e) {
       rethrow;
     }
-    
-    debugPrint("⚠️ [Service] User null, login gagal.");
     return null;
   }
 
@@ -45,5 +41,9 @@ class AuthService {
     await _supabase.auth.signOut();
     var box = await Hive.openBox<UserModel>(_userBoxName);
     await box.clear();
+  }
+
+  Future<Session?> getActiveSession() async {
+    return _supabase.auth.currentSession;
   }
 }

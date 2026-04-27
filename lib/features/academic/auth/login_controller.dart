@@ -7,50 +7,61 @@ class LoginController extends ChangeNotifier {
   
   UserModel? _currentUser;
   bool _isLoading = false;
+  bool _isCheckingSession = true;
   String? _error;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
+  bool get isCheckingSession => _isCheckingSession;
   String? get error => _error;
 
-  // Future<bool> handleLogin(String email, String password) async {
-  //   _isLoading = true;
-  //   _error = null;
-  //   notifyListeners();
+  // Cek sesi sudah login atau belum
+  Future<void> checkSession() async {
+    _isCheckingSession = true;
+    notifyListeners();
 
-  //   try {
-  //     _currentUser = await _authService.login(email, password);
-  //     return _currentUser != null;
-  //   } catch (e) {
-  //     debugPrint("Error: $e");
-  //     _error = "Login Gagal: Pastikan email dan password benar.";
-  //     return false;
-  //   } finally {
-  //     _isLoading = false;
-  //     notifyListeners();
-  //   }
-  // }
+    try {
+      final session = await _authService.getActiveSession();
+      if (session != null) {
+        _currentUser = await _authService.getLocalProfile();
+      }
+    } catch (e) {
+      _currentUser = null;
+    } finally {
+      _isCheckingSession = false;
+      notifyListeners();
+    }
+  }
 
   Future<bool> handleLogin(String email, String password) async {
-    debugPrint("🎬 [Controller] Memulai proses handleLogin...");
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      debugPrint("📡 [Controller] Memanggil _authService.login...");
       _currentUser = await _authService.login(email, password);
-      
-      debugPrint("🏁 [Controller] Hasil login: ${_currentUser != null ? 'SUKSES' : 'GAGAL'}");
       return _currentUser != null;
     } catch (e) {
-      // Log error ini biasanya yang paling informatif soal Firewall/Koneksi
-      debugPrint("💥 [Controller] TERJADI EXCEPTION: $e");
       _error = "Login Gagal: Pastikan email dan password benar.";
       return false;
     } finally {
       _isLoading = false;
-      debugPrint("🔄 [Controller] Loading selesai, notifyListeners dipanggil.");
+      notifyListeners();
+    }
+  }
+
+  Future<void> handleLogout() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _authService.logout();
+      _currentUser = null;
+      _error = null;
+    } catch (e) {
+      _error = "Gagal error karena $e";
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
