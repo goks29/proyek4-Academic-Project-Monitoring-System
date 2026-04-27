@@ -1,32 +1,25 @@
--- ==========================================
--- 1. AUTH USERS (Internal Supabase)
--- ==========================================
--- Password: password123
-INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role, confirmation_token, email_change, email_change_token_new, recovery_token)
-VALUES
-  -- Dosen
-  ('d05e0001-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'joko@dosen.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('d05e0002-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'bowo@dosen.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  -- Mahasiswa (15 Orang)
-  ('33330001-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'prubaya@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330002-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'bahlil@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330003-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'gibran@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330004-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'ganjar@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330005-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'mahfud@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330006-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'timothy@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330007-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'anies@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330008-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'cakimin@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330009-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'dadang-mbg@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330010-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'zulhas@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330011-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'amrans@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330012-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'luhut@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330013-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'alditaher@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330014-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'pigai@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', ''),
-  ('33330015-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'tirta@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), 'authenticated', '', '', '', '');
 
--- ==========================================
--- 2. PUBLIC USERS
--- ==========================================
+--AUTH USERS (Internal Supabase)
+INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
+VALUES
+  ('d05e0001-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'joko@dosen.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('d05e0002-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'bowo@dosen.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330001-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'prubaya@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330002-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'bahlil@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330003-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'gibran@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330004-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ganjar@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330005-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'mahfud@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330006-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'timothy@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330007-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'anies@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330008-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'cakimin@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330009-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'Dadan-mbg@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330010-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'zulhas@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330011-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'amrans@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330012-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'luhut@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330013-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alditaher@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330014-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'pigai@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('33330015-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tirta@mhs.ac.id', extensions.crypt('password123', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '');
+
 INSERT INTO "public"."users" ("id", "full_name", "email", "password", "role") VALUES
 ('d05e0001-0000-0000-0000-000000000000', 'Pak Joko', 'joko@dosen.ac.id', 'password123', 'lecturer'),
 ('d05e0002-0000-0000-0000-000000000000', 'Pak Bowo', 'bowo@dosen.ac.id', 'password123', 'lecturer'),
@@ -38,7 +31,7 @@ INSERT INTO "public"."users" ("id", "full_name", "email", "password", "role") VA
 ('33330006-0000-0000-0000-000000000000', 'Timothy', 'timothy@mhs.ac.id', 'password123', 'student'),
 ('33330007-0000-0000-0000-000000000000', 'Anies', 'anies@mhs.ac.id', 'password123', 'student'),
 ('33330008-0000-0000-0000-000000000000', 'Cak Imin', 'cakimin@mhs.ac.id', 'password123', 'student'),
-('33330009-0000-0000-0000-000000000000', 'Dadang-MBG', 'dadang-mbg@mhs.ac.id', 'password123', 'student'),
+('33330009-0000-0000-0000-000000000000', 'Dadan-MBG', 'Dadan-mbg@mhs.ac.id', 'password123', 'student'),
 ('33330010-0000-0000-0000-000000000000', 'Zulhas', 'zulhas@mhs.ac.id', 'password123', 'student'),
 ('33330011-0000-0000-0000-000000000000', 'Amran Sulaiman', 'amrans@mhs.ac.id', 'password123', 'student'),
 ('33330012-0000-0000-0000-000000000000', 'Luhut', 'luhut@mhs.ac.id', 'password123', 'student'),
@@ -46,17 +39,10 @@ INSERT INTO "public"."users" ("id", "full_name", "email", "password", "role") VA
 ('33330014-0000-0000-0000-000000000000', 'Pigai', 'pigai@mhs.ac.id', 'password123', 'student'),
 ('33330015-0000-0000-0000-000000000000', 'Tirta Pengpeng', 'tirta@mhs.ac.id', 'password123', 'student');
 
--- ==========================================
--- 3. PROJECTS
--- ==========================================
 INSERT INTO "public"."projects" ("id", "lecturer_id", "title", "description", "join_code") VALUES
 ('a1000000-0000-0000-0000-000000000000', 'd05e0001-0000-0000-0000-000000000000', 'Pengembangan Aplikasi Web', 'Tugas Besar Semester 4 - Mode Strict', 'WEB-STRICT'),
 ('a2000000-0000-0000-0000-000000000000', 'd05e0002-0000-0000-0000-000000000000', 'Pengembangan Aplikasi Mobile', 'Tugas Besar Semester 4 - Mode Flexible', 'MOB-FLEX');
 
--- ==========================================
--- 4. WORKSPACES (5 Tim x 2 Project)
--- ==========================================
--- Project Web (Strict)
 INSERT INTO "public"."workspaces" ("id", "project_id", "team_name", "topic_name", "progression_mode", "client_created_at") VALUES
 ('e1000001-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Tim Satu', 'Sistem E-Commerce UMKM', 'strict', now()),
 ('e1000002-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Tim Dua', 'Manajemen Keuangan Mahasiswa', 'strict', now()),
@@ -64,7 +50,6 @@ INSERT INTO "public"."workspaces" ("id", "project_id", "team_name", "topic_name"
 ('e1000004-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Tim Empat', 'Sistem Inventaris Gudang', 'strict', now()),
 ('e1000005-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Tim Lima', 'Booking Service Kendaraan', 'strict', now());
 
--- Project Mobile (Flexible)
 INSERT INTO "public"."workspaces" ("id", "project_id", "team_name", "topic_name", "progression_mode", "client_created_at") VALUES
 ('e2000001-0000-0000-0000-000000000000', 'a2000000-0000-0000-0000-000000000000', 'Tim Satu', 'Mobile Shop App', 'flexible', now()),
 ('e2000002-0000-0000-0000-000000000000', 'a2000000-0000-0000-0000-000000000000', 'Tim Dua', 'Finance Tracker Mobile', 'flexible', now()),
@@ -72,9 +57,7 @@ INSERT INTO "public"."workspaces" ("id", "project_id", "team_name", "topic_name"
 ('e2000004-0000-0000-0000-000000000000', 'a2000000-0000-0000-0000-000000000000', 'Tim Empat', 'Inventory Scan App', 'flexible', now()),
 ('e2000005-0000-0000-0000-000000000000', 'a2000000-0000-0000-0000-000000000000', 'Tim Lima', 'Vehicle Booking App', 'flexible', now());
 
--- ==========================================
--- 5. WORKSPACE MEMBERS (Tetap per kelompok)
--- ==========================================
+-- WORKSPACE MEMBERS (Tetap per kelompok)
 -- Kelompok 1: Prubaya(L), Bahlil, Gibran
 INSERT INTO "public"."workspace_members" ("workspace_id", "student_id", "is_leader") VALUES
 ('e1000001-0000-0000-0000-000000000000', '33330001-0000-0000-0000-000000000000', true),
@@ -93,7 +76,7 @@ INSERT INTO "public"."workspace_members" ("workspace_id", "student_id", "is_lead
 ('e2000002-0000-0000-0000-000000000000', '33330005-0000-0000-0000-000000000000', false),
 ('e2000002-0000-0000-0000-000000000000', '33330006-0000-0000-0000-000000000000', false);
 
--- Kelompok 3: Anies(L), Cak Imin, Dadang-MBG
+-- Kelompok 3: Anies(L), Cak Imin, Dadan-MBG
 INSERT INTO "public"."workspace_members" ("workspace_id", "student_id", "is_leader") VALUES
 ('e1000003-0000-0000-0000-000000000000', '33330007-0000-0000-0000-000000000000', true),
 ('e1000003-0000-0000-0000-000000000000', '33330008-0000-0000-0000-000000000000', false),
@@ -120,10 +103,8 @@ INSERT INTO "public"."workspace_members" ("workspace_id", "student_id", "is_lead
 ('e2000005-0000-0000-0000-000000000000', '33330014-0000-0000-0000-000000000000', false),
 ('e2000005-0000-0000-0000-000000000000', '33330015-0000-0000-0000-000000000000', false);
 
--- =============================================================================
 -- 6. PROGRESS PHASES (8 Phases per Workspace)
 -- Pola ID: f[ProjectNum][TeamNum][PhaseNum]
--- =============================================================================
 DO $$
 DECLARE
     team_idx INT;
@@ -185,11 +166,8 @@ BEGIN
     END LOOP;
 END $$;
 
-
--- =============================================================================
--- 7. TASK ALLOCATIONS (2-3 Tasks per Phase)
+-- TASK ALLOCATIONS (2-3 Tasks per Phase)
 -- Kita contohkan pembagian tugas untuk TIM 1 (Prubaya, Bahlil, Gibran)
--- =============================================================================
 
 -- Tasks for TIM 1 (Project WEB - w1000001)
 -- Phase 1 (b2010001)
