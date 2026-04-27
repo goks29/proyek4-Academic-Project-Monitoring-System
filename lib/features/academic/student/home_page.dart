@@ -1,4 +1,5 @@
 import 'package:academic_project_monitoring_system/features/academic/auth/login_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/auth/login_view.dart';
 import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -70,9 +71,27 @@ class HomePage extends StatelessWidget{
                   backgroundColor: Colors.grey[300],
                   child: Icon(Icons.person, color: Colors.white,),
                 ),
+
+                // Logout
+                /// Belom ada dialog konfirmasi ya gok
+                IconButton(
+                  icon: Icon(Icons.logout_outlined),
+                  onPressed: () async {
+                    final loginController = context.read<LoginController>();
+
+                    await loginController.handleLogout();
+
+                    if (context.mounted){
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginView()),
+                        (route) => false
+                      );
+                    }
+                  }
+                )
               ],
             ),
-
             //seach bar
           ],
         )
