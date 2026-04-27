@@ -21,13 +21,15 @@ class CommentModelAdapter extends TypeAdapter<CommentModel> {
       submissionId: fields[1] as String,
       userId: fields[2] as String,
       commentText: fields[3] as String,
+      clientCreatedAt: fields[4] as DateTime,
+      serverReceivedAt: fields[5] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, CommentModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -35,7 +37,11 @@ class CommentModelAdapter extends TypeAdapter<CommentModel> {
       ..writeByte(2)
       ..write(obj.userId)
       ..writeByte(3)
-      ..write(obj.commentText);
+      ..write(obj.commentText)
+      ..writeByte(4)
+      ..write(obj.clientCreatedAt)
+      ..writeByte(5)
+      ..write(obj.serverReceivedAt);
   }
 
   @override

@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
 import 'package:academic_project_monitoring_system/features/academic/auth/login_controller.dart';
 import 'package:academic_project_monitoring_system/features/academic/auth/login_view.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/student_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

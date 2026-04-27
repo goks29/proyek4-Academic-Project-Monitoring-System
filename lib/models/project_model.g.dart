@@ -23,13 +23,14 @@ class ProjectModelAdapter extends TypeAdapter<ProjectModel> {
       description: fields[3] as String,
       joinCode: fields[4] as String,
       finalSubmissionInfo: fields[5] as String?,
+      createdAt: fields[6] as DateTime,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProjectModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class ProjectModelAdapter extends TypeAdapter<ProjectModel> {
       ..writeByte(4)
       ..write(obj.joinCode)
       ..writeByte(5)
-      ..write(obj.finalSubmissionInfo);
+      ..write(obj.finalSubmissionInfo)
+      ..writeByte(6)
+      ..write(obj.createdAt);
   }
 
   @override

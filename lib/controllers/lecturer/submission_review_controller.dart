@@ -48,6 +48,8 @@ class SubmissionReviewController extends ChangeNotifier {
             studentNotes: submissions[index].studentNotes,
             status: status,
             lecturerFeedback: feedback,
+            lecturerId: submissions[index].lecturerId,
+            serverReceivedAt: submissions[index].serverReceivedAt,
          );
       }
     } catch (e) {

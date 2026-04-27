@@ -32,13 +32,25 @@ class TaskAllocationModel {
   @HiveField(5)
   final String status;
 
+  @HiveField(6)
+  final String? lecturerFeedback;
+
+  @HiveField(7)
+  final DateTime clientCreatedAt;
+
+  @HiveField(8)
+  final DateTime? serverReceivedAt;
+
   TaskAllocationModel({
     required this.id,
     required this.phaseId,
     required this.studentId,
     required this.taskDescription,
-    required this.isDone,
+    this.isDone = false,
     required this.status,
+    this.lecturerFeedback,
+    required this.clientCreatedAt,
+    this.serverReceivedAt,
   });
 
   /// Membuat instance TaskAllocationModel dari format JSON Supabase.
@@ -48,8 +60,13 @@ class TaskAllocationModel {
       phaseId: json['phase_id'] as String,
       studentId: json['student_id'] as String,
       taskDescription: json['task_description'] as String,
-      isDone: json['is_done'] as bool,
+      isDone: json['is_done'] as bool? ?? false,
       status: json['status'] as String,
+      lecturerFeedback: json['lecturer_feedback'] as String?,
+      clientCreatedAt: DateTime.parse(json['client_created_at'] as String),
+      serverReceivedAt: json['server_received_at'] != null 
+          ? DateTime.parse(json['server_received_at'] as String) 
+          : null,
     );
   }
 
@@ -59,7 +76,10 @@ class TaskAllocationModel {
       'phase_id': phaseId,
       'student_id': studentId,
       'task_description': taskDescription,
-      'client_created_at': DateTime.now().toIso8601String(),
+      'is_done': isDone,
+      'status': status,
+      'lecturer_feedback': lecturerFeedback,
+      'client_created_at': clientCreatedAt.toIso8601String(),
     };
   }
 }

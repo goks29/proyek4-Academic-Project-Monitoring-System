@@ -53,7 +53,7 @@ class WorkspaceModel extends HiveObject{
       topicName: json['topic_name'] as String? ?? '',
       topicDescription: json['topic_description'] as String? ?? '',
       progressionMode: json['progression_mode'] as String,
-      isCompleted: json['isCompleted'] as bool,
+      isCompleted: json['is_completed'] as bool? ?? false,
       clientCreatedAt: json['client_created_at'] as DateTime,
       serverReceivedAt: json['server_received_at'] as DateTime,
     );
@@ -65,8 +65,10 @@ class WorkspaceModel extends HiveObject{
       'project_id': projectId,
       'team_name': teamName,
       'topic_name': topicName,
+      'topic_description': topicDescription,
       'progression_mode': progressionMode,
-      'client_created_at': DateTime.now().toIso8601String(),
+      'is_completed': isCompleted,
+      'client_created_at': clientCreatedAt.toIso8601String(),
     };
   }
 }

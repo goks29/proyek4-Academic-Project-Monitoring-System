@@ -45,6 +45,11 @@ class PhaseApprovalController extends ChangeNotifier {
           phaseName: phases[index].phaseName,
           sortOrder: phases[index].sortOrder,
           status: status,
+          lecturerFeedback: feedback,
+          requireEvidence: phases[index].requireEvidence,
+          isLocked: phases[index].isLocked,
+          clientCreatedAt: phases[index].clientCreatedAt,
+          serverReceivedAt: phases[index].serverReceivedAt,
         );
       }
     } catch (e) {

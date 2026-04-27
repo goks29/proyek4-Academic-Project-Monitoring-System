@@ -23,11 +23,19 @@ class CommentModel {
   @HiveField(3)
   final String commentText;
 
+  @HiveField(4)
+  final DateTime clientCreatedAt;
+
+  @HiveField(5)
+  final DateTime? serverReceivedAt;
+
   CommentModel({
     required this.id,
     required this.submissionId,
     required this.userId,
     required this.commentText,
+    required this.clientCreatedAt,
+    this.serverReceivedAt,
   });
 
   /// Membuat instance CommentModel dari format JSON Supabase.
@@ -37,6 +45,10 @@ class CommentModel {
       submissionId: json['submission_id'] as String,
       userId: json['user_id'] as String,
       commentText: json['comment_text'] as String,
+      clientCreatedAt: DateTime.parse(json['client_created_at'] as String),
+      serverReceivedAt: json['server_received_at'] != null 
+          ? DateTime.parse(json['server_received_at'] as String) 
+          : null,
     );
   }
 
@@ -46,7 +58,7 @@ class CommentModel {
       'submission_id': submissionId,
       'user_id': userId,
       'comment_text': commentText,
-      'client_created_at': DateTime.now().toIso8601String(),
+      'client_created_at': clientCreatedAt.toIso8601String(),
     };
   }
 }

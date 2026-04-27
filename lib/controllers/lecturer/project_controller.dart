@@ -44,6 +44,7 @@ class ProjectController extends ChangeNotifier {
         description: description,
         joinCode: joinCode,
         finalSubmissionInfo: submissionInfo,
+        createdAt: DateTime.now(),
       );
       
       final createdProject = await _repository.createProject(newProject);

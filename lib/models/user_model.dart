@@ -25,11 +25,19 @@ class UserModel {
   @HiveField(3)
   final String role;
 
+  @HiveField(4)
+  final String password;
+
+  @HiveField(5)
+  final DateTime createdAt;
+
   UserModel({
     required this.id,
     required this.fullName,
     required this.email,
     required this.role,
+    required this.password,
+    required this.createdAt,
   });
 
   /// Membuat instance UserModel dari format JSON Supabase.
@@ -39,6 +47,8 @@ class UserModel {
       fullName: json['full_name'] as String,
       email: json['email'] as String,
       role: json['role'] as String,
+      password: json['password'] as String? ?? '',
+      createdAt: DateTime.parse(json['created_at'] as String? ?? DateTime.now().toIso8601String()),
     );
   }
 
