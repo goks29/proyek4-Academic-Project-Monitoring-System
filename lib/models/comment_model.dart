@@ -1,8 +1,26 @@
-/// Entity representation for the [comments] table.
+import 'package:hive/hive.dart';
+
+/*
+ * Tabel: comments
+ * Operasi & Aturan Bisnis:
+ * - SELECT / INSERT / UPDATE / DELETE: Memiliki akses penuh bagi seluruh anggota kelompok yang bersangkutan serta dosen proyek terkait karena tabel ini secara eksklusif difungsikan sebagai ruang diskusi, bimbingan, dan komunikasi kolaboratif yang memerlukan partisipasi dua arah.
+ */
+
+part 'comment_model.g.dart';
+
+/// Model data yang merepresentasikan tabel 'comments' di database.
+@HiveType(typeId: 4)
 class CommentModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String submissionId;
+
+  @HiveField(2)
   final String userId;
+
+  @HiveField(3)
   final String commentText;
 
   CommentModel({
@@ -12,7 +30,7 @@ class CommentModel {
     required this.commentText,
   });
 
-  /// Maps JSON data from Supabase to the [CommentModel] object.
+  /// Membuat instance CommentModel dari format JSON Supabase.
   factory CommentModel.fromJson(Map<String, dynamic> json) {
     return CommentModel(
       id: json['id'] as String,
@@ -22,7 +40,7 @@ class CommentModel {
     );
   }
 
-  /// Converts the [CommentModel] object to a JSON map for Supabase.
+  /// Mengonversi instance CommentModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'submission_id': submissionId,

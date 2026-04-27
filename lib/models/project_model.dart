@@ -1,10 +1,33 @@
-/// Entity representation for the [projects] table.
+import 'package:hive/hive.dart';
+
+/*
+ * Tabel: projects
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh dosen pemilik proyek dan mahasiswa yang telah bergabung dalam kelompok pada proyek tersebut agar informasi akademik dan instruksi tugas hanya terekspos kepada pihak yang memiliki kepentingan langsung.
+ * - INSERT / UPDATE / DELETE: Terbatas hanya untuk dosen pemilik proyek karena dosen merupakan pemegang otoritas tunggal dalam mendefinisikan, mengubah, atau menghapus parameter tugas besar.
+ */
+
+part 'project_model.g.dart';
+
+/// Model data yang merepresentasikan tabel 'projects' di database.
+@HiveType(typeId: 0)
 class ProjectModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String lecturerId;
+
+  @HiveField(2)
   final String title;
+
+  @HiveField(3)
   final String description;
+
+  @HiveField(4)
   final String joinCode;
+
+  @HiveField(5)
   final String? finalSubmissionInfo;
 
   ProjectModel({
@@ -16,7 +39,7 @@ class ProjectModel {
     this.finalSubmissionInfo,
   });
 
-  /// Maps JSON data from Supabase to the [ProjectModel] object.
+  /// Membuat instance ProjectModel dari format JSON Supabase.
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
     return ProjectModel(
       id: json['id'] as String,
@@ -28,7 +51,7 @@ class ProjectModel {
     );
   }
 
-  /// Converts the [ProjectModel] object to a JSON map for Supabase.
+  /// Mengonversi instance ProjectModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'lecturer_id': lecturerId,

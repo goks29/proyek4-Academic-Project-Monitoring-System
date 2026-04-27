@@ -1,45 +1,41 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'workspace_member_model.dart';
+part of 'comment_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class WorkspaceMemberModelAdapter extends TypeAdapter<WorkspaceMemberModel> {
+class CommentModelAdapter extends TypeAdapter<CommentModel> {
   @override
-<<<<<<< HEAD
-  final int typeId = 1;
-=======
-  final int typeId = 7;
->>>>>>> origin/BE_Dosen
+  final int typeId = 4;
 
   @override
-  WorkspaceMemberModel read(BinaryReader reader) {
+  CommentModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return WorkspaceMemberModel(
+    return CommentModel(
       id: fields[0] as String,
-      workspaceId: fields[1] as String,
-      studentId: fields[2] as String,
-      isLeader: fields[3] as bool,
+      submissionId: fields[1] as String,
+      userId: fields[2] as String,
+      commentText: fields[3] as String,
     );
   }
 
   @override
-  void write(BinaryWriter writer, WorkspaceMemberModel obj) {
+  void write(BinaryWriter writer, CommentModel obj) {
     writer
       ..writeByte(4)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.workspaceId)
+      ..write(obj.submissionId)
       ..writeByte(2)
-      ..write(obj.studentId)
+      ..write(obj.userId)
       ..writeByte(3)
-      ..write(obj.isLeader);
+      ..write(obj.commentText);
   }
 
   @override
@@ -48,7 +44,7 @@ class WorkspaceMemberModelAdapter extends TypeAdapter<WorkspaceMemberModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is WorkspaceMemberModelAdapter &&
+      other is CommentModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

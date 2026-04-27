@@ -1,45 +1,53 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'workspace_member_model.dart';
+part of 'submission_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class WorkspaceMemberModelAdapter extends TypeAdapter<WorkspaceMemberModel> {
+class SubmissionModelAdapter extends TypeAdapter<SubmissionModel> {
   @override
-<<<<<<< HEAD
-  final int typeId = 1;
-=======
-  final int typeId = 7;
->>>>>>> origin/BE_Dosen
+  final int typeId = 3;
 
   @override
-  WorkspaceMemberModel read(BinaryReader reader) {
+  SubmissionModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return WorkspaceMemberModel(
+    return SubmissionModel(
       id: fields[0] as String,
-      workspaceId: fields[1] as String,
+      phaseId: fields[1] as String,
       studentId: fields[2] as String,
-      isLeader: fields[3] as bool,
+      submittedAt: fields[3] as String,
+      evidenceFileUrl: fields[4] as String?,
+      studentNotes: fields[5] as String?,
+      status: fields[6] as String,
+      lecturerFeedback: fields[7] as String?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, WorkspaceMemberModel obj) {
+  void write(BinaryWriter writer, SubmissionModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.workspaceId)
+      ..write(obj.phaseId)
       ..writeByte(2)
       ..write(obj.studentId)
       ..writeByte(3)
-      ..write(obj.isLeader);
+      ..write(obj.submittedAt)
+      ..writeByte(4)
+      ..write(obj.evidenceFileUrl)
+      ..writeByte(5)
+      ..write(obj.studentNotes)
+      ..writeByte(6)
+      ..write(obj.status)
+      ..writeByte(7)
+      ..write(obj.lecturerFeedback);
   }
 
   @override
@@ -48,7 +56,7 @@ class WorkspaceMemberModelAdapter extends TypeAdapter<WorkspaceMemberModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is WorkspaceMemberModelAdapter &&
+      other is SubmissionModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

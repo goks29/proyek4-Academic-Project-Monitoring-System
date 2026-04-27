@@ -1,17 +1,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/project_model.dart';
+import '../../models/project_model.dart';
 
-/// Service handling operations for the [projects] table.
-///
-/// Row Level Security (RLS) Rules:
-/// - SELECT: Accessible by the project lecturer and students joined in a team within the project.
-/// - INSERT / UPDATE / DELETE: Only allowed for the project lecturer.
+// Service untuk operasi tabel projects di Supabase
+/// Layanan untuk berinteraksi dengan tabel 'projects' di Supabase.
 class ProjectService {
   final SupabaseClient _client;
 
   ProjectService(this._client);
 
-  /// Retrieves all projects visible to the current authenticated user.
+  // Ambil semua proyek yang tersedia untuk user
+  /// Mengambil semua data proyek yang tersedia di database cloud.
   Future<List<ProjectModel>> getProjects() async {
     final response = await _client.from('projects').select();
     return (response as List<dynamic>)
@@ -19,9 +17,8 @@ class ProjectService {
         .toList();
   }
 
-  /// Creates a new project.
-  ///
-  /// Only allowed if the current user has the lecturer role.
+  // Buat proyek baru (hanya untuk dosen)
+  /// Menyimpan data proyek baru ke tabel 'projects'.
   Future<ProjectModel> createProject(ProjectModel project) async {
     final response = await _client
         .from('projects')

@@ -1,10 +1,35 @@
-/// Entity representation for the [task_allocations] table.
+import 'package:hive/hive.dart';
+
+/*
+ * Tabel: task_allocations
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh anggota kelompok dan dosen proyek terkait agar seluruh entitas di dalam tim dapat melacak distribusi beban kerja secara transparan.
+ * - INSERT: Terbatas hanya untuk ketua kelompok sebagai manifestasi dari peran ketua dalam melakukan delegasi tugas kepada anggota.
+ * - UPDATE: Terbatas untuk ketua kelompok (pembaruan deskripsi tugas), mahasiswa yang ditugaskan (pelaporan penyelesaian tugas), dan dosen proyek terkait (validasi hasil), guna menciptakan alur kerja yang akuntabel sesuai dengan porsi tanggung jawab masing-masing.
+ * - DELETE: Tidak diizinkan melalui akses klien agar riwayat kontribusi individu tidak dapat dihilangkan.
+ */
+
+part 'task_allocation_model.g.dart';
+
+/// Model data yang merepresentasikan tabel 'task_allocations' di database.
+@HiveType(typeId: 2)
 class TaskAllocationModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String phaseId;
+
+  @HiveField(2)
   final String studentId;
+
+  @HiveField(3)
   final String taskDescription;
+
+  @HiveField(4)
   final bool isDone;
+
+  @HiveField(5)
   final String status;
 
   TaskAllocationModel({
@@ -16,7 +41,7 @@ class TaskAllocationModel {
     required this.status,
   });
 
-  /// Maps JSON data from Supabase to the [TaskAllocationModel] object.
+  /// Membuat instance TaskAllocationModel dari format JSON Supabase.
   factory TaskAllocationModel.fromJson(Map<String, dynamic> json) {
     return TaskAllocationModel(
       id: json['id'] as String,
@@ -28,7 +53,7 @@ class TaskAllocationModel {
     );
   }
 
-  /// Converts the [TaskAllocationModel] object to a JSON map for Supabase.
+  /// Mengonversi instance TaskAllocationModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'phase_id': phaseId,

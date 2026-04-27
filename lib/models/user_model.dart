@@ -1,8 +1,17 @@
 import 'package:hive/hive.dart';
 
+/*
+ * Tabel: users
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh seluruh pengguna yang terautentikasi karena informasi dasar profil (seperti nama) diperlukan untuk pencarian, identifikasi, dan kolaborasi di dalam sistem.
+ * - UPDATE: Terbatas hanya untuk pemilik akun yang bersangkutan guna menjaga privasi, keamanan kredensial, dan integritas data individu.
+ * - INSERT / DELETE: Tidak diizinkan melalui akses klien karena pembuatan dan penghapusan akun dikelola sepenuhnya oleh sistem autentikasi (Supabase Auth).
+ */
+
 part 'user_model.g.dart';
-/// Entity representation for the [users] table.
-@HiveType(typeId: 3)
+
+/// Model data yang merepresentasikan tabel 'users' di database.
+@HiveType(typeId: 5)
 class UserModel {
   @HiveField(0)
   final String id;
@@ -23,7 +32,7 @@ class UserModel {
     required this.role,
   });
 
-  /// Maps JSON data from Supabase to the [UserModel] object.
+  /// Membuat instance UserModel dari format JSON Supabase.
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] as String,
@@ -33,7 +42,7 @@ class UserModel {
     );
   }
 
-  /// Converts the [UserModel] object to a JSON map for Supabase.
+  /// Mengonversi instance UserModel ke format JSON (hanya field yang bisa diubah).
   Map<String, dynamic> toJson() {
     return {
       'full_name': fullName,

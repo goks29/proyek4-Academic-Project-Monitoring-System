@@ -99,4 +99,13 @@ class WorkspaceService {
       // Simpan log untuk sinkronisasi nanti
     }
   }
+
+  // Update topik proyek dalam workspace
+  /// Memperbarui judul topik proyek di dalam sebuah workspace.
+  Future<void> updateTopic(String workspaceId, String newTopic) async {
+    await _supabaseClient
+        .from('workspaces')
+        .update({'topic_name': newTopic})
+        .eq('id', workspaceId);
+  }
 }

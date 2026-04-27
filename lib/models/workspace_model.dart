@@ -44,7 +44,7 @@ class WorkspaceModel extends HiveObject{
     required this.serverReceivedAt
   });
 
-  /// Maps JSON data from Supabase to the [WorkspaceModel] object.
+  /// Membuat instance WorkspaceModel dari format JSON Supabase.
   factory WorkspaceModel.fromJson(Map<String, dynamic> json) {
     return WorkspaceModel(
       id: json['id'] as String,
@@ -59,7 +59,7 @@ class WorkspaceModel extends HiveObject{
     );
   }
 
-  /// Converts the [WorkspaceModel] object to a JSON map for Supabase.
+  /// Mengonversi instance WorkspaceModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'project_id': projectId,

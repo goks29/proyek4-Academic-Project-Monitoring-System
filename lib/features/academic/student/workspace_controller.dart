@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
-import 'package:academic_project_monitoring_system/services/workspace_service.dart';
+import 'package:academic_project_monitoring_system/services/remote/workspace_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class WorkspaceController extends ChangeNotifier {

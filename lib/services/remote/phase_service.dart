@@ -1,19 +1,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/progress_phase_model.dart';
+import '../../models/progress_phase_model.dart';
 
-/// Service handling operations for the [progress_phases] table.
-///
-/// Row Level Security (RLS) Rules:
-/// - SELECT: Accessible by team members and the project lecturer.
-/// - INSERT: Only allowed for the team leader.
-/// - UPDATE: Allowed for the team leader (content changes) and project lecturer (status and feedback updates).
-/// - DELETE: Not allowed through client access.
+// Service untuk operasi tabel progress_phases di Supabase
+/// Layanan untuk berinteraksi dengan tabel 'progress_phases' di Supabase.
 class PhaseService {
   final SupabaseClient _client;
 
   PhaseService(this._client);
 
-  /// Fetches all progress phases for a given [workspaceId], ordered by [sort_order].
+  // Ambil semua fase berdasarkan workspace_id
+  /// Mengambil daftar fase berdasarkan ID workspace, diurutkan sesuai sort_order.
   Future<List<ProgressPhaseModel>> getPhases(String workspaceId) async {
     final response = await _client
         .from('progress_phases')
@@ -26,9 +22,8 @@ class PhaseService {
         .toList();
   }
 
-  /// Creates a new progress phase.
-  ///
-  /// Only allowed for the workspace leader.
+  // Buat fase baru (hanya untuk ketua kelompok)
+  /// Membuat entri fase baru di database cloud.
   Future<ProgressPhaseModel> createPhase(ProgressPhaseModel phase) async {
     final response = await _client
         .from('progress_phases')
@@ -36,5 +31,11 @@ class PhaseService {
         .select()
         .single();
     return ProgressPhaseModel.fromJson(response);
+  }
+
+  // Update status atau feedback fase
+  /// Memperbarui status atau catatan feedback pada fase tertentu.
+  Future<void> updatePhaseStatus(String phaseId, Map<String, dynamic> data) async {
+    await _client.from('progress_phases').update(data).eq('id', phaseId);
   }
 }

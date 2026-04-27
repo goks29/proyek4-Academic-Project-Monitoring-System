@@ -1,12 +1,41 @@
-/// Entity representation for the [submissions] table.
+import 'package:hive/hive.dart';
+
+/*
+ * Tabel: submissions
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh anggota kelompok dan dosen proyek terkait sebagai wadah transparansi hasil kerja (deliverables) yang telah diselesaikan.
+ * - INSERT: Dapat dilakukan oleh seluruh anggota kelompok karena setiap individu berhak mengunggah berkas hasil kerjanya masing-masing sebagai bukti kontribusi.
+ * - UPDATE: Terbatas untuk mahasiswa pengunggah dokumen tersebut dan dosen proyek terkait, untuk memastikan bahwa berkas hanya dapat dikoreksi oleh pembuatnya atau dinilai oleh dosen, serta melindunginya dari modifikasi oleh rekan kelompok lain.
+ * - DELETE: Tidak diizinkan melalui akses klien guna menjaga integritas bukti pengumpulan tugas.
+ */
+
+part 'submission_model.g.dart';
+
+/// Model data yang merepresentasikan tabel 'submissions' di database.
+@HiveType(typeId: 3)
 class SubmissionModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String phaseId;
+
+  @HiveField(2)
   final String studentId;
+
+  @HiveField(3)
   final String submittedAt;
+
+  @HiveField(4)
   final String? evidenceFileUrl;
+
+  @HiveField(5)
   final String? studentNotes;
+
+  @HiveField(6)
   final String status;
+
+  @HiveField(7)
   final String? lecturerFeedback;
 
   SubmissionModel({
@@ -20,7 +49,7 @@ class SubmissionModel {
     this.lecturerFeedback,
   });
 
-  /// Maps JSON data from Supabase to the [SubmissionModel] object.
+  /// Membuat instance SubmissionModel dari format JSON Supabase.
   factory SubmissionModel.fromJson(Map<String, dynamic> json) {
     return SubmissionModel(
       id: json['id'] as String,
@@ -34,7 +63,7 @@ class SubmissionModel {
     );
   }
 
-  /// Converts the [SubmissionModel] object to a JSON map for Supabase.
+  /// Mengonversi instance SubmissionModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'phase_id': phaseId,

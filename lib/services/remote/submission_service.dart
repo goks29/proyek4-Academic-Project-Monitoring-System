@@ -1,19 +1,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/submission_model.dart';
+import '../../models/submission_model.dart';
 
-/// Service handling operations for the [submissions] table.
-///
-/// Row Level Security (RLS) Rules:
-/// - SELECT: Accessible by team members and the project lecturer.
-/// - INSERT: Allowed for all members of the respective team.
-/// - UPDATE: Allowed for the student who uploaded the document or the project lecturer.
-/// - DELETE: Not allowed through client access.
+// Service untuk operasi tabel submissions di Supabase
+/// Layanan untuk berinteraksi dengan tabel 'submissions' di Supabase.
 class SubmissionService {
   final SupabaseClient _client;
 
   SubmissionService(this._client);
 
-  /// Fetches all submissions for a given [phaseId].
+  // Ambil semua submission berdasarkan phase_id
+  /// Mengambil daftar submission mahasiswa berdasarkan ID fase.
   Future<List<SubmissionModel>> getSubmissions(String phaseId) async {
     final response = await _client
         .from('submissions')
@@ -25,9 +21,8 @@ class SubmissionService {
         .toList();
   }
 
-  /// Creates a new submission for a phase.
-  ///
-  /// Allowed for any workspace member.
+  // Kirim submission baru
+  /// Mengirimkan data submission baru ke database cloud.
   Future<SubmissionModel> createSubmission(SubmissionModel submission) async {
     final response = await _client
         .from('submissions')
@@ -37,9 +32,8 @@ class SubmissionService {
     return SubmissionModel.fromJson(response);
   }
 
-  /// Updates the status and feedback for a submission.
-  ///
-  /// Only allowed for the lecturer of the project.
+  // Update status dan feedback dari dosen
+  /// Memperbarui status kelulusan dan catatan feedback dari dosen.
   Future<void> updateStatus(String submissionId, String status, String feedback) async {
     await _client
         .from('submissions')

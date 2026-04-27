@@ -1,20 +1,29 @@
 import 'package:hive/hive.dart';
 
+/*
+ * Tabel: workspace_members
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh anggota kelompok dan dosen proyek terkait karena struktur keanggotaan diperlukan untuk kelancaran koordinasi tim dan penilaian akhir dosen.
+ * - INSERT: Terbatas hanya untuk ketua kelompok guna memusatkan kendali rekrutmen atau penambahan anggota baru di bawah persetujuan pimpinan kelompok.
+ * - UPDATE / DELETE: Tidak diizinkan melalui akses klien guna mengunci keanggotaan agar tidak terjadi manipulasi data anggota di tengah berjalannya proyek.
+ */
+
 part 'workspace_member_model.g.dart';
-/// Entity representation for the [workspace_members] table.
-@HiveType(typeId: 1)
-class WorkspaceMemberModel extends HiveObject{
+
+/// Model data yang merepresentasikan tabel 'workspace_members' di database.
+@HiveType(typeId: 7)
+class WorkspaceMemberModel {
   @HiveField(0)
-  late String id;
+  final String id;
 
   @HiveField(1)
-  late String workspaceId; // ID Project
+  final String workspaceId;
 
   @HiveField(2)
-  late String studentId; // NIM
+  final String studentId;
 
   @HiveField(3)
-  late bool isLeader;
+  final bool isLeader;
 
   WorkspaceMemberModel({
     required this.id,
@@ -23,7 +32,7 @@ class WorkspaceMemberModel extends HiveObject{
     required this.isLeader,
   });
 
-  /// Maps JSON data from Supabase to the [WorkspaceMemberModel] object.
+  /// Membuat instance WorkspaceMemberModel dari format JSON Supabase.
   factory WorkspaceMemberModel.fromJson(Map<String, dynamic> json) {
     return WorkspaceMemberModel(
       id: json['id'] as String,
@@ -33,7 +42,7 @@ class WorkspaceMemberModel extends HiveObject{
     );
   }
 
-  /// Converts the [WorkspaceMemberModel] object to a JSON map for Supabase.
+  /// Mengonversi instance WorkspaceMemberModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'workspace_id': workspaceId,
