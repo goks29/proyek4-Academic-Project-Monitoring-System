@@ -8,11 +8,7 @@ part of 'workspace_member_model.dart';
 
 class WorkspaceMemberModelAdapter extends TypeAdapter<WorkspaceMemberModel> {
   @override
-<<<<<<< HEAD
-  final int typeId = 1;
-=======
   final int typeId = 7;
->>>>>>> origin/BE_Dosen
 
   @override
   WorkspaceMemberModel read(BinaryReader reader) {
