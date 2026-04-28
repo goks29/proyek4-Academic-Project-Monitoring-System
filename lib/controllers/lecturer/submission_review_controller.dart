@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../models/submission_model.dart';
 import '../../repositories/submission_repository.dart';
 
+/// Controller untuk meninjau hasil pengumpulan tugas (submission) oleh dosen.
 class SubmissionReviewController extends ChangeNotifier {
   final SubmissionRepository _repository;
 
@@ -11,6 +12,7 @@ class SubmissionReviewController extends ChangeNotifier {
 
   SubmissionReviewController(this._repository);
 
+  /// Mengambil daftar submission berdasarkan ID fase.
   Future<void> fetchSubmissions(String phaseId) async {
     isLoading = true;
     errorMessage = null;
@@ -26,6 +28,7 @@ class SubmissionReviewController extends ChangeNotifier {
     }
   }
 
+  /// Memperbarui status peninjauan submission dan memberikan catatan feedback.
   Future<void> reviewSubmission(String submissionId, String status, String feedback) async {
     isLoading = true;
     errorMessage = null;
@@ -45,6 +48,8 @@ class SubmissionReviewController extends ChangeNotifier {
             studentNotes: submissions[index].studentNotes,
             status: status,
             lecturerFeedback: feedback,
+            lecturerId: submissions[index].lecturerId,
+            serverReceivedAt: submissions[index].serverReceivedAt,
          );
       }
     } catch (e) {

@@ -1,8 +1,16 @@
 import 'package:hive/hive.dart';
 
+/*
+ * Tabel: workspace_members
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh anggota kelompok dan dosen proyek terkait karena struktur keanggotaan diperlukan untuk kelancaran koordinasi tim dan penilaian akhir dosen.
+ * - INSERT: Terbatas hanya untuk ketua kelompok guna memusatkan kendali rekrutmen atau penambahan anggota baru di bawah persetujuan pimpinan kelompok.
+ * - UPDATE / DELETE: Tidak diizinkan melalui akses klien guna mengunci keanggotaan agar tidak terjadi manipulasi data anggota di tengah berjalannya proyek.
+ */
+
 part 'workspace_member_model.g.dart';
 
-// Representasi tabel workspace_members
+/// Model data yang merepresentasikan tabel 'workspace_members' di database.
 @HiveType(typeId: 7)
 class WorkspaceMemberModel {
   @HiveField(0)
@@ -24,6 +32,7 @@ class WorkspaceMemberModel {
     required this.isLeader,
   });
 
+  /// Membuat instance WorkspaceMemberModel dari format JSON Supabase.
   factory WorkspaceMemberModel.fromJson(Map<String, dynamic> json) {
     return WorkspaceMemberModel(
       id: json['id'] as String,
@@ -33,6 +42,7 @@ class WorkspaceMemberModel {
     );
   }
 
+  /// Mengonversi instance WorkspaceMemberModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'workspace_id': workspaceId,

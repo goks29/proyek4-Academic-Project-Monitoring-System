@@ -1,20 +1,18 @@
-// lib/features/academic/lecturer/lecturer_controller.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../models/project_model.dart';
 import '../../../models/workspace_model.dart';
-import '../../../models/progress_phase_model.dart'; // Import Model ini
+import '../../../models/progress_phase_model.dart';
 
-// Import semua Service yang dibutuhkan
-import '../../../services/project_service.dart';
+// Import SERVICES 
+import '../../../services/remote/phase_service.dart';
 import '../../../services/workspace_service.dart';
-import '../../../services/user_service.dart'; // Import UserService
-import '../../../services/workspace_member_service.dart'; // Import MemberService
-import '../../../services/phase_service.dart'; // Import PhaseService
+import '../../../services/remote/project_service.dart';
+import '../../../services/remote/user_service.dart';
+import '../../../services/remote/workspace_member_service.dart';
 
 class LecturerController {
-  // Inisialisasi masing-masing service secara mandiri
   final ProjectService _projectService = ProjectService(Supabase.instance.client);
   final WorkspaceService _workspaceService = WorkspaceService(Supabase.instance.client);
   final UserService _userService = UserService(Supabase.instance.client);
@@ -23,10 +21,9 @@ class LecturerController {
 
   Future<List<ProjectModel>> getAllProjects() async {
     try {
-      final result = await _projectService.getProjects();
-      return result;
+      return await _projectService.getProjects();
     } catch (e) {
-      print("DEBUG ERROR: Gagal konek ke Supabase. Pastikan URL benar! Error: $e");
+      print("DEBUG ERROR: Gagal ambil proyek: $e");
       return [];
     }
   }
@@ -56,6 +53,7 @@ class LecturerController {
         description: description,
         joinCode: joinCode,
         finalSubmissionInfo: finalInfo,
+        createdAt: DateTime.now(),
       );
 
       await _projectService.createProject(newProject);
@@ -72,12 +70,9 @@ class LecturerController {
 
   Future<List<Map<String, dynamic>>> getWorkspaceMembersDetails(String workspaceId) async {
     try {
-      // 1. Ambil data dari tabel workspace_members menggunakan _memberService
       final members = await _memberService.getMembers(workspaceId);
-      
       List<Map<String, dynamic>> detailedMembers = [];
       
-      // 2. Loop untuk mengambil nama user dari tabel users menggunakan _userService
       for (var member in members) {
         final userProfile = await _userService.getUserProfile(member.studentId);
         detailedMembers.add({
@@ -95,7 +90,6 @@ class LecturerController {
 
   Future<List<ProgressPhaseModel>> getWorkspacePhases(String workspaceId) async {
     try {
-      // Mengambil dari tabel progress_phases menggunakan _phaseService
       return await _phaseService.getPhases(workspaceId);
     } catch (e) {
       print("Error fetching phases: $e");

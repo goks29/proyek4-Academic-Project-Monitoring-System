@@ -2,12 +2,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/user_model.dart';
 
 // Service untuk operasi tabel users di Supabase
+/// Layanan untuk berinteraksi dengan tabel 'users' di Supabase.
 class UserService {
   final SupabaseClient _client;
 
   UserService(this._client);
 
   // Ambil profil user berdasarkan ID
+  /// Mengambil profil lengkap pengguna berdasarkan ID unik.
   Future<UserModel> getUserProfile(String userId) async {
     final response = await _client
         .from('users')
@@ -18,6 +20,7 @@ class UserService {
   }
 
   // Update nama lengkap user
+  /// Memperbarui nama lengkap pengguna di database.
   Future<void> updateProfile(String userId, String newName) async {
     await _client
         .from('users')

@@ -2,12 +2,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/comment_model.dart';
 
 // Service untuk operasi tabel comments di Supabase
+/// Layanan untuk berinteraksi dengan tabel 'comments' di Supabase.
 class CommentService {
   final SupabaseClient _client;
 
   CommentService(this._client);
 
   // Ambil komentar untuk submission tertentu
+  /// Mengambil komentar untuk submission tertentu, diurutkan dari yang terlama.
   Future<List<CommentModel>> getComments(String submissionId) async {
     final response = await _client
         .from('comments')
@@ -21,6 +23,7 @@ class CommentService {
   }
 
   // Tambah komentar baru
+  /// Menambahkan komentar baru ke dalam database cloud.
   Future<CommentModel> createComment(CommentModel comment) async {
     final response = await _client
         .from('comments')

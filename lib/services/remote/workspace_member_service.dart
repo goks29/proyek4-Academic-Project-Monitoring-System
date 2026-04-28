@@ -2,12 +2,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/workspace_member_model.dart';
 
 // Service untuk operasi tabel workspace_members di Supabase
+/// Layanan untuk berinteraksi dengan tabel 'workspace_members' di Supabase.
 class WorkspaceMemberService {
   final SupabaseClient _client;
 
   WorkspaceMemberService(this._client);
 
   // Ambil semua anggota dalam workspace tertentu
+  /// Mengambil daftar anggota tim berdasarkan ID workspace.
   Future<List<WorkspaceMemberModel>> getMembers(String workspaceId) async {
     final response = await _client
         .from('workspace_members')
@@ -20,6 +22,7 @@ class WorkspaceMemberService {
   }
 
   // Tambah anggota baru ke workspace
+  /// Menambahkan anggota baru ke dalam tim/workspace.
   Future<WorkspaceMemberModel> addMember(WorkspaceMemberModel member) async {
     final response = await _client
         .from('workspace_members')

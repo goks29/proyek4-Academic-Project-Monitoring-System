@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../models/task_allocation_model.dart';
 import '../../repositories/task_repository.dart';
 
+/// Controller untuk memantau alokasi tugas mahasiswa oleh dosen.
 class TaskApprovalController extends ChangeNotifier {
   final TaskRepository _repository;
 
@@ -11,6 +12,7 @@ class TaskApprovalController extends ChangeNotifier {
 
   TaskApprovalController(this._repository);
 
+  /// Mengambil daftar alokasi tugas berdasarkan ID fase.
   Future<void> fetchTasks(String phaseId) async {
     isLoading = true;
     errorMessage = null;

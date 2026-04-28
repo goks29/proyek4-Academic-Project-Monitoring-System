@@ -1,8 +1,17 @@
 import 'package:hive/hive.dart';
 
+/*
+ * Tabel: progress_phases
+ * Operasi & Aturan Bisnis:
+ * - SELECT: Dapat diakses oleh anggota kelompok dan dosen proyek terkait untuk keperluan sinkronisasi alur kerja tim dan pemantauan capaian oleh dosen.
+ * - INSERT: Terbatas hanya untuk ketua kelompok karena ketua memiliki tanggung jawab manajerial dalam menyusun tahapan dan perencanaan kerja kelompok.
+ * - UPDATE: Terbatas untuk ketua kelompok (khusus untuk mengubah penamaan/urutan fase) dan dosen proyek terkait (khusus untuk pembaruan status kelayakan dan umpan balik), guna memisahkan wewenang antara pihak yang mengeksekusi dan pihak yang mengevaluasi.
+ * - DELETE: Tidak diizinkan melalui akses klien guna mempertahankan rekam jejak histori tahapan kerja yang telah dilalui.
+ */
+
 part 'progress_phase_model.g.dart';
 
-// Representasi tabel progress_phases
+/// Model data yang merepresentasikan tabel 'progress_phases' di database.
 @HiveType(typeId: 1)
 class ProgressPhaseModel {
   @HiveField(0)
@@ -20,14 +29,35 @@ class ProgressPhaseModel {
   @HiveField(4)
   final String status;
 
+  @HiveField(5)
+  final String? lecturerFeedback;
+
+  @HiveField(6)
+  final bool requireEvidence;
+
+  @HiveField(7)
+  final bool isLocked;
+
+  @HiveField(8)
+  final DateTime clientCreatedAt;
+
+  @HiveField(9)
+  final DateTime? serverReceivedAt;
+
   ProgressPhaseModel({
     required this.id,
     required this.workspaceId,
     required this.phaseName,
     required this.sortOrder,
     required this.status,
+    this.lecturerFeedback,
+    this.requireEvidence = true,
+    this.isLocked = true,
+    required this.clientCreatedAt,
+    this.serverReceivedAt,
   });
 
+  /// Membuat instance ProgressPhaseModel dari format JSON Supabase.
   factory ProgressPhaseModel.fromJson(Map<String, dynamic> json) {
     return ProgressPhaseModel(
       id: json['id'] as String,
@@ -35,15 +65,27 @@ class ProgressPhaseModel {
       phaseName: json['phase_name'] as String,
       sortOrder: json['sort_order'] as int,
       status: json['status'] as String,
+      lecturerFeedback: json['lecturer_feedback'] as String?,
+      requireEvidence: json['require_evidence'] as bool? ?? true,
+      isLocked: json['is_locked'] as bool? ?? true,
+      clientCreatedAt: DateTime.parse(json['client_created_at'] as String),
+      serverReceivedAt: json['server_received_at'] != null 
+          ? DateTime.parse(json['server_received_at'] as String) 
+          : null,
     );
   }
 
+  /// Mengonversi instance ProgressPhaseModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
       'workspace_id': workspaceId,
       'phase_name': phaseName,
       'sort_order': sortOrder,
-      'client_created_at': DateTime.now().toIso8601String(),
+      'status': status,
+      'lecturer_feedback': lecturerFeedback,
+      'require_evidence': requireEvidence,
+      'is_locked': isLocked,
+      'client_created_at': clientCreatedAt.toIso8601String(),
     };
   }
 }
