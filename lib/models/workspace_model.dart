@@ -3,7 +3,7 @@ import 'package:hive/hive.dart';
 part 'workspace_model.g.dart';
 
 /// Entity representation for the [WorkspaceModel] table.
-@HiveType(typeId: 0)
+@HiveType(typeId: 6)
 class WorkspaceModel extends HiveObject{
   @HiveField(0)
   late String id;

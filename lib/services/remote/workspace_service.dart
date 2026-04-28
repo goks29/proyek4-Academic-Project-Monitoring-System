@@ -1,3 +1,5 @@
+import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
+import 'package:academic_project_monitoring_system/models/user_model.dart';
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -107,5 +109,42 @@ class WorkspaceService {
         .from('workspaces')
         .update({'topic_name': newTopic})
         .eq('id', workspaceId);
+  }
+
+  Future<List<TaskAllocationModel>> fetchTasksByWorkspaces(String workspaceId) async{
+    try {
+      final response = await _supabaseClient
+        .from('task_allocations')
+        .select('*, progress_phases!inner(workspace_id)')
+        .eq('progress_phases.workspace_id', workspaceId);
+      
+      return (response as List)
+        .map((json) => TaskAllocationModel.fromJson(json))
+        .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<UserModel>> fetchWorkspacesMember(String workspaceId) async {
+    try {
+      final response = await _supabaseClient
+        .from('workspace_members')
+        .select('*, users!inner(*)')
+        .eq('workspace_id', workspaceId);
+
+      final members = (response as List).map((data) {
+        return UserModel.fromJson(data['users']);
+      }).toList();
+      var box = Hive.box<UserModel>('workspace_members');
+      for (var member in members) {
+        await box.put(member.id, member);
+      }
+
+      return members;
+    } catch (e) {
+      var box = Hive.box<UserModel>('workspace_members');
+      return box.values.toList();
+    }
   }
 }
