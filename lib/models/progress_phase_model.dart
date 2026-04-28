@@ -1,9 +1,23 @@
-/// Entity representation for the [progress_phases] table.
+import 'package:hive/hive.dart';
+
+part 'progress_phase_model.g.dart';
+
+// Representasi tabel progress_phases
+@HiveType(typeId: 1)
 class ProgressPhaseModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String workspaceId;
+
+  @HiveField(2)
   final String phaseName;
+
+  @HiveField(3)
   final int sortOrder;
+
+  @HiveField(4)
   final String status;
 
   ProgressPhaseModel({
@@ -14,7 +28,6 @@ class ProgressPhaseModel {
     required this.status,
   });
 
-  /// Maps JSON data from Supabase to the [ProgressPhaseModel] object.
   factory ProgressPhaseModel.fromJson(Map<String, dynamic> json) {
     return ProgressPhaseModel(
       id: json['id'] as String,
@@ -25,7 +38,6 @@ class ProgressPhaseModel {
     );
   }
 
-  /// Converts the [ProgressPhaseModel] object to a JSON map for Supabase.
   Map<String, dynamic> toJson() {
     return {
       'workspace_id': workspaceId,

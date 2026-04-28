@@ -1,8 +1,20 @@
-/// Entity representation for the [workspace_members] table.
+import 'package:hive/hive.dart';
+
+part 'workspace_member_model.g.dart';
+
+// Representasi tabel workspace_members
+@HiveType(typeId: 7)
 class WorkspaceMemberModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String workspaceId;
+
+  @HiveField(2)
   final String studentId;
+
+  @HiveField(3)
   final bool isLeader;
 
   WorkspaceMemberModel({
@@ -12,7 +24,6 @@ class WorkspaceMemberModel {
     required this.isLeader,
   });
 
-  /// Maps JSON data from Supabase to the [WorkspaceMemberModel] object.
   factory WorkspaceMemberModel.fromJson(Map<String, dynamic> json) {
     return WorkspaceMemberModel(
       id: json['id'] as String,
@@ -22,7 +33,6 @@ class WorkspaceMemberModel {
     );
   }
 
-  /// Converts the [WorkspaceMemberModel] object to a JSON map for Supabase.
   Map<String, dynamic> toJson() {
     return {
       'workspace_id': workspaceId,

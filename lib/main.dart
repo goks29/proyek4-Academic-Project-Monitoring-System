@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'features/academic/lecturer/lecturer_controller.dart';
 
 // Pastikan path import ini sesuai dengan struktur folder di laptopmu
-import 'features/academic/lecturer/lecturer_view.dart';
+import 'features/academic/lecturer/view/lecturer_view.dart';
+
+final LecturerController globalLecturerController = LecturerController();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  
   // 1. Load configuration dari file .env
   try {
     await dotenv.load(fileName: ".env");
@@ -40,7 +43,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      // Mengarahkan tampilan awal langsung ke Dashboard Dosen kamu
+
       home: const LecturerView(),
     );
   }

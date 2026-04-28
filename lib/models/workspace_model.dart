@@ -1,9 +1,23 @@
-/// Entity representation for the [workspaces] table.
+import 'package:hive/hive.dart';
+
+part 'workspace_model.g.dart';
+
+// Representasi tabel workspaces
+@HiveType(typeId: 6)
 class WorkspaceModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String projectId;
+
+  @HiveField(2)
   final String teamName;
+
+  @HiveField(3)
   final String topicName;
+
+  @HiveField(4)
   final String progressionMode;
 
   WorkspaceModel({
@@ -14,7 +28,6 @@ class WorkspaceModel {
     required this.progressionMode,
   });
 
-  /// Maps JSON data from Supabase to the [WorkspaceModel] object.
   factory WorkspaceModel.fromJson(Map<String, dynamic> json) {
     return WorkspaceModel(
       id: json['id'] as String,
@@ -25,7 +38,6 @@ class WorkspaceModel {
     );
   }
 
-  /// Converts the [WorkspaceModel] object to a JSON map for Supabase.
   Map<String, dynamic> toJson() {
     return {
       'project_id': projectId,

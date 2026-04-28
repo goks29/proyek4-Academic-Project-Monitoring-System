@@ -1,8 +1,20 @@
-/// Entity representation for the [comments] table.
+import 'package:hive/hive.dart';
+
+part 'comment_model.g.dart';
+
+// Representasi tabel comments
+@HiveType(typeId: 4)
 class CommentModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String submissionId;
+
+  @HiveField(2)
   final String userId;
+
+  @HiveField(3)
   final String commentText;
 
   CommentModel({
@@ -12,7 +24,6 @@ class CommentModel {
     required this.commentText,
   });
 
-  /// Maps JSON data from Supabase to the [CommentModel] object.
   factory CommentModel.fromJson(Map<String, dynamic> json) {
     return CommentModel(
       id: json['id'] as String,
@@ -22,7 +33,6 @@ class CommentModel {
     );
   }
 
-  /// Converts the [CommentModel] object to a JSON map for Supabase.
   Map<String, dynamic> toJson() {
     return {
       'submission_id': submissionId,
