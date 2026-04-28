@@ -1,4 +1,7 @@
 import 'package:academic_project_monitoring_system/features/academic/student/student_view.dart';
+import 'package:academic_project_monitoring_system/models/project_model.dart';
+import 'package:academic_project_monitoring_system/models/sync_action_model.dart';
+import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
 import 'package:academic_project_monitoring_system/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -18,9 +21,13 @@ Future<void> main() async {
 
   // Inisialisasi Hive
   await Hive.initFlutter();
+
   Hive.registerAdapter(WorkspaceModelAdapter());
   Hive.registerAdapter(WorkspaceMemberModelAdapter());
   Hive.registerAdapter(UserModelAdapter());
+  Hive.registerAdapter(ProjectModelAdapter());         
+  Hive.registerAdapter(TaskAllocationModelAdapter());  
+  Hive.registerAdapter(SyncActionModelAdapter());
 
   await Hive.openBox<WorkspaceModel>('workspaces');
   await Hive.openBox<WorkspaceMemberModel>('workspace_members');

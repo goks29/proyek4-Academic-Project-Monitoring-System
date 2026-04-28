@@ -1,10 +1,24 @@
 import 'package:academic_project_monitoring_system/features/academic/auth/login_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/auth/login_view.dart';
 import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'workspace_view.dart';
 
-class HomePage extends StatelessWidget{
+class HomePage extends StatefulWidget{
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+      context.read<WorkspaceController>().fetchMyWorkspaces()
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loginController = context.watch<LoginController>();
@@ -18,6 +32,13 @@ class HomePage extends StatelessWidget{
           children: [
             Row(
               children: [
+                //Avatar
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.grey[300],
+                  child: Icon(Icons.person, color: Colors.white,),
+                ),
+                const SizedBox(width: 8),
                 //header : bagian nama (kiri)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,14 +86,61 @@ class HomePage extends StatelessWidget{
                 ),
                 const SizedBox(width: 8),
 
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.grey[300],
-                  child: Icon(Icons.person, color: Colors.white,),
-                ),
+
+
+                // Logout
+                /// Belom ada dialog konfirmasi ya gok
+                IconButton(
+                  icon: Icon(Icons.logout_outlined),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext dialogContext) {
+                        return AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadiusGeometry.circular(20),
+                          ),
+                          title: const Text(
+                            "Apakah kamu yakin ingin logout?", style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(dialogContext);
+                              },
+                              child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                            ),
+
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.circular(8),
+                                )
+                              ),
+                              onPressed: () async {
+                                Navigator.pop(dialogContext);
+                                final login = context.read<LoginController>();
+                                await login.handleLogout();
+
+                                if (context.mounted) {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => LoginView()),
+                                    (route) => false
+                                  );
+                                }
+                              },
+                              child: const Text("Keluar", style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        );
+                      }
+                    );
+                  }
+                )
               ],
             ),
-
             //seach bar
           ],
         )
@@ -131,98 +199,128 @@ class HomePage extends StatelessWidget{
             ),
             const SizedBox(height: 24),
             Text(
-              "Detail Tugas",
+              "Detail Tugas Besar",
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
               )
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 12),
 
-            //List Tubes
-            Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: Colors.grey,
-                  width: 0.5,
-                )
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  //nama dan icon panah
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
+            Builder(
+              builder: (context) {
+                if (workspaceController.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (workspaceController.myWorkspaces.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsetsGeometry.all(20.0),
+                      child: Text(
+                        "Belum ada project yang dibuat.",
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: workspaceController.myWorkspaces.length,
+                  itemBuilder: (context, index) {
+                    final workspace = workspaceController.myWorkspaces[index];
+
+                    //List Tubes
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: Colors.grey,
+                          width: 0.5,
+                        )
+                      ),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "${workspaceController.myWorkspaces}",
-                            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold ,fontSize: 23)
+                          //nama dan icon panah
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${workspace.teamName ?? "Tanpa Nama"}",
+                                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold ,fontSize: 23)
+                                  ),
+                                  Text(
+                                    "Kelompok ${workspace.projectId}",
+                                    style: TextStyle(color: Colors.black, fontSize: 15)
+                                  ),
+                                ],
+                              ),
+                              Spacer(),
+                              Icon(Icons.arrow_right_rounded, color: Colors.grey,)
+                            ],
                           ),
-                          Text(
-                            "Kelompok 7",
-                            style: TextStyle(color: Colors.black, fontSize: 15)
-                          ),
-                        ],
-                      ),
-                      Spacer(),
-                      Icon(Icons.arrow_right_rounded, color: Colors.grey,)
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  //bar progress
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      //text dan persen
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Progres Keseluruhan", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
-                          Spacer(),
-                          Text("90%", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12))
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      //progres bar
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: 0.90, 
-                          backgroundColor: Colors.grey[200],
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                          minHeight: 8, 
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                          const SizedBox(height: 14),
+                          //bar progress
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              //text dan persen
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Progres Keseluruhan", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
+                                  Spacer(),
+                                  Text("90%", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12))
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              //progres bar
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: LinearProgressIndicator(
+                                  value: 0.90, 
+                                  backgroundColor: Colors.grey[200],
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                                  minHeight: 8, 
+                                ),
+                              ),
+                              const SizedBox(height: 16),
 
-                      //line
-                      Divider(color: Colors.grey[300]),
-                      const SizedBox(height: 8),
+                              //line
+                              Divider(color: Colors.grey[300]),
+                              const SizedBox(height: 8),
 
-                      //Update
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Icon(Icons.access_time, color: Colors.grey[300]),
-                          const SizedBox(width: 6),
-                          Text(
-                            "Di Update 2 jam yang lalu",
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                              //Update
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Icon(Icons.access_time, color: Colors.grey[300]),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Baru Saja Di Update",
+                                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                    );  
+                  },
+                );
+              }
+            )
           ],
         ),
       ),
@@ -238,7 +336,9 @@ class HomePage extends StatelessWidget{
             MaterialPageRoute(
               builder: (context) => WorkspaceView(),
             ),
-          );
+          ).then((_) {
+            context.read<WorkspaceController>().fetchMyWorkspaces();
+          });
         },
         child: const Icon(Icons.add, color: Colors.white,),
       ),
