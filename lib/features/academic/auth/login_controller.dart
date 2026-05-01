@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:academic_project_monitoring_system/services/auth_service.dart';
 import 'package:academic_project_monitoring_system/models/user_model.dart';
@@ -42,7 +43,8 @@ class LoginController extends ChangeNotifier {
       _currentUser = await _authService.login(email, password);
       return _currentUser != null;
     } catch (e) {
-      _error = "Login Gagal: Pastikan email dan password benar.";
+      debugPrint('[LOGIN ERROR] ${e.runtimeType}: $e');
+      _error = "Login Gagal: ${e.toString()}";
       return false;
     } finally {
       _isLoading = false;

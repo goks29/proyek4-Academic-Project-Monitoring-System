@@ -14,42 +14,39 @@ class WorkspaceService {
 
   WorkspaceService(this._supabaseClient);
 
+  /// Buat WORKSPACE
   Future<String> createWorkspace({
-    required String projectId,
+    String projectId = '',
     required String teamName,
     required String creatorId,
     String? topicName,
     String? topicDescription,
-    DateTime? serverReceivedAt
   }) async {
     final workspaceId = _uuid.v4();
-    
-    // Objek Model
+
     final newWorkspace = WorkspaceModel(
       id: workspaceId,
       projectId: projectId,
       teamName: teamName,
       topicName: topicName,
       topicDescription: topicDescription,
-      progressionMode: 'strict', // Default value
+      progressionMode: 'strict',
       isCompleted: false,
       clientCreatedAt: DateTime.now(),
-      serverReceivedAt: null, //belum sinkron
+      serverReceivedAt: null,
     );
 
-    // Hive
     var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
     await box.put(workspaceId, newWorkspace);
-
-    // Otomatis jadi ketua kelompok
-    await addMemberToWorkspace(workspaceId, creatorId, isLeader: true);
-
     try {
       await _supabaseClient.from('workspaces').insert(newWorkspace.toJson());
       newWorkspace.serverReceivedAt = DateTime.now();
       await newWorkspace.save();
+      await addMemberToWorkspace(workspaceId, creatorId, isLeader: true);
     } catch (e) {
       newWorkspace.serverReceivedAt = null;
+      await newWorkspace.save();
+      rethrow;
     }
 
     return workspaceId;
@@ -63,29 +60,67 @@ class WorkspaceService {
   }
 
   Future<List<WorkspaceModel>> fetchWorkspacesFromCloud() async {
+    final currentUser = _supabaseClient.auth.currentUser;
+    if (currentUser == null) return [];
+
+    var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
+
     try {
-      final response = await _supabaseClient.from('workspaces').select();
+      final memberResponse = await _supabaseClient
+          .from('workspace_members')
+          .select('workspace_id')
+          .eq('student_id', currentUser.id);
+
+      final List<String> workspaceIds = (memberResponse as List)
+          .map((row) => row['workspace_id'] as String)
+          .toList();
+
+      if (workspaceIds.isEmpty) return [];
+
+      final response = await _supabaseClient
+          .from('workspaces')
+          .select()
+          .inFilter('id', workspaceIds);
+
       final cloudData = (response as List<dynamic>)
           .map((json) => WorkspaceModel.fromJson(json))
           .toList();
-      var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
+      await box.clear();
       for (var ws in cloudData) {
         await box.put(ws.id, ws);
       }
+
       return cloudData;
     } catch (e) {
-      return await getAllWorkspacesLocal();
+      return box.values.toList();
     }
   }
 
+  /// Mencari WORKSPACE berdasarkan ID
+  Future<WorkspaceModel?> getWorkspaceById(String workspaceId) async {
+    try {
+      final response = await _supabaseClient
+          .from('workspaces')
+          .select()
+          .eq('id', workspaceId)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return WorkspaceModel.fromJson(response);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Tambah MEMBER
   Future<void> addMemberToWorkspace(
-    String workspaceId, 
-    String studentId, 
-    {bool isLeader = false}
-  ) async {
+    String workspaceId,
+    String studentId, {
+    bool isLeader = false,
+  }) async {
     var box = await Hive.openBox<WorkspaceMemberModel>(_memberBoxName);
     final memberId = _uuid.v4();
-    
+
     final member = WorkspaceMemberModel(
       id: memberId,
       workspaceId: workspaceId,
@@ -102,49 +137,84 @@ class WorkspaceService {
     }
   }
 
-  // Update topik proyek dalam workspace
-  /// Memperbarui judul topik proyek di dalam sebuah workspace.
-  Future<void> updateTopic(String workspaceId, String newTopic) async {
-    await _supabaseClient
-        .from('workspaces')
-        .update({'topic_name': newTopic})
-        .eq('id', workspaceId);
-  }
-
-  Future<List<TaskAllocationModel>> fetchTasksByWorkspaces(String workspaceId) async{
-    try {
-      final response = await _supabaseClient
-        .from('task_allocations')
-        .select('*, progress_phases!inner(workspace_id)')
-        .eq('progress_phases.workspace_id', workspaceId);
-      
-      return (response as List)
-        .map((json) => TaskAllocationModel.fromJson(json))
-        .toList();
-    } catch (e) {
-      rethrow;
-    }
-  }
-
+  /// Ambil Data WORKSPACES MEMBER
   Future<List<UserModel>> fetchWorkspacesMember(String workspaceId) async {
     try {
       final response = await _supabaseClient
-        .from('workspace_members')
-        .select('*, users!inner(*)')
-        .eq('workspace_id', workspaceId);
+          .from('workspace_members')
+          .select('*, users!inner(*)')
+          .eq('workspace_id', workspaceId);
 
       final members = (response as List).map((data) {
         return UserModel.fromJson(data['users']);
       }).toList();
-      var box = Hive.box<UserModel>('workspace_members');
+      var box = await Hive.openBox<UserModel>('workspace_members');
       for (var member in members) {
         await box.put(member.id, member);
       }
 
       return members;
     } catch (e) {
-      var box = Hive.box<UserModel>('workspace_members');
+      var box = await Hive.openBox<UserModel>('workspace_members');
       return box.values.toList();
+    }
+  }
+
+  /// Mengajukan TOPIC
+  Future<void> updateTopic(
+    String workspaceId,
+    String topicName, {
+    String? topicDescription,
+  }) async {
+    final Map<String, dynamic> updateData = {'topic_name': topicName};
+    if (topicDescription != null) {
+      updateData['topic_description'] = topicDescription;
+    }
+
+    await _supabaseClient
+        .from('workspaces')
+        .update(updateData)
+        .eq('id', workspaceId);
+
+    var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
+    final localWs = box.get(workspaceId);
+    if (localWs != null) {
+      localWs.topicName = topicName;
+      if (topicDescription != null) localWs.topicDescription = topicDescription;
+      await localWs.save();
+    }
+  }
+
+  /// Menghubungkan WORKSPACES ke PROJECT dosen via join_code.
+  Future<void> linkWorkspaceToProject(
+    String workspaceId,
+    String projectId,
+  ) async {
+    await _supabaseClient
+        .from('workspaces')
+        .update({'project_id': projectId})
+        .eq('id', workspaceId);
+    var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
+    final localWs = box.get(workspaceId);
+    if (localWs != null) {
+      localWs.projectId = projectId;
+      await localWs.save();
+    }
+  }
+
+  /// Ambil semua TASK ALLOCATION
+  Future<List<TaskAllocationModel>> fetchTasksByWorkspaces(String workspaceId) async {
+    try {
+      final response = await _supabaseClient
+          .from('task_allocations')
+          .select('*, progress_phases!inner(workspace_id)')
+          .eq('progress_phases.workspace_id', workspaceId);
+
+      return (response as List)
+          .map((json) => TaskAllocationModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      rethrow;
     }
   }
 }

@@ -22,6 +22,8 @@ Future<void> main() async {
   // Inisialisasi Hive
   await Hive.initFlutter();
 
+  await Hive.deleteFromDisk();
+
   Hive.registerAdapter(WorkspaceModelAdapter());
   Hive.registerAdapter(WorkspaceMemberModelAdapter());
   Hive.registerAdapter(UserModelAdapter());

@@ -27,4 +27,22 @@ class ProjectService {
         .single();
     return ProjectModel.fromJson(response);
   }
+
+  // Mengambil project berdasarkan join_code
+  Future<ProjectModel?> getProjectByJoinCode(String joinCode) async {
+    try {
+      final response = await _client
+          .from('projects')
+          .select()
+          .eq('join_code', joinCode)
+          .maybeSingle();
+
+      if (response != null) {
+        return ProjectModel.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
