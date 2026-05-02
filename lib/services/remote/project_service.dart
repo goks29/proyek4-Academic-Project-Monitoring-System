@@ -1,15 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/project_model.dart';
 
-// Service untuk operasi tabel projects di Supabase
-/// Layanan untuk berinteraksi dengan tabel 'projects' di Supabase.
 class ProjectService {
   final SupabaseClient _client;
 
   ProjectService(this._client);
 
-  // Ambil semua proyek yang tersedia untuk user
-  /// Mengambil semua data proyek yang tersedia di database cloud.
   Future<List<ProjectModel>> getProjects() async {
     final response = await _client.from('projects').select();
     return (response as List<dynamic>)
@@ -17,8 +13,15 @@ class ProjectService {
         .toList();
   }
 
-  // Buat proyek baru (hanya untuk dosen)
-  /// Menyimpan data proyek baru ke tabel 'projects'.
+  Future<ProjectModel> getProjectByJoinCode(String joinCode) async {
+    final response = await _client
+        .from('projects')
+        .select()
+        .eq('join_code', joinCode)
+        .single();
+    return ProjectModel.fromJson(response);
+  }
+
   Future<ProjectModel> createProject(ProjectModel project) async {
     final response = await _client
         .from('projects')
@@ -26,5 +29,19 @@ class ProjectService {
         .select()
         .single();
     return ProjectModel.fromJson(response);
+  }
+
+  Future<void> updateProject(String joinCode, Map<String, dynamic> data) async {
+    await _client
+        .from('projects')
+        .update(data)
+        .eq('join_code', joinCode);
+  }
+
+  Future<void> closeProject(String joinCode) async {
+    await _client
+        .from('projects')
+        .update({'is_active': false})
+        .eq('join_code', joinCode);
   }
 }
