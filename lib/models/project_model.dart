@@ -13,7 +13,7 @@ part 'project_model.g.dart';
 @HiveType(typeId: 0)
 class ProjectModel {
   @HiveField(0)
-  final String id;
+  final String joinCode;
 
   @HiveField(1)
   final String lecturerId;
@@ -25,33 +25,33 @@ class ProjectModel {
   final String description;
 
   @HiveField(4)
-  final String joinCode;
+  final String? finalSubmissionInfo;
 
   @HiveField(5)
-  final String? finalSubmissionInfo;
+  final bool isActive;
 
   @HiveField(6)
   final DateTime createdAt;
 
   ProjectModel({
-    required this.id,
+    required this.joinCode,
     required this.lecturerId,
     required this.title,
     required this.description,
-    required this.joinCode,
     this.finalSubmissionInfo,
+    this.isActive = true,
     required this.createdAt,
   });
 
   /// Membuat instance ProjectModel dari format JSON Supabase.
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
     return ProjectModel(
-      id: json['id'] as String,
+      joinCode: json['join_code'] as String,
       lecturerId: json['lecturer_id'] as String,
       title: json['title'] as String,
       description: json['description'] as String? ?? '',
-      joinCode: json['join_code'] as String,
       finalSubmissionInfo: json['final_submission_info'] as String?,
+      isActive: json['is_active'] as bool? ?? true,
       createdAt: DateTime.parse(json['created_at'] as String? ?? DateTime.now().toIso8601String()),
     );
   }
@@ -59,11 +59,12 @@ class ProjectModel {
   /// Mengonversi instance ProjectModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
+      'join_code': joinCode,
       'lecturer_id': lecturerId,
       'title': title,
       'description': description,
-      'join_code': joinCode,
       'final_submission_info': finalSubmissionInfo,
+      'is_active': isActive,
     };
   }
 }

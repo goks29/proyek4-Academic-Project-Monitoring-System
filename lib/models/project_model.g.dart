@@ -17,12 +17,12 @@ class ProjectModelAdapter extends TypeAdapter<ProjectModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return ProjectModel(
-      id: fields[0] as String,
+      joinCode: fields[0] as String,
       lecturerId: fields[1] as String,
       title: fields[2] as String,
       description: fields[3] as String,
-      joinCode: fields[4] as String,
-      finalSubmissionInfo: fields[5] as String?,
+      finalSubmissionInfo: fields[4] as String?,
+      isActive: fields[5] as bool,
       createdAt: fields[6] as DateTime,
     );
   }
@@ -32,7 +32,7 @@ class ProjectModelAdapter extends TypeAdapter<ProjectModel> {
     writer
       ..writeByte(7)
       ..writeByte(0)
-      ..write(obj.id)
+      ..write(obj.joinCode)
       ..writeByte(1)
       ..write(obj.lecturerId)
       ..writeByte(2)
@@ -40,9 +40,9 @@ class ProjectModelAdapter extends TypeAdapter<ProjectModel> {
       ..writeByte(3)
       ..write(obj.description)
       ..writeByte(4)
-      ..write(obj.joinCode)
-      ..writeByte(5)
       ..write(obj.finalSubmissionInfo)
+      ..writeByte(5)
+      ..write(obj.isActive)
       ..writeByte(6)
       ..write(obj.createdAt);
   }
