@@ -14,32 +14,40 @@ class WorkspaceProfileWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildPremiumHeader(),
-        const SizedBox(height: 25),
-        Row(
-          children: [
-            const Text("Anggota Tim", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Colors.indigo.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-              child: const Text("Daftar Lengkap", style: TextStyle(color: Colors.indigo, fontSize: 12, fontWeight: FontWeight.bold)),
-            )
-          ],
+        _buildEstheticHeader(),
+        const SizedBox(height: 28),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            "Anggota Tim", 
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)
+          ),
         ),
-        const SizedBox(height: 15),
-        _buildLuxuriousMembersList(),
+        const SizedBox(height: 12),
+        _buildEstheticMembersList(),
       ],
     );
   }
 
-  Widget _buildPremiumHeader() {
+  // ==========================================
+  // HEADER (Desain Modern Clean & Soft UI)
+  // ==========================================
+  Widget _buildEstheticHeader() {
+    final bool hasTopic = workspace.topicName.isNotEmpty;
+    
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF3949AB), Color(0xFF1A237E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03), // Bayangan super tipis
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,85 +56,162 @@ class WorkspaceProfileWidget extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(14)),
-                child: const Icon(Icons.group_work, color: Colors.white, size: 28),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.workspaces_outline, color: Colors.indigo.shade400, size: 24),
               ),
-              const SizedBox(width: 15),
-              Expanded(child: Text(workspace.teamName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 0.5))),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  workspace.teamName,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 25),
-          const Text("Topik Tugas Besar:", style: TextStyle(color: Colors.white70, fontSize: 12)),
-          const SizedBox(height: 4),
-          Text(workspace.topicName.isNotEmpty ? workspace.topicName : "Topik belum ditentukan", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 20),
+          Text(
+            "Topik Proyek:", 
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade500, fontWeight: FontWeight.w500)
+          ),
+          const SizedBox(height: 8),
+          
+          // Kotak untuk topik agar tidak terlihat "sepi"
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: hasTopic ? Colors.grey.shade50 : Colors.red.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: hasTopic ? Colors.grey.shade200 : Colors.red.shade100),
+            ),
+            child: Text(
+              hasTopic ? workspace.topicName : "Topik belum ditentukan oleh mahasiswa",
+              style: TextStyle(
+                fontSize: 15,
+                color: hasTopic ? Colors.black87 : Colors.red.shade400,
+                fontWeight: hasTopic ? FontWeight.w600 : FontWeight.normal,
+                fontStyle: hasTopic ? FontStyle.normal : FontStyle.italic,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildLuxuriousMembersList() {
+  // ==========================================
+  // LIST ANGGOTA (Satu kotak menyatu bergaya iOS)
+  // ==========================================
+  Widget _buildEstheticMembersList() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: controller.getWorkspaceMembersDetails(workspace.id),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: Colors.indigo)));
-        if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(20), child: Text("Belum ada anggota.")));
-
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(30), 
+              child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.indigo)
+            )
+          );
+        }
+        
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.group_off_rounded, color: Colors.grey.shade400, size: 40),
+                const SizedBox(height: 10),
+                Text("Belum ada anggota kelompok", style: TextStyle(color: Colors.grey.shade500)),
+              ],
+            ),
+          );
+        }
+        
         final members = snapshot.data!;
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: members.length,
-          itemBuilder: (context, index) {
-            final member = members[index];
-            final isLeader = member['role'] == 'Ketua';
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.08), blurRadius: 15, spreadRadius: 2, offset: const Offset(0, 5))],
-                border: Border.all(color: isLeader ? Colors.amber.withOpacity(0.5) : Colors.transparent, width: 1.5),
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02), // Bayangan super tipis
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 55,
-                    height: 55,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(colors: isLeader ? [Colors.amber.shade300, Colors.orange.shade500] : [Colors.indigo.shade300, Colors.indigo.shade600], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                      boxShadow: [BoxShadow(color: (isLeader ? Colors.orange : Colors.indigo).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
-                    ),
-                    child: Center(child: Text(member['name'].isNotEmpty ? member['name'].substring(0, 1).toUpperCase() : "?", style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold))),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(member['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
-                        const SizedBox(height: 4),
-                        Text(member['email'], style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: isLeader ? Colors.amber.withOpacity(0.15) : Colors.grey[100], borderRadius: BorderRadius.circular(12), border: Border.all(color: isLeader ? Colors.amber.withOpacity(0.5) : Colors.grey[300]!)),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isLeader) ...[const Icon(Icons.star, color: Colors.amber, size: 14), const SizedBox(width: 4)],
-                        Text(member['role'], style: TextStyle(color: isLeader ? Colors.orange[800] : Colors.grey[700], fontSize: 12, fontWeight: FontWeight.bold)),
-                      ],
+            ],
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: ListView.separated(
+            // ---> INI KUNCI AGAR DATA MUNCUL DI LAYAR <---
+            shrinkWrap: true, 
+            physics: const NeverScrollableScrollPhysics(),
+            // ---------------------------------------------
+            
+            padding: EdgeInsets.zero,
+            itemCount: members.length,
+            // Pembatas menjorok ke dalam agar sejajar dengan teks
+            separatorBuilder: (context, index) => Divider(color: Colors.grey.shade100, height: 1, indent: 70, endIndent: 20),
+            itemBuilder: (context, index) {
+              final member = members[index];
+              final isLeader = member['role'] == 'Ketua';
+              
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                leading: CircleAvatar(
+                  radius: 22,
+                  backgroundColor: isLeader ? Colors.orange.shade50 : Colors.indigo.shade50,
+                  child: Text(
+                    member['name'].isNotEmpty ? member['name'].substring(0, 1).toUpperCase() : "?",
+                    style: TextStyle(
+                      color: isLeader ? Colors.orange.shade700 : Colors.indigo.shade500,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
-                ],
-              ),
-            );
-          },
+                ),
+                title: Text(
+                  member['name'], 
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black87)
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    member['email'], 
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12)
+                  ),
+                ),
+                trailing: isLeader 
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.orange.shade100)
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.star_rounded, color: Colors.orange.shade400, size: 14),
+                          const SizedBox(width: 4),
+                          Text("Ketua", style: TextStyle(color: Colors.orange.shade700, fontSize: 11, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    )
+                  : null, // Anggota biasa dikosongkan agar rapi
+              );
+            },
+          ),
         );
       },
     );

@@ -4,7 +4,7 @@ import '../../../../models/workspace_model.dart';
 import '../lecturer_controller.dart';
 
 // ==========================================
-// WIDGET UNTUK HEADER 
+// WIDGET UNTUK HEADER (Desain Sangat Simpel & Bersih)
 // ==========================================
 class WorkspaceHeaderWidget extends StatelessWidget {
   final WorkspaceModel workspace;
@@ -13,63 +13,39 @@ class WorkspaceHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasTopic = workspace.topicName.isNotEmpty;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF3949AB), Color(0xFF1A237E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1A237E).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.group_work, color: Colors.white, size: 28),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Text(
-                  workspace.teamName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            workspace.teamName,
+            style: const TextStyle(
+              fontSize: 22, 
+              fontWeight: FontWeight.bold, 
+              color: Colors.black87
+            ),
           ),
-          const SizedBox(height: 25),
-          const Text(
-            "Topik Tugas Besar:",
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+          const SizedBox(height: 16),
+          Text(
+            "Topik Tugas Besar:", 
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade500)
           ),
           const SizedBox(height: 4),
           Text(
-            workspace.topicName.isNotEmpty ? workspace.topicName : "Topik belum ditentukan",
-            style: const TextStyle(
-              color: Colors.white,
+            hasTopic ? workspace.topicName : "Topik belum ditentukan",
+            style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w500,
+              color: hasTopic ? Colors.black87 : Colors.grey.shade400,
+              fontStyle: hasTopic ? FontStyle.normal : FontStyle.italic,
             ),
           ),
         ],
@@ -79,7 +55,7 @@ class WorkspaceHeaderWidget extends StatelessWidget {
 }
 
 // ==========================================
-// WIDGET LIST ANGGOTA
+// WIDGET LIST ANGGOTA (Menggunakan ListTile yang Minimalis)
 // ==========================================
 class WorkspaceMembersWidget extends StatelessWidget {
   final WorkspaceModel workspace;
@@ -97,123 +73,68 @@ class WorkspaceMembersWidget extends StatelessWidget {
       future: controller.getWorkspaceMembersDetails(workspace.id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.indigo));
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          );
         }
+        
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text("Belum ada anggota di kelompok ini."));
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text("Belum ada anggota terdaftar.", style: TextStyle(color: Colors.grey.shade500)),
+            )
+          );
         }
-
+        
         final members = snapshot.data!;
         
-        return ListView.builder(
+        return ListView.separated(
+          // ---> INI KUNCI AGAR DATA MUNCUL DI LAYAR <---
+          shrinkWrap: true, 
+          physics: const NeverScrollableScrollPhysics(), 
+          // ---------------------------------------------
+          
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           itemCount: members.length,
+          separatorBuilder: (context, index) => Divider(color: Colors.grey.shade200, height: 1),
           itemBuilder: (context, index) {
             final member = members[index];
             final isLeader = member['role'] == 'Ketua';
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.08),
-                    blurRadius: 15,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 5),
+            
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              leading: CircleAvatar(
+                backgroundColor: isLeader ? Colors.amber.shade100 : Colors.indigo.shade50,
+                child: Text(
+                  member['name'].isNotEmpty ? member['name'].substring(0, 1).toUpperCase() : "?",
+                  style: TextStyle(
+                    color: isLeader ? Colors.amber.shade900 : Colors.indigo.shade700,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-                border: Border.all(
-                  color: isLeader ? Colors.amber.withOpacity(0.5) : Colors.transparent,
-                  width: 1.5,
                 ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 55,
-                    height: 55,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: isLeader 
-                            ? [Colors.amber.shade300, Colors.orange.shade500]
-                            : [Colors.indigo.shade300, Colors.indigo.shade600],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (isLeader ? Colors.orange : Colors.indigo).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        member['name'].isNotEmpty ? member['name'].substring(0, 1).toUpperCase() : "?",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          member['name'],
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          member['email'],
-                          style: TextStyle(color: Colors.grey[500], fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isLeader ? Colors.amber.withOpacity(0.15) : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isLeader ? Colors.amber.withOpacity(0.5) : Colors.grey[300]!,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isLeader) ...[
-                          const Icon(Icons.star, color: Colors.amber, size: 14),
-                          const SizedBox(width: 4),
-                        ],
-                        Text(
-                          member['role'],
-                          style: TextStyle(
-                            color: isLeader ? Colors.orange[800] : Colors.grey[700],
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              title: Text(
+                member['name'], 
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
               ),
+              subtitle: Text(
+                member['email'], 
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13)
+              ),
+              trailing: isLeader 
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(6)
+                    ),
+                    child: Text("Ketua", style: TextStyle(color: Colors.amber.shade800, fontSize: 11, fontWeight: FontWeight.bold)),
+                  )
+                : null, // Anggota biasa tidak perlu label agar lebih bersih
             );
           },
         );
