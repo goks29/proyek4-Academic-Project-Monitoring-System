@@ -35,6 +35,9 @@ class WorkspaceController extends ChangeNotifier {
   List<TaskAllocationModel> get allTask => _allTask;
   List<UserModel> get workspaceMembers => _workspaceMembers;
 
+  bool _isCurrentUserLeader = false;
+  bool get isCurrentUserLeader => _isCurrentUserLeader;
+
   /// Membuat WORKSPACES baru
   Future<void> createWorkspace({
     required String teamName,
@@ -223,6 +226,57 @@ class WorkspaceController extends ChangeNotifier {
     }
   }
 
+  /// Membuat PHASES sekaligus TASK ALLOCATIONS
+  Future<bool> createPhasesWithTasks(
+    String workspaceId,
+    List<({String phaseName, int sortOrder, List<({String studentId, String taskDescription})> tasks})> phaseEntries,
+  ) async {
+    _setLoading(true);
+    _errorMessage = null;
+
+    try {
+      for (final entry in phaseEntries) {
+        final newPhase = ProgressPhaseModel(
+          id: _uuid.v4(),
+          workspaceId: workspaceId,
+          phaseName: entry.phaseName,
+          sortOrder: entry.sortOrder,
+          status: 'pending',
+          isLocked: true,
+          requireEvidence: true,
+          clientCreatedAt: DateTime.now(),
+        );
+        final savedPhase = await _phaseService.createPhase(newPhase);
+        _allPhases.add(savedPhase);
+
+        if (entry.tasks.isNotEmpty) {
+          final taskFutures = entry.tasks.map((t) async {
+            final newTask = TaskAllocationModel(
+              id: _uuid.v4(),
+              phaseId: savedPhase.id,
+              studentId: t.studentId,
+              taskDescription: t.taskDescription,
+              isDone: false,
+              status: 'pending',
+              clientCreatedAt: DateTime.now(),
+            );
+            final savedTask = await _taskService.createTask(newTask);
+            _allTask.add(savedTask);
+          });
+          await Future.wait(taskFutures);
+        }
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = "Gagal menyimpan phase & task: ${e.toString()}";
+      notifyListeners();
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   /// Mengambil DETAIL dari WORKSPACES yang udah dibuat
   Future<void> loadWorkspaceData(String workspaceId) async {
     _isLoading = true;
@@ -235,11 +289,13 @@ class WorkspaceController extends ChangeNotifier {
         _phaseService.getPhases(workspaceId),
         _service.fetchTasksByWorkspaces(workspaceId),
         _service.fetchWorkspacesMember(workspaceId),
+        _service.checkIsLeader(workspaceId),
       ]);
 
       _allPhases = results[0] as List<ProgressPhaseModel>;
       _allTask = results[1] as List<TaskAllocationModel>;
       _workspaceMembers = results[2] as List<UserModel>;
+      _isCurrentUserLeader = results[3] as bool;
     } catch (e) {
       _errorMessage = "Gagal memuat data workspace: ${e.toString()}";
     } finally {

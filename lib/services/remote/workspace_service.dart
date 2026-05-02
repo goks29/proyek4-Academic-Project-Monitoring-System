@@ -1,5 +1,6 @@
 import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
 import 'package:academic_project_monitoring_system/models/user_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -79,7 +80,7 @@ class WorkspaceService {
 
       final response = await _supabaseClient
           .from('workspaces')
-          .select()
+          .select('*, projects(title)')
           .inFilter('id', workspaceIds);
 
       final cloudData = (response as List<dynamic>)
@@ -133,7 +134,8 @@ class WorkspaceService {
     try {
       await _supabaseClient.from('workspace_members').insert(member.toJson());
     } catch (e) {
-      // Simpan log untuk sinkronisasi nanti
+      debugPrint('[addMemberToWorkspace ERROR] $e');
+      rethrow;
     }
   }
 
@@ -142,21 +144,42 @@ class WorkspaceService {
     try {
       final response = await _supabaseClient
           .from('workspace_members')
-          .select('*, users!inner(*)')
+          .select('*, users!workspace_members_student_id_fkey(*)')
           .eq('workspace_id', workspaceId);
 
       final members = (response as List).map((data) {
         return UserModel.fromJson(data['users']);
       }).toList();
-      var box = await Hive.openBox<UserModel>('workspace_members');
+      var box = await Hive.openBox<UserModel>('workspace_members_users');
       for (var member in members) {
         await box.put(member.id, member);
       }
 
       return members;
     } catch (e) {
-      var box = await Hive.openBox<UserModel>('workspace_members');
-      return box.values.toList();
+      debugPrint('[fetchWorkspacesMember ERROR] $e');
+      return [];
+    }
+  }
+
+  /// Cek USER LOGIN apakah ketua workspaces tertentu
+  Future<bool> checkIsLeader(String workspaceId) async {
+    try {
+      final currentUser = _supabaseClient.auth.currentUser;
+      if (currentUser == null) return false;
+
+      final response = await _supabaseClient
+          .from('workspace_members')
+          .select('is_leader')
+          .eq('workspace_id', workspaceId)
+          .eq('student_id', currentUser.id)
+          .maybeSingle();
+
+      if (response == null) return false;
+      return response['is_leader'] as bool? ?? false;
+    } catch (e) {
+      debugPrint('[checkIsLeader ERROR] $e');
+      return false;
     }
   }
 

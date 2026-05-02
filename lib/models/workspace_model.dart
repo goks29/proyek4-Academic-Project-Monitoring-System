@@ -32,6 +32,10 @@ class WorkspaceModel extends HiveObject{
   @HiveField(8)
   DateTime? serverReceivedAt;
 
+  /// Nama project dari tabel `projects`. Tidak disimpan ke Hive (transient),
+  /// diisi saat fetch dari cloud.
+  String? projectName;
+
   WorkspaceModel({
     required this.id,
     required this.projectId,
@@ -42,10 +46,13 @@ class WorkspaceModel extends HiveObject{
     required this.isCompleted,
     required this.clientCreatedAt,
     this.serverReceivedAt,
+    this.projectName,
   });
 
   /// Membuat instance WorkspaceModel dari format JSON Supabase.
   factory WorkspaceModel.fromJson(Map<String, dynamic> json) {
+    // Ambil nama project dari join table jika tersedia
+    final projectData = json['projects'] as Map<String, dynamic>?;
     return WorkspaceModel(
       id: json['id'] as String,
       projectId: json['project_id'] as String? ?? '',
@@ -58,6 +65,7 @@ class WorkspaceModel extends HiveObject{
       serverReceivedAt: json['server_received_at'] != null
           ? DateTime.parse(json['server_received_at'] as String)
           : null,
+      projectName: projectData?['title'] as String?,
     );
   }
 
