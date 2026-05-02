@@ -1,17 +1,17 @@
+// lib/features/academic/lecturer/view/lecturer_view.dart
 import 'package:flutter/material.dart';
-
 import '../../../../models/project_model.dart';
-import '../../../../models/workspace_model.dart';
+// import '../../../../models/workspace_model.dart';
 import '../lecturer_controller.dart';
 
-// IMPORT WIDGETS
+// IMPORT WIDGETS & VIEWS
 import '../widgets/lecturer_header.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/dashboard_stats.dart';
 import '../widgets/project_list_widget.dart';
 import '../widgets/workspace_list_widget.dart';
-import '../widgets/workspace_profile_widget.dart';
 import '../widgets/lecturer_bottom_nav.dart';
+import 'workspace_detail_view.dart';
 import '../../../../main.dart';
 
 class LecturerView extends StatefulWidget {
@@ -23,10 +23,8 @@ class LecturerView extends StatefulWidget {
 
 class _LecturerViewState extends State<LecturerView> {
   final LecturerController _controller = globalLecturerController;
-  
   ProjectModel? _selectedProject;
-  WorkspaceModel? _selectedWorkspace;
-
+  
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
@@ -43,11 +41,7 @@ class _LecturerViewState extends State<LecturerView> {
 
   void _handleBackNavigation() {
     setState(() {
-      if (_selectedWorkspace != null) {
-        _selectedWorkspace = null;
-      } else {
-        _selectedProject = null;
-      }
+      _selectedProject = null;
     });
   }
 
@@ -55,8 +49,8 @@ class _LecturerViewState extends State<LecturerView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F9),
-      bottomNavigationBar: _selectedProject == null 
-          ? LecturerBottomNav(controller: _controller, onRefresh: () => setState(() {})) 
+      bottomNavigationBar: _selectedProject == null
+          ? LecturerBottomNav(controller: _controller, onRefresh: () => setState(() {}))
           : null,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -69,25 +63,32 @@ class _LecturerViewState extends State<LecturerView> {
               // 1. Header Global
               LecturerHeader(
                 selectedProject: _selectedProject,
-                selectedWorkspace: _selectedWorkspace,
+                selectedWorkspace: null,
                 onBackPressed: _handleBackNavigation,
               ),
               const SizedBox(height: 25),
               
-              // 2. Logika Navigasi 3 Level (Sangat Bersih)
-              if (_selectedWorkspace != null) ...[
-                WorkspaceProfileWidget(workspace: _selectedWorkspace!, controller: _controller),
-              ] 
-              else if (_selectedProject != null) ...[
+              // 2. Logika Navigasi (Tinggal 2 Level: Beranda -> List Kelompok)
+              if (_selectedProject != null) ...[
                 WorkspaceListWidget(
                   workspacesFuture: _controller.getWorkspacesByProject(_selectedProject!.id),
                   controller: _controller,
-                  onWorkspaceSelected: (ws) => setState(() => _selectedWorkspace = ws),
+                  onWorkspaceSelected: (ws) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WorkspaceDetailView(
+                          workspace: ws,
+                          controller: _controller,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ] 
               else ...[
                 SearchBarWidget(
-                  controller: _searchController, 
+                  controller: _searchController,
                   onChanged: (val) => setState(() => _searchQuery = val.toLowerCase())
                 ),
                 const SizedBox(height: 25),
