@@ -174,8 +174,8 @@ INSERT INTO "public"."task_allocations" ("id", "phase_id", "student_id", "task_d
 ('c1010003-0000-0000-0000-000000000000', 'b2010001-0000-0000-0000-000000000000', '33330003-0000-0000-0000-000000000000', 'Gibran: Membuat Use Case Diagram', 40, true, 'accepted', now());
 
 INSERT INTO "public"."submissions" ("id", "task_id", "student_id", "submitted_at", "evidence_file_url", "student_notes", "status") VALUES
-('s1010001-0000-0000-0000-000000000000', 'c1010001-0000-0000-0000-000000000000', '33330001-0000-0000-0000-000000000000', now(), 'http://drive.com/srs.pdf', 'SRS selesai', 'accepted'),
-('s1010002-0000-0000-0000-000000000000', 'c1010002-0000-0000-0000-000000000000', '33330002-0000-0000-0000-000000000000', now(), 'http://drive.com/erd.png', 'ERD selesai', 'accepted');
+('a1010001-0000-0000-0000-000000000000', 'c1010001-0000-0000-0000-000000000000', '33330001-0000-0000-0000-000000000000', now(), 'http://drive.com/srs.pdf', 'SRS selesai', 'accepted'),
+('a1010002-0000-0000-0000-000000000000', 'c1010002-0000-0000-0000-000000000000', '33330002-0000-0000-0000-000000000000', now(), 'http://drive.com/erd.png', 'ERD selesai', 'accepted');
 
 INSERT INTO "public"."comments" ("phase_id", "task_id", "user_id", "comment_text", "client_created_at") VALUES
 ('b2010001-0000-0000-0000-000000000000', NULL, 'd05e0001-0000-0000-0000-000000000000', 'Bagus, lanjutkan ke fase 2', now()),
@@ -198,7 +198,7 @@ INSERT INTO "public"."task_allocations" ("id", "phase_id", "student_id", "task_d
 ('c1030002-0000-0000-0000-000000000000', 'b2030001-0000-0000-0000-000000000000', '33330008-0000-0000-0000-000000000000', 'Cak Imin: Rancangan Basis Data', 50, true, 'accepted', now());
 
 INSERT INTO "public"."submissions" ("id", "task_id", "student_id", "submitted_at", "evidence_file_url", "student_notes", "status") VALUES
-('s1030001-0000-0000-0000-000000000000', 'c1030001-0000-0000-0000-000000000000', '33330007-0000-0000-0000-000000000000', now(), 'http://drive.com/proposal.pdf', 'Proposal akhir dikumpulkan', 'accepted');
+('a1030001-0000-0000-0000-000000000000', 'c1030001-0000-0000-0000-000000000000', '33330007-0000-0000-0000-000000000000', now(), 'http://drive.com/proposal.pdf', 'Proposal akhir dikumpulkan', 'accepted');
 
 -- Tasks for TIM 4 (Project WEB - w1000004)
 INSERT INTO "public"."task_allocations" ("id", "phase_id", "student_id", "task_description", "percentage", "require_evidence", "status", "client_created_at") VALUES
