@@ -139,10 +139,13 @@ ALTER TABLE "task_allocations" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "submissions" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "comments" ENABLE ROW LEVEL SECURITY;
 
--- Siapa pun yang login bisa melihat profil user lain
+-- Any authenticated user can view other user profiles
 CREATE POLICY "user_select_policy" ON "users" FOR SELECT TO authenticated USING (true);
 
--- Hanya pemilik akun yang bisa edit data dirinya
+-- Only account owner can insert their own profile (via auth trigger)
+CREATE POLICY "user_insert_policy" ON "users" FOR INSERT TO authenticated WITH CHECK (id = auth.uid());
+
+-- Only account owner can update their own profile
 CREATE POLICY "user_update_policy" ON "users" FOR UPDATE TO authenticated USING (id = auth.uid());
 
 -- Dosen pemilik proyek punya akses penuh
@@ -167,8 +170,11 @@ USING (
   OR EXISTS (SELECT 1 FROM projects WHERE join_code = workspaces.join_code AND lecturer_id = auth.uid())
 );
 
--- Mahasiswa bisa membuat workspace (pembentukan kelompok awal sebelum join project)
-CREATE POLICY "workspace_insert" ON "workspaces" FOR INSERT TO authenticated WITH CHECK (true);
+-- Only students can create workspaces
+CREATE POLICY "workspace_insert" ON "workspaces" FOR INSERT TO authenticated 
+WITH CHECK (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'student')
+);
 
 -- Hanya KETUA atau DOSEN yang bisa update data kelompok (seperti topik)
 CREATE POLICY "workspace_update" ON "workspaces" FOR UPDATE TO authenticated 
@@ -184,8 +190,18 @@ USING (
   OR EXISTS (SELECT 1 FROM workspaces w JOIN projects p ON p.join_code = w.join_code WHERE w.id = workspace_members.workspace_id AND p.lecturer_id = auth.uid())
 );
 
--- Mahasiswa bisa menambah diri mereka sendiri atau ketua menambah anggota
-CREATE POLICY "member_insert" ON "workspace_members" FOR INSERT TO authenticated WITH CHECK (true);
+-- Students can add themselves, or leaders can add other students
+CREATE POLICY "member_insert" ON "workspace_members" FOR INSERT TO authenticated 
+WITH CHECK (
+  (student_id = auth.uid() AND EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'student'))
+  OR
+  EXISTS (
+    SELECT 1 FROM workspace_members wm_leader
+    WHERE wm_leader.workspace_id = workspace_members.workspace_id
+    AND wm_leader.student_id = auth.uid()
+    AND wm_leader.is_leader = true
+  )
+);
 
 -- SELECT: Anggota & Dosen
 CREATE POLICY "phase_select" ON "progress_phases" FOR SELECT TO authenticated 
@@ -194,16 +210,32 @@ USING (
   OR EXISTS (SELECT 1 FROM workspaces w JOIN projects p ON p.join_code = w.join_code WHERE w.id = progress_phases.workspace_id AND p.lecturer_id = auth.uid())
 );
 
--- INSERT: HANYA KETUA
+-- INSERT: Leader only, project must be active
 CREATE POLICY "phase_insert" ON "progress_phases" FOR INSERT TO authenticated 
 WITH CHECK (
-  EXISTS (SELECT 1 FROM workspace_members WHERE workspace_id = progress_phases.workspace_id AND student_id = auth.uid() AND is_leader = true)
+  EXISTS (
+    SELECT 1 FROM workspace_members wm
+    JOIN workspaces w ON w.id = wm.workspace_id
+    JOIN projects p ON p.join_code = w.join_code
+    WHERE wm.workspace_id = progress_phases.workspace_id
+    AND wm.student_id = auth.uid()
+    AND wm.is_leader = true
+    AND p.is_active = true
+  )
 );
 
--- UPDATE: KETUA (isi) atau DOSEN (status/feedback)
+-- UPDATE: Leader (content, project must be active) or Lecturer (status/feedback)
 CREATE POLICY "phase_update" ON "progress_phases" FOR UPDATE TO authenticated 
 USING (
-  EXISTS (SELECT 1 FROM workspace_members WHERE workspace_id = progress_phases.workspace_id AND student_id = auth.uid() AND is_leader = true)
+  EXISTS (
+    SELECT 1 FROM workspace_members wm
+    JOIN workspaces w ON w.id = wm.workspace_id
+    JOIN projects p ON p.join_code = w.join_code
+    WHERE wm.workspace_id = progress_phases.workspace_id
+    AND wm.student_id = auth.uid()
+    AND wm.is_leader = true
+    AND p.is_active = true
+  )
   OR EXISTS (SELECT 1 FROM workspaces w JOIN projects p ON p.join_code = w.join_code WHERE w.id = progress_phases.workspace_id AND p.lecturer_id = auth.uid())
 );
 
@@ -214,16 +246,32 @@ USING (
   OR EXISTS (SELECT 1 FROM progress_phases pp JOIN workspaces w ON w.id = pp.workspace_id JOIN projects p ON p.join_code = w.join_code WHERE pp.id = task_allocations.phase_id AND p.lecturer_id = auth.uid())
 );
 
--- INSERT: ANGGOTA atau KETUA
+-- INSERT: Workspace members, project must be active
 CREATE POLICY "task_insert" ON "task_allocations" FOR INSERT TO authenticated 
 WITH CHECK (
-  EXISTS (SELECT 1 FROM progress_phases pp JOIN workspace_members wm ON wm.workspace_id = pp.workspace_id WHERE pp.id = task_allocations.phase_id AND wm.student_id = auth.uid())
+  EXISTS (
+    SELECT 1 FROM progress_phases pp
+    JOIN workspace_members wm ON wm.workspace_id = pp.workspace_id
+    JOIN workspaces w ON w.id = pp.workspace_id
+    JOIN projects p ON p.join_code = w.join_code
+    WHERE pp.id = task_allocations.phase_id
+    AND wm.student_id = auth.uid()
+    AND p.is_active = true
+  )
 );
 
--- UPDATE: KETUA, MHS ybs, DOSEN
+-- UPDATE: Workspace members (project must be active) or Lecturer
 CREATE POLICY "task_update" ON "task_allocations" FOR UPDATE TO authenticated 
 USING (
-  EXISTS (SELECT 1 FROM progress_phases pp JOIN workspace_members wm ON wm.workspace_id = pp.workspace_id WHERE pp.id = task_allocations.phase_id AND wm.student_id = auth.uid())
+  EXISTS (
+    SELECT 1 FROM progress_phases pp
+    JOIN workspace_members wm ON wm.workspace_id = pp.workspace_id
+    JOIN workspaces w ON w.id = pp.workspace_id
+    JOIN projects p ON p.join_code = w.join_code
+    WHERE pp.id = task_allocations.phase_id
+    AND wm.student_id = auth.uid()
+    AND p.is_active = true
+  )
   OR EXISTS (SELECT 1 FROM progress_phases pp JOIN workspaces w ON w.id = pp.workspace_id JOIN projects p ON p.join_code = w.join_code WHERE pp.id = task_allocations.phase_id AND p.lecturer_id = auth.uid())
 );
 
