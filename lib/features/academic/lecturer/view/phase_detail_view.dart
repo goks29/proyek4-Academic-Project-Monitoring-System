@@ -5,9 +5,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../models/progress_phase_model.dart';
 import '../../../../models/workspace_model.dart';
 import '../../../../models/task_allocation_model.dart';
+import '../../../../models/submission_model.dart';
 
-// Import Controller
+// Import Service
 import '../../../../services/remote/task_service.dart';
+import '../../../../services/remote/submission_service.dart';
+
+// Import Component/Widgets 
+import '../widgets/submission_list_widget.dart';
+import '../widgets/task_list_widget.dart';
 
 class PhaseDetailView extends StatefulWidget {
   final ProgressPhaseModel phase;
@@ -24,16 +30,27 @@ class PhaseDetailView extends StatefulWidget {
 }
 
 class _PhaseDetailViewState extends State<PhaseDetailView> {
-  // Kita inisialisasi pemanggilan data Supabase secara langsung terlebih dahulu
-  // untuk memastikan alur UX berjalan sempurna.
-  late Future<List<TaskAllocationModel>> _tasksFuture;
+  late Future<Map<String, dynamic>> _phaseDataFuture;
+  
   final TaskService _taskService = TaskService(Supabase.instance.client);
+  final SubmissionService _submissionService = SubmissionService(Supabase.instance.client);
 
   @override
   void initState() {
     super.initState();
-    // Tarik data tugas berdasarkan ID fase ini
-    _tasksFuture = _taskService.getTasks(widget.phase.id);
+    _phaseDataFuture = _fetchPhaseData();
+  }
+
+  Future<Map<String, dynamic>> _fetchPhaseData() async {
+    final results = await Future.wait([
+      _taskService.getTasks(widget.phase.id),
+      _submissionService.getSubmissions(widget.phase.id),
+    ]);
+
+    return {
+      'tasks': results[0] as List<TaskAllocationModel>,
+      'submissions': results[1] as List<SubmissionModel>,
+    };
   }
 
   @override
@@ -61,88 +78,49 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: FutureBuilder<List<TaskAllocationModel>>(
-        future: _tasksFuture,
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _phaseDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: Colors.indigo));
           }
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text("Belum ada pembagian tugas di fase ini."),
-            );
+          if (snapshot.hasError) {
+            return Center(child: Text("Terjadi kesalahan jaringan: ${snapshot.error}"));
           }
 
-          final tasks = snapshot.data!;
+          final tasks = snapshot.data!['tasks'] as List<TaskAllocationModel>;
+          final submissions = snapshot.data!['submissions'] as List<SubmissionModel>;
 
-          return ListView.builder(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-            itemCount: tasks.length,
-            itemBuilder: (context, index) {
-              final task = tasks[index];
-              
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Hasil Kerja Mahasiswa",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Deskripsi Tugas
-                    Text(
-                      task.taskDescription,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    const Divider(height: 1),
-                    const SizedBox(height: 12),
+                const SizedBox(height: 12),
+                
+                // Panggil Widget Submission yang sudah di-ekstrak
+                SubmissionListWidget(submissions: submissions), 
 
-                    // Info Status & PIC
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Status (Done / Progress)
-                        Row(
-                          children: [
-                            Icon(
-                              task.isDone ? Icons.check_box : Icons.check_box_outline_blank,
-                              color: task.isDone ? Colors.green : Colors.grey,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              task.isDone ? "Selesai" : "Dikerjakan",
-                              style: TextStyle(
-                                color: task.isDone ? Colors.green : Colors.grey.shade700,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
+                const SizedBox(height: 30),
+                Divider(color: Colors.grey.shade300),
+                const SizedBox(height: 20),
 
-                        // ID Mahasiswa (Nanti kita convert jadi Nama)
-                        Row(
-                          children: [
-                            const Icon(Icons.person_outline, size: 16, color: Colors.indigo),
-                            const SizedBox(width: 4),
-                            Text(
-                              "ID: ${task.studentId.substring(0, 5)}...", // Dipotong biar rapi sementara
-                              style: const TextStyle(color: Colors.indigo, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                const Text(
+                  "Pembagian Tugas",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
                 ),
-              );
-            },
+                const SizedBox(height: 12),
+                
+                // Panggil Widget Task yang sudah di-ekstrak
+                TaskListWidget(tasks: tasks),
+
+              ],
+            ),
           );
         },
       ),
