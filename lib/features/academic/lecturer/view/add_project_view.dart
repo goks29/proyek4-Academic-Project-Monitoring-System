@@ -1,6 +1,6 @@
 // lib/features/academic/lecturer/add_project_view.dart
 import 'package:flutter/material.dart';
-import '../lecturer_controller.dart';// Jika LecturerController menggunakan globalLecturerController
+import '../lecturer_controller.dart';
 
 // Import Widget yang sudah dibuat
 import '../widgets/project_input_field.dart';
@@ -35,6 +35,8 @@ class _AddProjectViewState extends State<AddProjectView> {
   }
 
   void _submitData() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    
     if (_titleController.text.isEmpty || _descController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Judul dan Deskripsi tidak boleh kosong")),
