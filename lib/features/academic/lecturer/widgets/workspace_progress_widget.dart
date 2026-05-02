@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../models/workspace_model.dart';
 import '../../../../models/progress_phase_model.dart';
 import '../lecturer_controller.dart';
+import '../view/phase_detail_view.dart';
 
 class WorkspaceProgressWidget extends StatelessWidget {
   final WorkspaceModel workspace;
@@ -57,16 +58,14 @@ class WorkspaceProgressWidget extends StatelessWidget {
           separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final phase = phases[index];
-            return _buildPhaseCard(phase);
+            return _buildPhaseCard(context, phase);
           },
         );
       },
     );
   }
 
-  // Desain Kartu Task yang informatif dan bersih
-  Widget _buildPhaseCard(ProgressPhaseModel phase) {
-    // Penyesuaian warna dan ikon berdasarkan status fase
+  Widget _buildPhaseCard(BuildContext context, ProgressPhaseModel phase) {
     Color statusColor;
     IconData statusIcon;
 
@@ -88,127 +87,142 @@ class WorkspaceProgressWidget extends StatelessWidget {
         statusIcon = Icons.radio_button_unchecked;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                PhaseDetailView(phase: phase, workspace: workspace),
           ),
-        ],
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Ikon Status
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Ikon Status
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(statusIcon, color: statusColor, size: 20),
                 ),
-                child: Icon(statusIcon, color: statusColor, size: 20),
-              ),
-              const SizedBox(width: 16),
+                const SizedBox(width: 16),
 
-              // Nama Fase & Urutan
-              Expanded(
+                // Nama Fase & Urutan
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        phase.phaseName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Tahap ke-${phase.sortOrder}",
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Badge Status Teks
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    phase.status.toUpperCase(),
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Feedback Dosen
+            if (phase.lecturerFeedback != null &&
+                phase.lecturerFeedback!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade100),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      phase.phaseName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.comment_outlined,
+                          size: 14,
+                          color: Colors.blue.shade700,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Catatan Dosen:",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade800,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
-                      "Tahap ke-${phase.sortOrder}",
+                      phase.lecturerFeedback!,
                       style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 12,
+                        fontSize: 13,
+                        color: Colors.blue.shade900,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Badge Status Teks
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  phase.status.toUpperCase(),
-                  style: TextStyle(
-                    color: statusColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
             ],
-          ),
-
-          // Bagian Feedback Dosen (Hanya muncul jika ada isinya)
-          if (phase.lecturerFeedback != null &&
-              phase.lecturerFeedback!.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade100),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.comment_outlined,
-                        size: 14,
-                        color: Colors.blue.shade700,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        "Catatan Dosen:",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    phase.lecturerFeedback!,
-                    style: TextStyle(fontSize: 13, color: Colors.blue.shade900),
-                  ),
-                ],
-              ),
-            ),
           ],
-        ],
+        ),
       ),
     );
   }
