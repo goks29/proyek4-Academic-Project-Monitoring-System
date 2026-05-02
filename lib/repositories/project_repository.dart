@@ -2,39 +2,47 @@ import '../services/local/project_local_service.dart';
 import '../services/remote/project_service.dart';
 import '../models/project_model.dart';
 
-// Repository untuk mengelola data proyek
-/// Repository yang mengelola sinkronisasi data proyek antara penyimpanan lokal dan server.
 class ProjectRepository {
   final ProjectService _remote;
   final ProjectLocalService _local;
 
   ProjectRepository(this._remote, this._local);
 
-  // Ambil daftar proyek: cek lokal dulu, lalu update dari remote
-  /// Mengambil daftar proyek: memprioritaskan data lokal lalu memperbarui dari remote.
   Future<List<ProjectModel>> getProjects() async {
-    // Ambil data dari penyimpanan lokal untuk respon cepat
     final localData = _local.getAllProjects();
-    
     try {
-      // Ambil data terbaru dari server
       final remoteData = await _remote.getProjects();
-      // Simpan data terbaru ke lokal
       await _local.saveAllProjects(remoteData);
       return remoteData;
     } catch (e) {
-      print('Fetch remote projects failed, using local data: $e');
       return localData;
     }
   }
 
-  // Buat proyek baru
-  /// Membuat proyek baru di server dan menyimpannya secara lokal.
+  Future<ProjectModel> getProjectByJoinCode(String joinCode) async {
+    final local = _local.getProjectByJoinCode(joinCode);
+    if (local != null) return local;
+
+    final remote = await _remote.getProjectByJoinCode(joinCode);
+    await _local.saveProject(remote);
+    return remote;
+  }
+
   Future<ProjectModel> createProject(ProjectModel project) async {
-    // Simpan ke remote (Supabase)
     final newProject = await _remote.createProject(project);
-    // Simpan ke lokal (Hive)
     await _local.saveProject(newProject);
     return newProject;
+  }
+
+  Future<void> updateProject(String joinCode, Map<String, dynamic> data) async {
+    await _remote.updateProject(joinCode, data);
+    final updated = await _remote.getProjectByJoinCode(joinCode);
+    await _local.saveProject(updated);
+  }
+
+  Future<void> closeProject(String joinCode) async {
+    await _remote.closeProject(joinCode);
+    final updated = await _remote.getProjectByJoinCode(joinCode);
+    await _local.saveProject(updated);
   }
 }
