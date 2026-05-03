@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'workspace_create_view.dart';
+import 'workspace_join_view.dart';
 
 class WorkspaceHomeView extends StatefulWidget {
   @override
@@ -77,7 +78,12 @@ class _WorkspaceViewState extends State<WorkspaceHomeView> {
               title: "Gabung Kelompok",
               subtitle: "Masukkan ID kelompok yang dibagikan oleh ketuamu.",
               onTap: () {
-                // buat nanti tombol join
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WorkspaceJoinView(),
+                  )
+                );
               }
             ),
           ],

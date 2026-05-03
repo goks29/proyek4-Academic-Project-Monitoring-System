@@ -83,7 +83,7 @@ class _WorkspaceViewState extends State<WorkspaceCreateView> {
                     const SizedBox(height: 16),       
                     // Teks Kecil
                     Text(
-                      "Tambah Kelompok",
+                      "Kamu akan menjadi ketua kelompok",
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.7),
                         fontSize: 12,
@@ -94,10 +94,10 @@ class _WorkspaceViewState extends State<WorkspaceCreateView> {
                     const SizedBox(height: 8),                   
                     // Teks Judul Besar
                     const Text(
-                      "Masukan Detail Kelompok Tubes",
+                      "Kelompok Baru",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
+                        fontSize: 25,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

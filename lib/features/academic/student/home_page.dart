@@ -25,6 +25,7 @@ class _HomePageState extends State<HomePage> {
     final workspaceController = context.watch<WorkspaceController>();
 
     return Scaffold(
+      backgroundColor: const Color.fromRGBO(243, 244, 246, 1), 
       //header
       appBar: AppBar(
         title: 
