@@ -3,6 +3,8 @@ import '../../models/project_model.dart';
 import '../../repositories/project_repository.dart';
 import 'dart:math';
 
+/// Pengendali untuk manajemen proyek (khusus Dosen).
+/// Mengelola status loading, pesan kesalahan, dan daftar proyek.
 class ProjectController extends ChangeNotifier {
   final ProjectRepository _repository;
 
@@ -10,8 +12,15 @@ class ProjectController extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
+  /// Menghitung jumlah proyek yang masih berjalan (aktif).
+  int get onProgressProjectCount => projects.where((p) => p.isActive).length;
+
+  /// Menghitung jumlah proyek yang sudah selesai (tidak aktif).
+  int get completedProjectCount => projects.where((p) => !p.isActive).length;
+
   ProjectController(this._repository);
 
+  /// Mengambil daftar proyek dari repositori.
   Future<void> fetchProjects() async {
     isLoading = true;
     errorMessage = null;
@@ -27,6 +36,7 @@ class ProjectController extends ChangeNotifier {
     }
   }
 
+  /// Membuat proyek baru dengan kode akses acak.
   Future<void> createProject(String lecturerId, String title, String description, String? submissionInfo) async {
     isLoading = true;
     errorMessage = null;
@@ -53,6 +63,7 @@ class ProjectController extends ChangeNotifier {
     }
   }
 
+  /// Memperbarui informasi proyek yang ada.
   Future<void> updateProject(String joinCode, {String? title, String? description, String? submissionInfo}) async {
     isLoading = true;
     errorMessage = null;
@@ -73,6 +84,7 @@ class ProjectController extends ChangeNotifier {
     }
   }
 
+  /// Menutup proyek (set status isActive menjadi false).
   Future<void> closeProject(String joinCode) async {
     isLoading = true;
     errorMessage = null;
@@ -100,9 +112,11 @@ class ProjectController extends ChangeNotifier {
     }
   }
 
+  /// Menghasilkan kode akses acak sebanyak 6 karakter.
   String _generateJoinCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rnd = Random();
     return String.fromCharCodes(Iterable.generate(6, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
   }
 }
+
