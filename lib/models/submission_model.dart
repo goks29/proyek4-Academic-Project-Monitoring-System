@@ -18,7 +18,7 @@ class SubmissionModel {
   final String id;
 
   @HiveField(1)
-  final String phaseId;
+  final String taskId;
 
   @HiveField(2)
   final String studentId;
@@ -46,7 +46,7 @@ class SubmissionModel {
 
   SubmissionModel({
     required this.id,
-    required this.phaseId,
+    required this.taskId,
     required this.studentId,
     required this.submittedAt,
     this.evidenceFileUrl,
@@ -61,7 +61,7 @@ class SubmissionModel {
   factory SubmissionModel.fromJson(Map<String, dynamic> json) {
     return SubmissionModel(
       id: json['id'] as String,
-      phaseId: json['phase_id'] as String,
+      taskId: json['task_id'] as String,
       studentId: json['student_id'] as String,
       submittedAt: DateTime.parse(json['submitted_at'] as String),
       evidenceFileUrl: json['evidence_file_url'] as String?,
@@ -78,7 +78,7 @@ class SubmissionModel {
   /// Mengonversi instance SubmissionModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
-      'phase_id': phaseId,
+      'task_id': taskId,
       'student_id': studentId,
       'submitted_at': submittedAt.toIso8601String(),
       'evidence_file_url': evidenceFileUrl,

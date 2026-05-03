@@ -18,38 +18,41 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
     };
     return WorkspaceModel(
       id: fields[0] as String,
-      projectId: fields[1] as String,
+      joinCode: fields[1] as String?,
       teamName: fields[2] as String,
       topicName: fields[3] as String,
-      progressionMode: fields[4] as String,
-      topicDescription: fields[5] as String?,
-      isCompleted: fields[6] as bool,
-      clientCreatedAt: fields[7] as DateTime,
-      serverReceivedAt: fields[8] as DateTime?,
+      topicDescription: fields[4] as String?,
+      status: fields[5] as String,
+      lecturerFeedback: fields[6] as String?,
+      isCompleted: fields[7] as bool,
+      clientCreatedAt: fields[8] as DateTime,
+      serverReceivedAt: fields[9] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, WorkspaceModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.projectId)
+      ..write(obj.joinCode)
       ..writeByte(2)
       ..write(obj.teamName)
       ..writeByte(3)
       ..write(obj.topicName)
       ..writeByte(4)
-      ..write(obj.progressionMode)
-      ..writeByte(5)
       ..write(obj.topicDescription)
+      ..writeByte(5)
+      ..write(obj.status)
       ..writeByte(6)
-      ..write(obj.isCompleted)
+      ..write(obj.lecturerFeedback)
       ..writeByte(7)
-      ..write(obj.clientCreatedAt)
+      ..write(obj.isCompleted)
       ..writeByte(8)
+      ..write(obj.clientCreatedAt)
+      ..writeByte(9)
       ..write(obj.serverReceivedAt);
   }
 

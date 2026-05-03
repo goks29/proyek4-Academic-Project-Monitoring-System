@@ -15,23 +15,27 @@ class CommentModel {
   final String id;
 
   @HiveField(1)
-  final String submissionId;
+  final String? phaseId;
 
   @HiveField(2)
-  final String userId;
+  final String? taskId;
 
   @HiveField(3)
-  final String commentText;
+  final String userId;
 
   @HiveField(4)
-  final DateTime clientCreatedAt;
+  final String commentText;
 
   @HiveField(5)
+  final DateTime clientCreatedAt;
+
+  @HiveField(6)
   final DateTime? serverReceivedAt;
 
   CommentModel({
     required this.id,
-    required this.submissionId,
+    this.phaseId,
+    this.taskId,
     required this.userId,
     required this.commentText,
     required this.clientCreatedAt,
@@ -42,7 +46,8 @@ class CommentModel {
   factory CommentModel.fromJson(Map<String, dynamic> json) {
     return CommentModel(
       id: json['id'] as String,
-      submissionId: json['submission_id'] as String,
+      phaseId: json['phase_id'] as String?,
+      taskId: json['task_id'] as String?,
       userId: json['user_id'] as String,
       commentText: json['comment_text'] as String,
       clientCreatedAt: DateTime.parse(json['client_created_at'] as String),
@@ -55,7 +60,8 @@ class CommentModel {
   /// Mengonversi instance CommentModel ke format JSON untuk Supabase.
   Map<String, dynamic> toJson() {
     return {
-      'submission_id': submissionId,
+      'phase_id': phaseId,
+      'task_id': taskId,
       'user_id': userId,
       'comment_text': commentText,
       'client_created_at': clientCreatedAt.toIso8601String(),

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../../models/progress_phase_model.dart';
 import '../../repositories/phase_repository.dart';
 
-/// Controller untuk menangani persetujuan fase kemajuan oleh dosen.
 class PhaseApprovalController extends ChangeNotifier {
   final PhaseRepository _repository;
 
@@ -12,7 +11,6 @@ class PhaseApprovalController extends ChangeNotifier {
 
   PhaseApprovalController(this._repository);
 
-  /// Mengambil daftar fase berdasarkan ID workspace.
   Future<void> fetchPhases(String workspaceId) async {
     isLoading = true;
     errorMessage = null;
@@ -28,7 +26,6 @@ class PhaseApprovalController extends ChangeNotifier {
     }
   }
 
-  /// Memperbarui status persetujuan fase dan memberikan feedback.
   Future<void> approvePhase(String phaseId, String status, String feedback) async {
     isLoading = true;
     errorMessage = null;
@@ -36,7 +33,7 @@ class PhaseApprovalController extends ChangeNotifier {
 
     try {
       await _repository.approvePhase(phaseId, status, feedback);
-      
+
       final index = phases.indexWhere((p) => p.id == phaseId);
       if (index != -1) {
         phases[index] = ProgressPhaseModel(
@@ -46,8 +43,6 @@ class PhaseApprovalController extends ChangeNotifier {
           sortOrder: phases[index].sortOrder,
           status: status,
           lecturerFeedback: feedback,
-          requireEvidence: phases[index].requireEvidence,
-          isLocked: phases[index].isLocked,
           clientCreatedAt: phases[index].clientCreatedAt,
           serverReceivedAt: phases[index].serverReceivedAt,
         );
