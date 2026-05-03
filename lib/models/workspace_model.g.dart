@@ -20,7 +20,7 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
       id: fields[0] as String,
       joinCode: fields[1] as String?,
       teamName: fields[2] as String,
-      topicName: fields[3] as String,
+      topicName: fields[3] as String?,
       topicDescription: fields[4] as String?,
       status: fields[5] as String,
       lecturerFeedback: fields[6] as String?,

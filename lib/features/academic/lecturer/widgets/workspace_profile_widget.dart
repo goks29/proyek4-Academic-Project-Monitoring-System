@@ -33,7 +33,7 @@ class WorkspaceProfileWidget extends StatelessWidget {
   // HEADER (Desain Modern Clean & Soft UI)
   // ==========================================
   Widget _buildEstheticHeader() {
-    final bool hasTopic = workspace.topicName.isNotEmpty;
+    final bool hasTopic = workspace.topicName?.isNotEmpty ?? false;
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -88,7 +88,7 @@ class WorkspaceProfileWidget extends StatelessWidget {
               border: Border.all(color: hasTopic ? Colors.grey.shade200 : Colors.red.shade100),
             ),
             child: Text(
-              hasTopic ? workspace.topicName : "Topik belum ditentukan oleh mahasiswa",
+              hasTopic ? workspace.topicName! : "Topik belum ditentukan oleh mahasiswa",
               style: TextStyle(
                 fontSize: 15,
                 color: hasTopic ? Colors.black87 : Colors.red.shade400,

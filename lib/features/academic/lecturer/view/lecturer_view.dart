@@ -71,7 +71,7 @@ class _LecturerViewState extends State<LecturerView> {
               // 2. Logika Navigasi (Tinggal 2 Level: Beranda -> List Kelompok)
               if (_selectedProject != null) ...[
                 WorkspaceListWidget(
-                  workspacesFuture: _controller.getWorkspacesByProject(_selectedProject!.id),
+                  workspacesFuture: _controller.getWorkspacesByJoinCode(_selectedProject!.joinCode),
                   controller: _controller,
                   onWorkspaceSelected: (ws) {
                     Navigator.push(

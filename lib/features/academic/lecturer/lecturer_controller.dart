@@ -1,16 +1,17 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
+// HAPUS import 'package:uuid/uuid.dart'; karena kita tidak pakai UUID lagi
 
 import '../../../models/project_model.dart';
 import '../../../models/workspace_model.dart';
 import '../../../models/progress_phase_model.dart';
 
-// Import SERVICES 
+// Import SERVICES (Arahkan workspace_service ke folder remote yang baru)
 import '../../../services/remote/phase_service.dart';
-import '../../../services/workspace_service.dart';
+import '../../../services/remote/workspace_service.dart'; // <--- UBAH IMPORT INI
 import '../../../services/remote/project_service.dart';
 import '../../../services/remote/user_service.dart';
 import '../../../services/remote/workspace_member_service.dart';
+import 'dart:math'; // <--- TAMBAHKAN UNTUK RANDOM CODE
 
 class LecturerController {
   final ProjectService _projectService = ProjectService(Supabase.instance.client);
@@ -28,9 +29,10 @@ class LecturerController {
     }
   }
 
-  Future<List<WorkspaceModel>> getWorkspacesByProject(String projectId) async {
+  // ---> UBAH FUNGSI INI DARI getWorkspacesByProject MENJADI getWorkspacesByJoinCode <---
+  Future<List<WorkspaceModel>> getWorkspacesByJoinCode(String joinCode) async {
     try {
-      return await _workspaceService.getWorkspacesByProject(projectId);
+      return await _workspaceService.getWorkspacesByJoinCode(joinCode);
     } catch (e) {
       print("DEBUG ERROR: Gagal ambil kelompok: $e");
       return [];
@@ -45,17 +47,17 @@ class LecturerController {
     try {
       final String lecturerId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
       final String joinCode = _generateRandomCode();
-
+      
+      // ---> UBAH CARA PEMBUATAN PROJECTMODEL (Hilangkan id) <---
       final newProject = ProjectModel(
-        id: const Uuid().v4(),
+        joinCode: joinCode, // id diganti jadi joinCode
         lecturerId: lecturerId,
         title: title,
         description: description,
-        joinCode: joinCode,
         finalSubmissionInfo: finalInfo,
         createdAt: DateTime.now(),
       );
-
+      
       await _projectService.createProject(newProject);
       return joinCode;
     } catch (e) {
@@ -65,7 +67,9 @@ class LecturerController {
   }
 
   String _generateRandomCode() {
-    return (1000 + (9999 - 1000) * (DateTime.now().millisecond / 1000)).toInt().toString();
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final rnd = Random();
+    return String.fromCharCodes(Iterable.generate(6, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
   }
 
   Future<List<Map<String, dynamic>>> getWorkspaceMembersDetails(String workspaceId) async {

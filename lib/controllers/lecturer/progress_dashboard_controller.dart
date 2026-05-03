@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../models/task_allocation_model.dart';
-import '../../models/workspace_model.dart';
+// import '../../models/workspace_model.dart';
 import '../../repositories/workspace_repository.dart';
 import '../../repositories/workspace_member_repository.dart';
 import '../../repositories/phase_repository.dart';
@@ -14,7 +14,8 @@ class GroupProgressData {
   final int doneTasks;
 
   /// Menghitung persentase progress kelompok.
-  double get progressPercent => totalTasks == 0 ? 0 : (doneTasks / totalTasks) * 100;
+  double get progressPercent =>
+      totalTasks == 0 ? 0 : (doneTasks / totalTasks) * 100;
 
   GroupProgressData({
     required this.workspaceId,
@@ -32,7 +33,8 @@ class StudentProgressData {
   final int doneTasks;
 
   /// Menghitung persentase progress individu mahasiswa.
-  double get progressPercent => totalTasks == 0 ? 0 : (doneTasks / totalTasks) * 100;
+  double get progressPercent =>
+      totalTasks == 0 ? 0 : (doneTasks / totalTasks) * 100;
 
   StudentProgressData({
     required this.studentId,
@@ -83,12 +85,14 @@ class ProgressDashboardController extends ChangeNotifier {
           doneTasks += tasks.where((t) => t.isDone).length;
         }
 
-        groupProgressList.add(GroupProgressData(
-          workspaceId: workspace.id,
-          teamName: workspace.teamName,
-          totalTasks: totalTasks,
-          doneTasks: doneTasks,
-        ));
+        groupProgressList.add(
+          GroupProgressData(
+            workspaceId: workspace.id,
+            teamName: workspace.teamName,
+            totalTasks: totalTasks,
+            doneTasks: doneTasks,
+          ),
+        );
       }
     } catch (e) {
       errorMessage = e.toString();
@@ -114,10 +118,13 @@ class ProgressDashboardController extends ChangeNotifier {
       }
 
       studentProgressList = members.map((member) {
-        final memberTasks = allTasks.where((t) => t.studentId == member.studentId).toList();
+        final memberTasks = allTasks
+            .where((t) => t.studentId == member.studentId)
+            .toList();
         return StudentProgressData(
           studentId: member.studentId,
-          studentName: member.studentId, // Perlu diresolusi via UserRepository di layer UI jika perlu nama asli
+          studentName: member
+              .studentId, // Perlu diresolusi via UserRepository di layer UI jika perlu nama asli
           totalTasks: memberTasks.length,
           doneTasks: memberTasks.where((t) => t.isDone).length,
         );
@@ -130,4 +137,3 @@ class ProgressDashboardController extends ChangeNotifier {
     }
   }
 }
-

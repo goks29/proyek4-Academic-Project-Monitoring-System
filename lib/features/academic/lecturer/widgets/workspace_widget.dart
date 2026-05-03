@@ -13,7 +13,7 @@ class WorkspaceHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool hasTopic = workspace.topicName.isNotEmpty;
+    final bool hasTopic = workspace.topicName?.isNotEmpty ?? false;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -41,7 +41,7 @@ class WorkspaceHeaderWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            hasTopic ? workspace.topicName : "Topik belum ditentukan",
+            hasTopic ? workspace.topicName! : "Topik belum ditentukan",
             style: TextStyle(
               fontSize: 16,
               color: hasTopic ? Colors.black87 : Colors.grey.shade400,

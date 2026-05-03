@@ -43,7 +43,7 @@ class WorkspaceListWidget extends StatelessWidget {
                     Text(ws.teamName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 4),
                     Text(
-                      ws.topicName.isNotEmpty ? "Topik: ${ws.topicName}" : "Topik belum ditentukan",
+                      (ws.topicName?.isNotEmpty ?? false) ? "Topik: ${ws.topicName}" : "Topik belum ditentukan",
                       style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     ),
                     const SizedBox(height: 12),
