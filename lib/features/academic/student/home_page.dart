@@ -3,7 +3,7 @@ import 'package:academic_project_monitoring_system/features/academic/auth/login_
 import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'workspace_view.dart';
+import 'workspace_home_view.dart';
 
 class HomePage extends StatefulWidget{
   @override
@@ -334,7 +334,7 @@ class _HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => WorkspaceView(),
+              builder: (context) => WorkspaceHomeView(),
             ),
           ).then((_) {
             context.read<WorkspaceController>().fetchMyWorkspaces();

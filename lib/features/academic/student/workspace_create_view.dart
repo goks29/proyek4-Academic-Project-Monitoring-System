@@ -3,17 +3,36 @@ import 'package:academic_project_monitoring_system/features/academic/student/wor
 import 'package:provider/provider.dart';
 // import 'workspace_controller.dart'; 
 
-class WorkspaceView extends StatelessWidget {
-  final TextEditingController projectIdController = TextEditingController();
-  final TextEditingController teamNameController = TextEditingController();
-  final TextEditingController nimController = TextEditingController();
-  final TextEditingController topicController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+class WorkspaceCreateView extends StatefulWidget {
+  @override
+  State<WorkspaceCreateView> createState() => _WorkspaceViewState();
+}
+
+class _WorkspaceViewState extends State<WorkspaceCreateView> {
+  late final TextEditingController teamNameController;
+  late final TextEditingController topicNameController;
+  late final TextEditingController topicDescriptionController;
+
+  @override
+  void initState() {
+    super.initState();
+    teamNameController = TextEditingController();
+    topicNameController = TextEditingController();
+    topicDescriptionController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    teamNameController.dispose();
+    topicNameController.dispose();
+    topicDescriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final workspaceController = context.watch<WorkspaceController>();
-
+    
     return Scaffold(
       backgroundColor: const Color.fromRGBO(243, 244, 246, 1), 
       appBar: AppBar(
@@ -24,14 +43,6 @@ class WorkspaceView extends StatelessWidget {
           onPressed: () {
             Navigator.pop(context);
           },
-        ),
-        // Judul
-        title: const Text(
-          "Kelompok Tugas Besar Baru",
-          style: TextStyle(
-            color: Colors.blueAccent,
-            fontWeight: FontWeight.bold,
-          ),
         ),
       ),
     //body
@@ -72,7 +83,7 @@ class WorkspaceView extends StatelessWidget {
                     const SizedBox(height: 16),       
                     // Teks Kecil
                     Text(
-                      "TUBES SETUP",
+                      "Tambah Kelompok",
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.7),
                         fontSize: 12,
@@ -83,7 +94,7 @@ class WorkspaceView extends StatelessWidget {
                     const SizedBox(height: 8),                   
                     // Teks Judul Besar
                     const Text(
-                      "DETAIL KELOMPOK TUBES",
+                      "Masukan Detail Kelompok Tubes",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 22,
@@ -98,16 +109,6 @@ class WorkspaceView extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Id Kelompok", style: TextStyle(color: Colors.black,fontSize: 15, fontWeight: FontWeight.bold)),
-                  TextField(
-                    controller: projectIdController,
-                    decoration: InputDecoration(
-                      labelText: "",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(20))
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-
                   Text("Nama Tim", style: TextStyle(color: Colors.black,fontSize: 15, fontWeight: FontWeight.bold)),
                   TextField(
                     controller: teamNameController,
@@ -118,19 +119,9 @@ class WorkspaceView extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
 
-                  Text("Nim Ketua", style: TextStyle(color: Colors.black,fontSize: 15, fontWeight: FontWeight.bold)),
-                  TextField(
-                    controller: nimController,
-                    decoration: InputDecoration(
-                      labelText: "",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(20))
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-
                   Text("Topik", style: TextStyle(color: Colors.black,fontSize: 15, fontWeight: FontWeight.bold)),
                   TextField(
-                    controller: topicController,
+                    controller: topicNameController,
                     decoration: InputDecoration(
                       labelText: "",
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(20))
@@ -140,7 +131,7 @@ class WorkspaceView extends StatelessWidget {
 
                   Text("Deskripsi", style: TextStyle(color: Colors.black,fontSize: 15, fontWeight: FontWeight.bold)),
                   TextField(
-                    controller: descriptionController,
+                    controller: topicDescriptionController,
                     decoration: InputDecoration(
                       labelText: "",
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(20))
@@ -161,12 +152,10 @@ class WorkspaceView extends StatelessWidget {
                       onPressed: workspaceController.isLoading
                         ? null
                         : () async {
-                          await context.read<WorkspaceController>().createWorkspace(
-                            projectId: projectIdController.text,
+                          await context.read<WorkspaceController>().createWorkspace(               
                             teamName: teamNameController.text,
-                            nim: nimController.text,
-                            topic: topicController.text,
-                            description: descriptionController.text,
+                            topic: topicNameController.text,
+                            description: topicDescriptionController.text,
                           );
 
                           if (context.mounted) {
