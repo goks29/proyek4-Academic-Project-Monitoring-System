@@ -9,7 +9,7 @@ import '../../../../models/submission_model.dart';
 
 import '../../../../services/remote/task_service.dart';
 import '../../../../services/remote/submission_service.dart';
-import '../../../../services/remote/phase_service.dart'; // <--- Tambahkan ini lagi
+import '../../../../services/remote/phase_service.dart';
 
 // Import Component/Widgets yang sudah dipecah
 import '../widgets/submission_list_widget.dart';
@@ -34,9 +34,8 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
   
   final TaskService _taskService = TaskService(Supabase.instance.client);
   final SubmissionService _submissionService = SubmissionService(Supabase.instance.client);
-  
-  // Service & Controller untuk Phase dikembalikan
   final PhaseService _phaseService = PhaseService(Supabase.instance.client);
+  
   final TextEditingController _feedbackController = TextEditingController();
 
   @override
@@ -122,6 +121,7 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
                 SubmissionListWidget(
                   submissions: submissions,
                   onSubmissionReviewed: () {
+                    // Refresh data jika ada submission yang di-ACC/Tolak
                     setState(() {
                       _phaseDataFuture = _fetchPhaseData();
                     });
@@ -145,8 +145,7 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
         },
       ),
       
-      // KITA GUNAKAN FUTURE BUILDER DI BOTTOM BAR UNTUK MENGECEK STATUS SUBMISSION
-      // KITA GUNAKAN FUTURE BUILDER DI BOTTOM BAR UNTUK MENGECEK STATUS SUBMISSION
+      // LOGIKA KUNCI GANDA DI BOTTOM BAR
       bottomNavigationBar: FutureBuilder<Map<String, dynamic>>(
         future: _phaseDataFuture,
         builder: (context, snapshot) {
@@ -154,56 +153,75 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
 
           final submissions = snapshot.data!['submissions'] as List<SubmissionModel>;
           
-          final hasPending = submissions.any((sub) => sub.status.toLowerCase() == 'pending');
-          
-          // ---> LOGIKA BARU: Cek apakah fase ini sudah dinilai (Bukan pending)
+          final hasSubmissions = submissions.isNotEmpty; // Cek apakah ada submission
+          final hasPendingSubmissions = submissions.any((sub) => sub.status.toLowerCase() == 'pending');
           final isPhaseReviewed = widget.phase.status.toLowerCase() != 'pending';
 
-          // Kirim status "isPhaseReviewed" ke widget action bar
-          return _buildBottomActionBar(context, hasPending, isPhaseReviewed);
+          return _buildBottomActionBar(context, hasPendingSubmissions, isPhaseReviewed, hasSubmissions);
         }
       ),
     );
   }
 
   // ==========================================
-  // WIDGET UI: BOTTOM ACTION BAR DENGAN UX "GEMBOK" GANDA
+  // WIDGET UI: BOTTOM ACTION BAR DENGAN UX 3 LAPIS
   // ==========================================
-  Widget _buildBottomActionBar(BuildContext context, bool hasPending, bool isPhaseReviewed) {
-    // Tombol mati (disabled) JIKA masih ada tugas tertunda ATAU fase sudah dinilai
-    final bool isDisabled = hasPending || isPhaseReviewed;
+  Widget _buildBottomActionBar(BuildContext context, bool hasPendingSubmissions, bool isPhaseReviewed, bool hasSubmissions) {
+    
+    // LAPIS 1: Fase sudah selesai dinilai -> HILANGKAN TOMBOL
+    if (isPhaseReviewed) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))]),
+        child: SafeArea(
+          child: Row(
+            children: [
+              Icon(Icons.check_circle, size: 18, color: Colors.green.shade600),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "Fase ini telah ditutup dan dinilai (${widget.phase.status.toUpperCase()}).", 
+                  style: TextStyle(color: Colors.green.shade700, fontSize: 13, fontWeight: FontWeight.bold)
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
+    // LAPIS 2: Belum ada kerjaan yang disubmit -> HILANGKAN TOMBOL
+    if (!hasSubmissions) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))]),
+        child: SafeArea(
+          child: Row(
+            children: [
+              Icon(Icons.hourglass_empty_rounded, size: 18, color: Colors.grey.shade500),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "Menunggu mahasiswa mengumpulkan hasil kerja...", 
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontStyle: FontStyle.italic)
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // LAPIS 3: Sudah ada submit, MUNCULKAN TOMBOL (tapi gembok kalau masih ada yang pending)
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))]),
       child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min, 
           children: [
-            // ---> PESAN JIKA FASE SUDAH DINILAI (KUNCI PERMANEN) <---
-            if (isPhaseReviewed)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle, size: 18, color: Colors.green.shade600),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        "Fase ini telah ditutup dan dinilai (${widget.phase.status.toUpperCase()}).", 
-                        style: TextStyle(color: Colors.green.shade700, fontSize: 13, fontWeight: FontWeight.bold)
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            // ---> PESAN JIKA MASIH ADA TUGAS BELUM DICEK <---
-            else if (hasPending)
+            // Peringatan jika digembok
+            if (hasPendingSubmissions)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
@@ -224,12 +242,11 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    // GUNAKAN VARIABEL isDisabled
-                    onPressed: isDisabled ? null : () => _showApprovalDialog(context, isApproved: false),
+                    onPressed: hasPendingSubmissions ? null : () => _showApprovalDialog(context, isApproved: false),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.red.shade600,
                       disabledForegroundColor: Colors.grey.shade400,
-                      side: BorderSide(color: isDisabled ? Colors.grey.shade300 : Colors.red.shade600),
+                      side: BorderSide(color: hasPendingSubmissions ? Colors.grey.shade300 : Colors.red.shade600),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
@@ -239,8 +256,7 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    // GUNAKAN VARIABEL isDisabled
-                    onPressed: isDisabled ? null : () => _showApprovalDialog(context, isApproved: true),
+                    onPressed: hasPendingSubmissions ? null : () => _showApprovalDialog(context, isApproved: true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade600,
                       disabledBackgroundColor: Colors.grey.shade200,
@@ -265,7 +281,6 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
   // FUNGSI UX: MUNCULKAN DIALOG CATATAN FASE
   // ==========================================
   void _showApprovalDialog(BuildContext context, {required bool isApproved}) {
-    // Ingat kata kuncinya: 'accepted' dan 'rejected' sesuai database Enum kita
     final statusText = isApproved ? 'accepted' : 'rejected';
     final titleText = isApproved ? 'Terima Fase Ini?' : 'Minta Revisi Fase?';
     final buttonColor = isApproved ? Colors.green.shade600 : Colors.red.shade600;
@@ -292,14 +307,8 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
                   hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
                   filled: true,
                   fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: buttonColor),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: buttonColor)),
                 ),
               ),
             ],
@@ -341,11 +350,7 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
                   }
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: buttonColor,
-                foregroundColor: Colors.white,
-                elevation: 0,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white, elevation: 0),
               child: const Text("Simpan & Kirim"),
             ),
           ],
