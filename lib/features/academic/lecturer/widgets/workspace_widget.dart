@@ -4,16 +4,115 @@ import '../../../../models/workspace_model.dart';
 import '../lecturer_controller.dart';
 
 // ==========================================
-// WIDGET UNTUK HEADER (Desain Sangat Simpel & Bersih)
+// WIDGET UNTUK HEADER & VALIDASI TOPIK
 // ==========================================
-class WorkspaceHeaderWidget extends StatelessWidget {
+class WorkspaceHeaderWidget extends StatefulWidget {
   final WorkspaceModel workspace;
+  final LecturerController controller;
+  // Tambahkan callback agar halaman induk tahu kalau topik baru saja di-ACC
+  final VoidCallback onTopicReviewed; 
 
-  const WorkspaceHeaderWidget({super.key, required this.workspace});
+  const WorkspaceHeaderWidget({
+    super.key, 
+    required this.workspace,
+    required this.controller,
+    required this.onTopicReviewed,
+  });
+
+  @override
+  State<WorkspaceHeaderWidget> createState() => _WorkspaceHeaderWidgetState();
+}
+
+class _WorkspaceHeaderWidgetState extends State<WorkspaceHeaderWidget> {
+  bool _isLoading = false;
+
+  Future<void> _handleTopicReview(BuildContext context, bool isApproved) async {
+    final statusText = isApproved ? 'accepted' : 'rejected';
+    final titleText = isApproved ? 'Terima Topik Ini?' : 'Minta Ganti Topik?';
+    final buttonColor = isApproved ? Colors.green.shade600 : Colors.red.shade600;
+    
+    final TextEditingController feedbackController = TextEditingController();
+    
+    // Tampilkan catatan lama jika ada
+    if (widget.workspace.lecturerFeedback != null) {
+      feedbackController.text = widget.workspace.lecturerFeedback!;
+    }
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(titleText, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Berikan catatan terkait topik ini:", style: TextStyle(fontSize: 13)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: feedbackController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: "Contoh: Topik terlalu luas, tolong disempitkan...",
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: buttonColor)),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                FocusManager.instance.primaryFocus?.unfocus();
+                Navigator.pop(context, true);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white),
+              child: const Text("Kirim"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+
+      final success = await widget.controller.updateTopicStatus(
+        widget.workspace.id,
+        statusText,
+        feedbackController.text,
+      );
+      
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Penilaian topik tersimpan!"), backgroundColor: Colors.green),
+          );
+          widget.onTopicReviewed(); // Beritahu halaman induk untuk refresh
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Gagal menyimpan penilaian."), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bool hasTopic = workspace.topicName?.isNotEmpty ?? false;
+    final bool hasTopic = widget.workspace.topicName?.isNotEmpty ?? false;
+    final String status = widget.workspace.status.toLowerCase();
+    final bool isPending = status == 'pending';
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -26,36 +125,130 @@ class WorkspaceHeaderWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            workspace.teamName,
-            style: const TextStyle(
-              fontSize: 22, 
-              fontWeight: FontWeight.bold, 
-              color: Colors.black87
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  widget.workspace.teamName,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
+              if (hasTopic) _buildStatusBadge(status),
+            ],
           ),
           const SizedBox(height: 16),
-          Text(
-            "Topik Tugas Besar:", 
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade500)
-          ),
+          Text("Topik Tugas Besar:", style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
           const SizedBox(height: 4),
           Text(
-            hasTopic ? workspace.topicName! : "Topik belum ditentukan",
+            hasTopic ? widget.workspace.topicName! : "Topik belum ditentukan oleh mahasiswa",
             style: TextStyle(
               fontSize: 16,
-              color: hasTopic ? Colors.black87 : Colors.grey.shade400,
+              color: hasTopic ? Colors.black87 : Colors.red.shade400,
               fontStyle: hasTopic ? FontStyle.normal : FontStyle.italic,
+              fontWeight: hasTopic ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
+          
+          // JIKA ADA DESKRIPSI TOPIK
+          if (hasTopic && widget.workspace.topicDescription != null && widget.workspace.topicDescription!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              widget.workspace.topicDescription!,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+            ),
+          ],
+
+          // JIKA ADA FEEDBACK DOSEN (Tampil kalau bukan pending)
+          if (!isPending && widget.workspace.lecturerFeedback != null && widget.workspace.lecturerFeedback!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Catatan Anda:", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade500)),
+                  const SizedBox(height: 4),
+                  Text(widget.workspace.lecturerFeedback!, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                ],
+              ),
+            ),
+          ],
+
+          // TOMBOL AKSI VALIDASI (Hanya muncul jika topik ada dan statusnya pending)
+          if (hasTopic && isPending) ...[
+            const SizedBox(height: 16),
+            if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _handleTopicReview(context, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red.shade600, side: BorderSide(color: Colors.red.shade200),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text("TOLAK TOPIK", style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _handleTopicReview(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade600, foregroundColor: Colors.white, elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text("ACC TOPIK", style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                ],
+              ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    Color bg;
+    Color fg;
+    String text;
+
+    switch (status) {
+      case 'accepted':
+      case 'approved':
+        bg = Colors.green.shade50;
+        fg = Colors.green.shade700;
+        text = "TOPIK DI-ACC";
+        break;
+      case 'rejected':
+      case 'revisi':
+        bg = Colors.red.shade50;
+        fg = Colors.red.shade700;
+        text = "TOPIK DITOLAK";
+        break;
+      default:
+        bg = Colors.orange.shade50;
+        fg = Colors.orange.shade700;
+        text = "MENUNGGU ACC";
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+      child: Text(text, style: TextStyle(color: fg, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 }
 
 // ==========================================
-// WIDGET LIST ANGGOTA (Menggunakan ListTile yang Minimalis)
+// WIDGET LIST ANGGOTA 
+// (Biarkan sama persis seperti sebelumnya)
 // ==========================================
 class WorkspaceMembersWidget extends StatelessWidget {
   final WorkspaceModel workspace;
@@ -93,11 +286,8 @@ class WorkspaceMembersWidget extends StatelessWidget {
         final members = snapshot.data!;
         
         return ListView.separated(
-          // ---> INI KUNCI AGAR DATA MUNCUL DI LAYAR <---
           shrinkWrap: true, 
           physics: const NeverScrollableScrollPhysics(), 
-          // ---------------------------------------------
-          
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           itemCount: members.length,
           separatorBuilder: (context, index) => Divider(color: Colors.grey.shade200, height: 1),
@@ -134,7 +324,7 @@ class WorkspaceMembersWidget extends StatelessWidget {
                     ),
                     child: Text("Ketua", style: TextStyle(color: Colors.amber.shade800, fontSize: 11, fontWeight: FontWeight.bold)),
                   )
-                : null, // Anggota biasa tidak perlu label agar lebih bersih
+                : null,
             );
           },
         );

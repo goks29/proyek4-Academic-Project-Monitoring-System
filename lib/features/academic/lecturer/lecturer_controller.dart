@@ -1,17 +1,18 @@
+// lib/features/academic/lecturer/lecturer_controller.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
-// HAPUS import 'package:uuid/uuid.dart'; karena kita tidak pakai UUID lagi
 
 import '../../../models/project_model.dart';
 import '../../../models/workspace_model.dart';
 import '../../../models/progress_phase_model.dart';
 
-// Import SERVICES (Arahkan workspace_service ke folder remote yang baru)
+// Import SERVICES 
 import '../../../services/remote/phase_service.dart';
-import '../../../services/remote/workspace_service.dart'; // <--- UBAH IMPORT INI
+import '../../../services/remote/workspace_service.dart';
 import '../../../services/remote/project_service.dart';
 import '../../../services/remote/user_service.dart';
 import '../../../services/remote/workspace_member_service.dart';
-import 'dart:math'; // <--- TAMBAHKAN UNTUK RANDOM CODE
+import '../../../services/remote/task_service.dart'; // <--- TAMBAHAN IMPORT
+import 'dart:math';
 
 class LecturerController {
   final ProjectService _projectService = ProjectService(Supabase.instance.client);
@@ -19,7 +20,18 @@ class LecturerController {
   final UserService _userService = UserService(Supabase.instance.client);
   final WorkspaceMemberService _memberService = WorkspaceMemberService(Supabase.instance.client);
   final PhaseService _phaseService = PhaseService(Supabase.instance.client);
+  final TaskService _taskService = TaskService(Supabase.instance.client); // <--- TAMBAHAN SERVICE
 
+  Future<bool> updateTopicStatus(String workspaceId, String status, String? feedback) async {
+    try {
+      await _workspaceService.updateTopicStatus(workspaceId, status, feedback);
+      return true;
+    } catch (e) {
+      print("Gagal validasi topik: $e");
+      return false;
+    }
+  }
+  
   Future<List<ProjectModel>> getAllProjects() async {
     try {
       return await _projectService.getProjects();
@@ -29,7 +41,6 @@ class LecturerController {
     }
   }
 
-  // ---> UBAH FUNGSI INI DARI getWorkspacesByProject MENJADI getWorkspacesByJoinCode <---
   Future<List<WorkspaceModel>> getWorkspacesByJoinCode(String joinCode) async {
     try {
       return await _workspaceService.getWorkspacesByJoinCode(joinCode);
@@ -39,8 +50,37 @@ class LecturerController {
     }
   }
 
+  // ---> FUNGSI LAMA (DUMMY 70%) BISA KITA HAPUS ATAU BIARKAN SAJA <---
   double calculateProgress(WorkspaceModel workspace) {
-    return 0.7; // Progress dummy 70%
+    return 0.7; 
+  }
+
+  // ---> FUNGSI BARU: KALKULASI PROGRESS REAL-TIME <---
+  Future<double> getRealWorkspaceProgress(String workspaceId) async {
+    try {
+      // 1. Ambil semua fase di kelompok ini
+      final phases = await _phaseService.getPhases(workspaceId);
+      if (phases.isEmpty) return 0.0;
+
+      int totalTasks = 0;
+      int doneTasks = 0;
+
+      // 2. Hitung semua tugas di setiap fase
+      for (var phase in phases) {
+        final tasks = await _taskService.getTasks(phase.id);
+        totalTasks += tasks.length;
+        // Hitung tugas yang sudah dicentang selesai oleh mahasiswa
+        doneTasks += tasks.where((t) => t.isDone).length; 
+      }
+
+      // 3. Kalkulasi persentase
+      if (totalTasks == 0) return 0.0;
+      return doneTasks / totalTasks;
+
+    } catch (e) {
+      print("Error hitung progress: $e");
+      return 0.0;
+    }
   }
 
   Future<String?> createProject(String title, String description, String? finalInfo) async {
@@ -48,9 +88,8 @@ class LecturerController {
       final String lecturerId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
       final String joinCode = _generateRandomCode();
       
-      // ---> UBAH CARA PEMBUATAN PROJECTMODEL (Hilangkan id) <---
       final newProject = ProjectModel(
-        joinCode: joinCode, // id diganti jadi joinCode
+        joinCode: joinCode,
         lecturerId: lecturerId,
         title: title,
         description: description,

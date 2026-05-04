@@ -5,9 +5,9 @@ import '../lecturer_controller.dart';
 
 // IMPORT WIDGETS
 import '../widgets/workspace_widget.dart';
-import '../widgets/workspace_progress_widget.dart'; // File baru yang akan kita buat
+import '../widgets/workspace_progress_widget.dart';
 
-class WorkspaceDetailView extends StatelessWidget {
+class WorkspaceDetailView extends StatefulWidget {
   final WorkspaceModel workspace;
   final LecturerController controller;
 
@@ -18,9 +18,32 @@ class WorkspaceDetailView extends StatelessWidget {
   });
 
   @override
+  State<WorkspaceDetailView> createState() => _WorkspaceDetailViewState();
+}
+
+class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
+  // Simpan data workspace ke state agar bisa diperbarui (refresh)
+  late WorkspaceModel _currentWorkspace;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentWorkspace = widget.workspace;
+  }
+
+  // Fungsi untuk menarik ulang data workspace spesifik dari database jika topik di-ACC
+  Future<void> _refreshWorkspaceData() async {
+    final workspaces = await widget.controller.getWorkspacesByJoinCode(_currentWorkspace.joinCode ?? '');
+    final updatedWorkspace = workspaces.firstWhere((w) => w.id == _currentWorkspace.id);
+    setState(() {
+      _currentWorkspace = updatedWorkspace;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2, // Menentukan ada 2 Tab
+      length: 2, 
       child: Scaffold(
         backgroundColor: const Color(0xFFF4F6F9),
         appBar: AppBar(
@@ -29,28 +52,29 @@ class WorkspaceDetailView extends StatelessWidget {
           centerTitle: true,
           title: const Text(
             "Detail Kelompok",
-            style: TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
           ),
           leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Colors.black87,
-              size: 20,
-            ),
-            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87, size: 20),
+            onPressed: () => Navigator.pop(context, true), // Kirim sinyal refresh ke beranda saat back
           ),
         ),
         body: Column(
           children: [
             const SizedBox(height: 20),
-            // Header tetap nangkring di atas
-            WorkspaceHeaderWidget(workspace: workspace),
+            
+            // Header yang sekarang bisa dipakai untuk validasi topik!
+            WorkspaceHeaderWidget(
+              workspace: _currentWorkspace, // Pakai data dari state
+              controller: widget.controller,
+              onTopicReviewed: () {
+                // Panggil fungsi refresh saat dosen selesai menilai topik
+                _refreshWorkspaceData();
+              },
+            ),
+            
             const SizedBox(height: 20),
-
+            
             // Tab Bar (Tombol Navigasi)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -67,33 +91,27 @@ class WorkspaceDetailView extends StatelessWidget {
                 ),
                 labelColor: Colors.indigo.shade700,
                 unselectedLabelColor: Colors.grey.shade500,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 tabs: const [
-                  Tab(text: "Progress Tugas"), // Tab 1 (Default muncul pertama)
-                  Tab(text: "Anggota Tim"), // Tab 2
+                  Tab(text: "Progress Tugas"), 
+                  Tab(text: "Anggota Tim"), 
                 ],
               ),
             ),
             const SizedBox(height: 16),
-
+            
             // Isi dari masing-masing Tab
             Expanded(
               child: TabBarView(
                 children: [
-                  // Konten Tab 1: Daftar Task / Phase
                   WorkspaceProgressWidget(
-                    workspace: workspace,
-                    controller: controller,
+                    workspace: _currentWorkspace,
+                    controller: widget.controller,
                   ),
-
-                  // Konten Tab 2: Daftar Anggota (Dibungkus scroll agar shrinkWrap bekerja aman)
                   SingleChildScrollView(
                     child: WorkspaceMembersWidget(
-                      workspace: workspace,
-                      controller: controller,
+                      workspace: _currentWorkspace,
+                      controller: widget.controller,
                     ),
                   ),
                 ],
