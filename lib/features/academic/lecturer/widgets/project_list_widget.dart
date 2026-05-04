@@ -30,6 +30,8 @@ class ProjectListWidget extends StatelessWidget {
           itemCount: filtered.length,
           itemBuilder: (context, i) {
             final project = filtered[i];
+            final bool isActive = project.isActive; // Ambil status dari database
+
             return GestureDetector(
               onTap: () => onProjectSelected(project),
               child: Container(
@@ -42,10 +44,20 @@ class ProjectListWidget extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // ---> LABEL STATUS DINAMIS <---
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: Colors.red[50]!, borderRadius: BorderRadius.circular(8)),
-                          child: Text("On Progress", style: TextStyle(color: Colors.red[400]!, fontSize: 10)),
+                          decoration: BoxDecoration(
+                            color: isActive ? Colors.red.shade50 : Colors.green.shade50, 
+                            borderRadius: BorderRadius.circular(8)
+                          ),
+                          child: Text(
+                            isActive ? "On Progress" : "Selesai", 
+                            style: TextStyle(
+                              color: isActive ? Colors.red.shade400 : Colors.green.shade600, 
+                              fontSize: 10, fontWeight: FontWeight.bold
+                            )
+                          ),
                         ),
                         const Icon(Icons.chevron_right, color: Colors.grey),
                       ],

@@ -36,6 +36,31 @@ class LecturerController {
     }
   }
 
+  Future<bool> updateProject(String joinCode, {String? title, String? description, String? submissionInfo}) async {
+    try {
+      final data = <String, dynamic>{};
+      if (title != null) data['title'] = title;
+      if (description != null) data['description'] = description;
+      if (submissionInfo != null) data['final_submission_info'] = submissionInfo;
+      
+      await _projectService.updateProject(joinCode, data);
+      return true;
+    } catch (e) {
+      print("Error update project: $e");
+      return false;
+    }
+  }
+
+  Future<bool> closeProject(String joinCode) async {
+    try {
+      await _projectService.closeProject(joinCode);
+      return true;
+    } catch (e) {
+      print("Error close project: $e");
+      return false;
+    }
+  }
+  
   Future<UserModel?> getCurrentUserProfile() async {
     try {
       // Ambil ID dari sesi Supabase, atau pakai ID Dummy jika sedang testing lokal
