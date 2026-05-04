@@ -5,6 +5,7 @@ import '../../../models/project_model.dart';
 import '../../../models/workspace_model.dart';
 import '../../../models/progress_phase_model.dart';
 import '../../../models/user_model.dart';
+import '../../../models/comment_model.dart';
 
 // Import SERVICES 
 import '../../../services/remote/phase_service.dart';
@@ -12,7 +13,8 @@ import '../../../services/remote/workspace_service.dart';
 import '../../../services/remote/project_service.dart';
 import '../../../services/remote/user_service.dart';
 import '../../../services/remote/workspace_member_service.dart';
-import '../../../services/remote/task_service.dart'; // <--- TAMBAHAN IMPORT
+import '../../../services/remote/task_service.dart'; 
+import '../../../services/remote/comment_service.dart';
 import 'dart:math';
 
 class LecturerController {
@@ -21,7 +23,8 @@ class LecturerController {
   final UserService _userService = UserService(Supabase.instance.client);
   final WorkspaceMemberService _memberService = WorkspaceMemberService(Supabase.instance.client);
   final PhaseService _phaseService = PhaseService(Supabase.instance.client);
-  final TaskService _taskService = TaskService(Supabase.instance.client); // <--- TAMBAHAN SERVICE
+  final TaskService _taskService = TaskService(Supabase.instance.client); 
+  final CommentService _commentService = CommentService(Supabase.instance.client);
 
   Future<bool> updateTopicStatus(String workspaceId, String status, String? feedback) async {
     try {
@@ -43,7 +46,7 @@ class LecturerController {
       return null;
     }
   }
-  
+
   Future<List<ProjectModel>> getAllProjects() async {
     try {
       return await _projectService.getProjects();
@@ -62,7 +65,33 @@ class LecturerController {
     }
   }
 
-  // ---> FUNGSI BARU: KALKULASI PROGRESS REAL-TIME <---
+  Future<List<CommentModel>> getPhaseComments(String phaseId) async {
+    try {
+      return await _commentService.getCommentsByPhaseId(phaseId);
+    } catch (e) {
+      print("Error fetching comments: $e");
+      return [];
+    }
+  }
+
+  Future<bool> sendPhaseComment(String phaseId, String text) async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
+      final comment = CommentModel(
+        id: '', // Diabaikan oleh toJson Supabase
+        phaseId: phaseId,
+        userId: userId,
+        commentText: text,
+        clientCreatedAt: DateTime.now(),
+      );
+      await _commentService.createComment(comment);
+      return true;
+    } catch (e) {
+      print("Error sending comment: $e");
+      return false;
+    }
+  }
+
   Future<double> getRealWorkspaceProgress(String workspaceId) async {
     try {
       // 1. Ambil semua fase di kelompok ini

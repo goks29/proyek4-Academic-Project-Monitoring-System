@@ -11,9 +11,12 @@ import '../../../../services/remote/task_service.dart';
 import '../../../../services/remote/submission_service.dart';
 import '../../../../services/remote/phase_service.dart';
 
+import '../lecturer_controller.dart';
+
 // Import Component/Widgets yang sudah dipecah
 import '../widgets/submission_list_widget.dart';
 import '../widgets/task_list_widget.dart';
+import '../widgets/phase_comment_widget.dart';
 
 class PhaseDetailView extends StatefulWidget {
   final ProgressPhaseModel phase;
@@ -138,14 +141,39 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
                 ),
                 const SizedBox(height: 12),
                 
-                TaskListWidget(tasks: tasks),
+                TaskListWidget(
+                  tasks: tasks,
+                  onTaskReviewed: () {
+                    // Refresh data jika ada task yang di-ACC/Tolak
+                    setState(() {
+                      _phaseDataFuture = _fetchPhaseData();
+                    });
+                  },
+                ),
               ],
             ),
           );
         },
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true, // Agar bisa setinggi 80% layar
+            backgroundColor: Colors.transparent,
+            builder: (context) => PhaseCommentWidget(
+              phase: widget.phase,
+              controller: LecturerController(), // Instansiasi baru aman karena isinya hanya logic
+            ),
+          );
+        },
+        icon: const Icon(Icons.forum_outlined),
+        label: const Text("Diskusi", style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+        elevation: 4,
+      ),
       
-      // LOGIKA KUNCI GANDA DI BOTTOM BAR
       bottomNavigationBar: FutureBuilder<Map<String, dynamic>>(
         future: _phaseDataFuture,
         builder: (context, snapshot) {
