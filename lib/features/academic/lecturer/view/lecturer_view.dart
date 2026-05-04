@@ -60,11 +60,11 @@ class _LecturerViewState extends State<LecturerView> {
             children: [
               const SizedBox(height: 20),
               
-              // 1. Header Global
               LecturerHeader(
                 selectedProject: _selectedProject,
                 selectedWorkspace: null,
                 onBackPressed: _handleBackNavigation,
+                controller: _controller, 
               ),
               const SizedBox(height: 25),
               

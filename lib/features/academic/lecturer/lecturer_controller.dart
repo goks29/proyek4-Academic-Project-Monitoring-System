@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../models/project_model.dart';
 import '../../../models/workspace_model.dart';
 import '../../../models/progress_phase_model.dart';
+import '../../../models/user_model.dart';
 
 // Import SERVICES 
 import '../../../services/remote/phase_service.dart';
@@ -31,6 +32,17 @@ class LecturerController {
       return false;
     }
   }
+
+  Future<UserModel?> getCurrentUserProfile() async {
+    try {
+      // Ambil ID dari sesi Supabase, atau pakai ID Dummy jika sedang testing lokal
+      final String userId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
+      return await _userService.getUserProfile(userId);
+    } catch (e) {
+      print("Error fetching user profile: $e");
+      return null;
+    }
+  }
   
   Future<List<ProjectModel>> getAllProjects() async {
     try {
@@ -48,11 +60,6 @@ class LecturerController {
       print("DEBUG ERROR: Gagal ambil kelompok: $e");
       return [];
     }
-  }
-
-  // ---> FUNGSI LAMA (DUMMY 70%) BISA KITA HAPUS ATAU BIARKAN SAJA <---
-  double calculateProgress(WorkspaceModel workspace) {
-    return 0.7; 
   }
 
   // ---> FUNGSI BARU: KALKULASI PROGRESS REAL-TIME <---
