@@ -1,8 +1,11 @@
 // lib/features/academic/lecturer/add_project_view.dart
+// lib/features/academic/lecturer/view/add_project_view.dart
 import 'package:flutter/material.dart';
-import '../lecturer_controller.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../controllers/lecturer/project_controller.dart'; // <--- IMPORT CONTROLLER BARU
 
-// Import Widget yang sudah dibuat
+// Import Widget
 import '../widgets/project_input_field.dart';
 import '../widgets/success_code_box.dart';
 
@@ -17,12 +20,7 @@ class _AddProjectViewState extends State<AddProjectView> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _infoController = TextEditingController();
-  
-  // Jika kamu menggunakan arsitektur Singleton yang kita buat sebelumnya
-  // final _controller = globalLecturerController; 
-  // Jika masih menggunakan controller mandiri:
-  final _controller = LecturerController(); 
-  
+
   bool _isLoading = false;
   String? _generatedCode;
 
@@ -38,25 +36,34 @@ class _AddProjectViewState extends State<AddProjectView> {
     FocusManager.instance.primaryFocus?.unfocus();
     
     if (_titleController.text.isEmpty || _descController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Judul dan Deskripsi tidak boleh kosong")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Judul dan Deskripsi tidak boleh kosong")));
       return;
     }
 
     setState(() => _isLoading = true);
 
-    final resultLabel = await _controller.createProject(
+    // Dapatkan instance ProjectController
+    final projectCtrl = context.read<ProjectController>();
+    final lecturerId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
+
+    // Gunakan fungsi createProject milik temanmu
+    await projectCtrl.createProject(
+      lecturerId,
       _titleController.text,
       _descController.text,
       _infoController.text,
     );
 
+    // Setelah dibuat, projectCtrl.projects otomatis ter-update! Proyek terbaru ada di urutan paling belakang.
+    final newProject = projectCtrl.projects.last;
+
     setState(() {
       _isLoading = false;
-      _generatedCode = resultLabel;
+      _generatedCode = newProject.joinCode;
     });
   }
+
+  // ... (Sisa fungsi build() di bawahnya BIAKAN SAMA PERSIS seperti sebelumnya)
 
   @override
   Widget build(BuildContext context) {

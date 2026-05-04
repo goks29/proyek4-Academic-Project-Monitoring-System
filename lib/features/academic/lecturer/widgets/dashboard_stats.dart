@@ -2,26 +2,23 @@
 import 'package:flutter/material.dart';
 
 class DashboardStats extends StatelessWidget {
-  final Future<Map<String, int>> statsFuture;
+  final int activeProjects;
+  final int pendingReviews;
 
-  const DashboardStats({super.key, required this.statsFuture});
+  const DashboardStats({
+    super.key, 
+    required this.activeProjects, 
+    required this.pendingReviews,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, int>>(
-      future: statsFuture,
-      builder: (context, snapshot) {
-        String active = snapshot.hasData ? snapshot.data!['activeProjects'].toString() : "...";
-        String review = snapshot.hasData ? snapshot.data!['pendingReviews'].toString() : "...";
-        
-        return Row(
-          children: [
-            _statCard("TUGAS BESAR AKTIF", active, Colors.indigoAccent[700]!, Colors.white),
-            const SizedBox(width: 15),
-            _statCard("BUTUH REVIEW", review, Colors.white, Colors.orange, isBordered: true),
-          ],
-        );
-      },
+    return Row(
+      children: [
+        _statCard("TUGAS BESAR AKTIF", activeProjects.toString(), Colors.indigoAccent[700]!, Colors.white),
+        const SizedBox(width: 15),
+        _statCard("BUTUH REVIEW", pendingReviews.toString(), Colors.white, Colors.orange, isBordered: true),
+      ],
     );
   }
 

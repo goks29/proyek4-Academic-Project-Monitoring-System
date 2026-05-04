@@ -1,13 +1,32 @@
 // lib/features/academic/lecturer/widgets/workspace_profile_widget.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../models/workspace_model.dart';
-import '../lecturer_controller.dart';
+import '../../../../repositories/workspace_member_repository.dart';
+import '../../../../repositories/user_repository.dart';
 
 class WorkspaceProfileWidget extends StatelessWidget {
   final WorkspaceModel workspace;
-  final LecturerController controller;
 
-  const WorkspaceProfileWidget({super.key, required this.workspace, required this.controller});
+  const WorkspaceProfileWidget({super.key, required this.workspace});
+
+  // Fungsi untuk mengambil detail anggota dari Repository via Provider
+  Future<List<Map<String, dynamic>>> _fetchMembers(BuildContext context) async {
+    final memberRepo = context.read<WorkspaceMemberRepository>();
+    final userRepo = context.read<UserRepository>();
+    final members = await memberRepo.getMembers(workspace.id);
+    
+    List<Map<String, dynamic>> detailedMembers = [];
+    for (var member in members) {
+      final userProfile = await userRepo.getUser(member.studentId);
+      detailedMembers.add({
+        'role': member.isLeader ? 'Ketua' : 'Anggota',
+        'name': userProfile.fullName,
+        'email': userProfile.email
+      });
+    }
+    return detailedMembers;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +43,7 @@ class WorkspaceProfileWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _buildEstheticMembersList(),
+        _buildEstheticMembersList(context), // Lempar context ke dalam fungsi
       ],
     );
   }
@@ -42,7 +61,7 @@ class WorkspaceProfileWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03), // Bayangan super tipis
+            color: Colors.black.withOpacity(0.03), 
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -78,7 +97,6 @@ class WorkspaceProfileWidget extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           
-          // Kotak untuk topik agar tidak terlihat "sepi"
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -105,9 +123,9 @@ class WorkspaceProfileWidget extends StatelessWidget {
   // ==========================================
   // LIST ANGGOTA (Satu kotak menyatu bergaya iOS)
   // ==========================================
-  Widget _buildEstheticMembersList() {
+  Widget _buildEstheticMembersList(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: controller.getWorkspaceMembersDetails(workspace.id),
+      future: _fetchMembers(context), // <--- Gunakan fungsi _fetchMembers yang baru
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -145,7 +163,7 @@ class WorkspaceProfileWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02), // Bayangan super tipis
+                color: Colors.black.withOpacity(0.02), 
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -153,14 +171,10 @@ class WorkspaceProfileWidget extends StatelessWidget {
             border: Border.all(color: Colors.grey.shade100),
           ),
           child: ListView.separated(
-            // ---> INI KUNCI AGAR DATA MUNCUL DI LAYAR <---
             shrinkWrap: true, 
             physics: const NeverScrollableScrollPhysics(),
-            // ---------------------------------------------
-            
             padding: EdgeInsets.zero,
             itemCount: members.length,
-            // Pembatas menjorok ke dalam agar sejajar dengan teks
             separatorBuilder: (context, index) => Divider(color: Colors.grey.shade100, height: 1, indent: 70, endIndent: 20),
             itemBuilder: (context, index) {
               final member = members[index];
@@ -208,7 +222,7 @@ class WorkspaceProfileWidget extends StatelessWidget {
                         ],
                       ),
                     )
-                  : null, // Anggota biasa dikosongkan agar rapi
+                  : null, 
               );
             },
           ),
