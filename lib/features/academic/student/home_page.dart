@@ -4,6 +4,7 @@ import 'package:academic_project_monitoring_system/features/academic/student/wor
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'workspace_home_view.dart';
+import 'workspace_detail_view.dart'; 
 
 class HomePage extends StatefulWidget{
   @override
@@ -25,9 +26,10 @@ class _HomePageState extends State<HomePage> {
     final workspaceController = context.watch<WorkspaceController>();
 
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(243, 244, 246, 1), 
+      backgroundColor: const Color.fromRGBO(243, 244, 246, 1),
       //header
       appBar: AppBar(
+        backgroundColor: const Color.fromRGBO(243, 244, 246, 1),
         title: 
         Column (
           children: [
@@ -47,7 +49,7 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       "Halo, ${loginController.currentUser?.fullName}",
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Colors.blueAccent,
                         fontWeight: FontWeight.bold,
                         fontSize: 25,
                       ),
@@ -87,10 +89,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(width: 8),
 
-
-
                 // Logout
-                /// Belom ada dialog konfirmasi ya gok
                 IconButton(
                   icon: Icon(Icons.logout_outlined),
                   onPressed: () {
@@ -237,7 +236,6 @@ class _HomePageState extends State<HomePage> {
                     //List Tubes
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
-                      padding: EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(15),
@@ -246,78 +244,93 @@ class _HomePageState extends State<HomePage> {
                           width: 0.5,
                         )
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          //nama dan icon panah
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "${workspace.teamName ?? "Tanpa Nama"}",
-                                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold ,fontSize: 23)
-                                  ),
-                                  Text(
-                                    "Kelompok ${workspace.projectId}",
-                                    style: TextStyle(color: Colors.black, fontSize: 15)
-                                  ),
-                                ],
+                      child: Material(
+                        color: Colors.transparent, 
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(15), 
+                          onTap: () {
+                            // Navigasi ke WorkspaceDetailView saat diklik
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => WorkspaceDetailView(workspace: workspace),
                               ),
-                              Spacer(),
-                              Icon(Icons.arrow_right_rounded, color: Colors.grey,)
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          //bar progress
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              //text dan persen
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("Progres Keseluruhan", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
-                                  Spacer(),
-                                  Text("90%", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12))
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              //progres bar
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: LinearProgressIndicator(
-                                  value: 0.90, 
-                                  backgroundColor: Colors.grey[200],
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                                  minHeight: 8, 
+                            ).then((_) {
+                              context.read<WorkspaceController>().fetchMyWorkspaces();
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0), 
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Nama dan Icon Panah
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "${workspace.teamName}",
+                                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold ,fontSize: 20)
+                                        ),
+                                        Text(
+                                          "Kelompok ${workspace.projectName}",
+                                          style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        ),
+                                      ],
+                                    ),
+                                    const Icon(Icons.arrow_right_rounded, color: Colors.grey)
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-
-                              //line
-                              Divider(color: Colors.grey[300]),
-                              const SizedBox(height: 8),
-
-                              //Update
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Icon(Icons.access_time, color: Colors.grey[300]),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    "Baru Saja Di Update",
-                                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                const SizedBox(height: 14),
+                                
+                                // Bar Progress (nanti Di Fix)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: const [
+                                        Text("Progres Keseluruhan", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
+                                        Spacer(),
+                                        Text("90%", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12))
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: LinearProgressIndicator(
+                                        value: 0.90, 
+                                        backgroundColor: Colors.grey[200],
+                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                                        minHeight: 8, 
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Divider(color: Colors.grey[300]),
+                                    const SizedBox(height: 8),
+ 
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Icon(Icons.access_time, color: Colors.grey[300]),
+                                        const SizedBox(width: 6),
+                                        const Text(
+                                          "Baru Saja Di Update",
+                                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
+                        ),
                       ),
-                    );  
+                    );
                   },
                 );
               }

@@ -36,7 +36,6 @@ class _WorkspaceJoinViewState extends State<WorkspaceJoinView> {
     setState(() {
       _isLoading = true;
     });
-
     final workspaceController = Provider.of<WorkspaceController>(context, listen: false);
     final isSuccess = await workspaceController.joinWorkspaceById(workspaceId);
 

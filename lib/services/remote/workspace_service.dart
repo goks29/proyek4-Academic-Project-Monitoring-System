@@ -93,6 +93,7 @@ class WorkspaceService {
 
       return cloudData;
     } catch (e) {
+      debugPrint('ERROR FETCH WORKSPACE: $e');
       return box.values.toList();
     }
   }
