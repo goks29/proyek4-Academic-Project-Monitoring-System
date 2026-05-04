@@ -16,15 +16,18 @@ class LecturerBottomNav extends StatelessWidget {
       selectedItemColor: Colors.indigo,
       unselectedItemColor: Colors.grey,
       onTap: (index) async {
+        // Index 1 sekarang adalah tombol "TAMBAH"
         if (index == 1) {
-          final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddProjectView()));
+          final result = await Navigator.push(
+            context, 
+            MaterialPageRoute(builder: (context) => const AddProjectView())
+          );
           if (result == true) onRefresh();
         }
       },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'BERANDA'),
         BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: 'TAMBAH'),
-        BottomNavigationBarItem(icon: Icon(Icons.people_alt_outlined), label: 'MAHASISWA'),
       ],
     );
   }
