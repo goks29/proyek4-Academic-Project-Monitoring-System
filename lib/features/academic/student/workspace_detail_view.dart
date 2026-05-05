@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'workspace_controller.dart';
+import 'phase_task_setup_page.dart';
 
 
 class WorkspaceDetailView extends StatefulWidget {
@@ -322,19 +323,19 @@ class _LeaderActionsGrid extends StatelessWidget {
       );
       return;
     }
-    // final result = await Navigator.push<bool>(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (_) => PhaseTaskSetupPage(
-    //       workspaceId: workspace.id,
-    //       members: controller.workspaceMembers,
-    //     ),
-    //   ),
-    // );
-    // // Jika ada data baru tersimpan, refresh detail
-    // if (result == true && context.mounted) {
-    //   await controller.loadWorkspaceData(workspace.id);
-    // }
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PhaseTaskSetupPage(
+          workspaceId: workspace.id,
+          members: controller.workspaceMembers,
+        ),
+      ),
+    );
+    // Jika ada data baru tersimpan, refresh detail
+    if (result == true && context.mounted) {
+      await controller.loadWorkspaceData(workspace.id);
+    }
   }
 
   // Dialog: Join Project Dosen
