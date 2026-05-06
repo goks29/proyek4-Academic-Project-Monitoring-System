@@ -41,6 +41,10 @@ class TaskAllocationModel {
   @HiveField(8)
   final DateTime? serverReceivedAt;
 
+  /// Persentase progress pengerjaan (0–100).
+  /// Tidak disimpan ke Hive (transient), diisi saat fetch dari cloud.
+  final int progress;
+
   TaskAllocationModel({
     required this.id,
     required this.phaseId,
@@ -51,6 +55,7 @@ class TaskAllocationModel {
     this.lecturerFeedback,
     required this.clientCreatedAt,
     this.serverReceivedAt,
+    this.progress = 0,
   });
 
   /// Membuat instance TaskAllocationModel dari format JSON Supabase.
@@ -67,6 +72,7 @@ class TaskAllocationModel {
       serverReceivedAt: json['server_received_at'] != null 
           ? DateTime.parse(json['server_received_at'] as String) 
           : null,
+      progress: json['progress'] as int? ?? 0,
     );
   }
 
@@ -81,5 +87,31 @@ class TaskAllocationModel {
       'lecturer_feedback': lecturerFeedback,
       'client_created_at': clientCreatedAt.toIso8601String(),
     };
+  }
+
+  TaskAllocationModel copyWith({
+    String? id,
+    String? phaseId,
+    String? studentId,
+    String? taskDescription,
+    bool? isDone,
+    String? status,
+    String? lecturerFeedback,
+    DateTime? clientCreatedAt,
+    DateTime? serverReceivedAt,
+    int? progress,
+  }) {
+    return TaskAllocationModel(
+      id: id ?? this.id,
+      phaseId: phaseId ?? this.phaseId,
+      studentId: studentId ?? this.studentId,
+      taskDescription: taskDescription ?? this.taskDescription,
+      isDone: isDone ?? this.isDone,
+      status: status ?? this.status,
+      lecturerFeedback: lecturerFeedback ?? this.lecturerFeedback,
+      clientCreatedAt: clientCreatedAt ?? this.clientCreatedAt,
+      serverReceivedAt: serverReceivedAt ?? this.serverReceivedAt,
+      progress: progress ?? this.progress,
+    );
   }
 }

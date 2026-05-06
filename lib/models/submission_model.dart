@@ -44,6 +44,10 @@ class SubmissionModel {
   @HiveField(9)
   final DateTime? serverReceivedAt;
 
+  /// ID task_allocation yang dikaitkan dengan submission ini.
+  /// Tidak disimpan ke Hive (transient), diisi saat fetch dari cloud.
+  final String? taskId;
+
   SubmissionModel({
     required this.id,
     required this.phaseId,
@@ -55,6 +59,7 @@ class SubmissionModel {
     this.lecturerFeedback,
     this.lecturerId,
     this.serverReceivedAt,
+    this.taskId,
   });
 
   /// Membuat instance SubmissionModel dari format JSON Supabase.
@@ -72,6 +77,7 @@ class SubmissionModel {
       serverReceivedAt: json['server_received_at'] != null 
           ? DateTime.parse(json['server_received_at'] as String) 
           : null,
+      taskId: json['task_id'] as String?,
     );
   }
 
@@ -86,6 +92,7 @@ class SubmissionModel {
       'status': status,
       'lecturer_feedback': lecturerFeedback,
       'lecturer_id': lecturerId,
+      if (taskId != null) 'task_id': taskId,
     };
   }
 }
