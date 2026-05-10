@@ -167,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Text("Tugas yang sudah selesai", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
                         const SizedBox(height: 6),
-                        Text("17", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 25)),
+                        Text("${workspaceController.totalSelesai}", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 25)),
                       ],
                     )                  
                   ),
@@ -190,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Text("Tugas yang tertunda", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 20)),
                         const SizedBox(height: 6),
-                        Text("2", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 25)),
+                        Text("${workspaceController.totalTertunda}", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 25)),
                       ],
                     )                  
                   ),
@@ -232,6 +232,8 @@ class _HomePageState extends State<HomePage> {
                   itemCount: workspaceController.myWorkspaces.length,
                   itemBuilder: (context, index) {
                     final workspace = workspaceController.myWorkspaces[index];
+                    final progressAvg = workspaceController.workspaceProgress[workspace.id] ?? 0.0;
+                    final progressDecimal = progressAvg / 100.0;
 
                     //List Tubes
                     return Container(
@@ -286,23 +288,23 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 const SizedBox(height: 14),
                                 
-                                // Bar Progress (nanti Di Fix)
+                                // Bar Progress
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: const [
-                                        Text("Progres Keseluruhan", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
-                                        Spacer(),
-                                        Text("90%", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12))
+                                      children: [
+                                        const Text("Progres Keseluruhan", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
+                                        const Spacer(),
+                                        Text("${progressAvg.toInt()}%", style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12))
                                       ],
                                     ),
                                     const SizedBox(height: 8),
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
                                       child: LinearProgressIndicator(
-                                        value: 0.90, 
+                                        value: progressDecimal, 
                                         backgroundColor: Colors.grey[200],
                                         valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
                                         minHeight: 8, 
