@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
-import 'workspace_controller.dart';
+import 'workspace_detail_controller.dart';
 import 'phase_task_setup_page.dart';
+import 'workspace_task_view.dart'; 
+import 'workspace_task_controller.dart'; 
 
 
 class WorkspaceDetailView extends StatefulWidget {
@@ -28,14 +30,14 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
     _currentUserId = Supabase.instance.client.auth.currentUser?.id ?? '';
     _isLeader = false;
     Future.microtask(() async {
-      await context.read<WorkspaceController>().loadWorkspaceData(widget.workspace.id);
+      await context.read<WorkspaceDetailController>().loadWorkspaceData(widget.workspace.id);
       if (mounted) _resolveLeaderStatus();
     });
   }
 
   void _resolveLeaderStatus() {
     if (!mounted) return;
-    final ctrl = context.read<WorkspaceController>();
+    final ctrl = context.read<WorkspaceDetailController>();
     setState(() {
       _isLeader = ctrl.isCurrentUserLeader;
     });
@@ -43,7 +45,7 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = context.watch<WorkspaceController>();
+    final ctrl = context.watch<WorkspaceDetailController>();
     final ws = widget.workspace;
 
     return Scaffold(
@@ -104,7 +106,7 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
                     // Phase & Task 
                     const _SectionHeader(title: 'Progress Phase & Task'),
                     const SizedBox(height: 12),
-                    _PhaseTaskList(controller: ctrl, workspaceId: ws.id),
+                    _PhaseTaskList(controller: ctrl, workspace: ws),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -265,7 +267,7 @@ class _SectionHeader extends StatelessWidget {
 
 class _LeaderActionsGrid extends StatelessWidget {
   final WorkspaceModel workspace;
-  final WorkspaceController controller;
+  final WorkspaceDetailController controller;
   final String currentUserId;
 
   const _LeaderActionsGrid({
@@ -679,7 +681,7 @@ class _ActionTile extends StatelessWidget {
 // Member List
 
 class _MemberList extends StatelessWidget {
-  final WorkspaceController controller;
+  final WorkspaceDetailController controller;
   const _MemberList({required this.controller});
 
   @override
@@ -729,16 +731,20 @@ class _MemberList extends StatelessWidget {
 // Phase & Task List
 
 class _PhaseTaskList extends StatelessWidget {
-  final WorkspaceController controller;
-  final String workspaceId;
+  final WorkspaceDetailController controller;
+  final WorkspaceModel workspace; // <-- Diubah: Menerima model workspace utuh
 
-  const _PhaseTaskList(
-      {required this.controller, required this.workspaceId});
+  const _PhaseTaskList({
+    super.key,
+    required this.controller,
+    required this.workspace, // <-- Diubah
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Ambil phase berdasarkan workspace.id
     final phases = controller.allPhases
-        .where((p) => p.workspaceId == workspaceId)
+        .where((p) => p.workspaceId == workspace.id)
         .toList();
 
     if (phases.isEmpty) {
@@ -780,6 +786,25 @@ class _PhaseTaskList extends StatelessWidget {
                 : tasks
                     .map((task) => ListTile(
                           dense: true,
+                          // TAMBAHAN: onTap untuk navigasi ke halaman Task Detail
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>ChangeNotifierProvider(
+                                  create: (context) =>WorkspaceTaskController(),
+                                  child: WorkspaceTaskView(
+                                    workspace: workspace,
+                                    task: task, // Oper object Task-nya ke sini
+                                  ),
+                                ),
+                              ),
+                            ).then((_) {
+                              // Opsional: Refresh data workspace saat user pencet 'Back'
+                              // Biar kalau progress task-nya nambah, bar di depannya ikut update
+                              controller.loadWorkspaceData(workspace.id);
+                            });
+                          },
                           leading: Icon(
                             task.isDone
                                 ? Icons.check_circle

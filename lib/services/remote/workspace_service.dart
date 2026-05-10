@@ -148,7 +148,9 @@ class WorkspaceService {
           .select('*, users!workspace_members_student_id_fkey(*)')
           .eq('workspace_id', workspaceId);
 
-      final members = (response as List).map((data) {
+      final members = (response as List)
+          .where((data) => data['users'] != null)
+          .map((data) {
         return UserModel.fromJson(data['users']);
       }).toList();
       var box = await Hive.openBox<UserModel>('workspace_members_users');

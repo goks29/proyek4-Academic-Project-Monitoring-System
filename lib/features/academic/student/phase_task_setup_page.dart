@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:academic_project_monitoring_system/models/user_model.dart';
-import 'workspace_controller.dart';
+import 'workspace_detail_controller.dart';
 
 class _TaskEntry {
   String? studentId;
@@ -122,7 +122,7 @@ class _PhaseTaskSetupPageState extends State<PhaseTaskSetupPage> {
       );
     }).toList();
 
-    final ctrl = context.read<WorkspaceController>();
+    final ctrl = context.read<WorkspaceDetailController>();
     final ok = await ctrl.createPhasesWithTasks(widget.workspaceId, phaseEntries);
 
     if (!mounted) return;

@@ -11,6 +11,8 @@ import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/workspace_member_model.dart';
 import 'package:provider/provider.dart';
 import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/workspace_detail_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/workspace_task_controller.dart';
 import 'package:academic_project_monitoring_system/features/academic/auth/login_controller.dart';
 import 'package:academic_project_monitoring_system/features/academic/auth/login_view.dart';
 
@@ -44,6 +46,8 @@ Future<void> main() async {
         providers: [
           ChangeNotifierProvider(create: (_) => LoginController()..checkSession()),
           ChangeNotifierProvider(create: (_) => WorkspaceController()),
+          ChangeNotifierProvider(create: (_) => WorkspaceDetailController()),
+          ChangeNotifierProvider(create: (_) => WorkspaceTaskController()),
         ],
         child: const MyApp(),
       ),

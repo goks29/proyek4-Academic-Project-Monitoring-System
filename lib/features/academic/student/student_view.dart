@@ -17,7 +17,7 @@ class _StudentViewState extends State<StudentView> {
 
   late final List<Widget> _page = [
     HomePage(),
-    const Text("ayam")
+    const Center(child: Text("Halaman Tugas")),
   ];
 
   @override

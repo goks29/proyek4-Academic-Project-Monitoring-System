@@ -8,7 +8,7 @@ import 'package:academic_project_monitoring_system/services/remote/submission_se
 
 /// Controller untuk TaskDetailPage (di-scope per-route).
 /// Menangani progress update dan upload bukti pengerjaan.
-class TaskController extends ChangeNotifier {
+class WorkspaceTaskController extends ChangeNotifier {
   final TaskService _taskService = TaskService(Supabase.instance.client);
   final SubmissionService _submissionService =
       SubmissionService(Supabase.instance.client);
@@ -27,19 +27,23 @@ class TaskController extends ChangeNotifier {
 
   // ── Load ──────────────────────────────────────────────────────────────────
 
-  Future<void> loadTask(String taskId) async {
+  Future<void> loadTask(TaskAllocationModel initialTask) async {
+    _task = initialTask;
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
       final results = await Future.wait([
-        _taskService.getTaskById(taskId),
-        _submissionService.getSubmissionsByTask(taskId),
+        _taskService.getTaskById(initialTask.id),
+        _submissionService.getSubmissionsByTask(initialTask.id),
       ]);
-      _task = results[0] as TaskAllocationModel?;
+      final fetchedTask = results[0] as TaskAllocationModel?;
+      if (fetchedTask != null) {
+        _task = fetchedTask;
+      }
       _submissions = results[1] as List<SubmissionModel>;
     } catch (e) {
-      _errorMessage = 'Gagal memuat data task: ${e.toString()}';
+      _errorMessage = 'Gagal memuat data: ${e.toString()}';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -54,11 +58,16 @@ class TaskController extends ChangeNotifier {
     notifyListeners();
     try {
       await _taskService.updateTaskProgress(taskId, progress);
+      
+      bool isNowDone = progress >= 100;
+      if (_task != null && _task!.isDone != isNowDone) {
+        await _taskService.updateTaskStatus(taskId, isNowDone);
+      }
+
       if (_task != null) {
         _task = _task!.copyWith(
           progress: progress,
-          isDone: progress >= 100,
-          status: progress >= 100 ? 'done' : _task!.status,
+          isDone: isNowDone,
         );
       }
       notifyListeners();
