@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
-import 'workspace_controller.dart';
+import 'workspace_detail_controller.dart';
 import 'phase_task_setup_page.dart';
 
 
@@ -28,14 +28,14 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
     _currentUserId = Supabase.instance.client.auth.currentUser?.id ?? '';
     _isLeader = false;
     Future.microtask(() async {
-      await context.read<WorkspaceController>().loadWorkspaceData(widget.workspace.id);
+      await context.read<WorkspaceDetailController>().loadWorkspaceData(widget.workspace.id);
       if (mounted) _resolveLeaderStatus();
     });
   }
 
   void _resolveLeaderStatus() {
     if (!mounted) return;
-    final ctrl = context.read<WorkspaceController>();
+    final ctrl = context.read<WorkspaceDetailController>();
     setState(() {
       _isLeader = ctrl.isCurrentUserLeader;
     });
@@ -43,7 +43,7 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = context.watch<WorkspaceController>();
+    final ctrl = context.watch<WorkspaceDetailController>();
     final ws = widget.workspace;
 
     return Scaffold(
@@ -265,7 +265,7 @@ class _SectionHeader extends StatelessWidget {
 
 class _LeaderActionsGrid extends StatelessWidget {
   final WorkspaceModel workspace;
-  final WorkspaceController controller;
+  final WorkspaceDetailController controller;
   final String currentUserId;
 
   const _LeaderActionsGrid({
@@ -326,9 +326,12 @@ class _LeaderActionsGrid extends StatelessWidget {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => PhaseTaskSetupPage(
-          workspaceId: workspace.id,
-          members: controller.workspaceMembers,
+        builder: (_) => ChangeNotifierProvider.value(
+          value: controller,
+          child: PhaseTaskSetupPage(
+            workspaceId: workspace.id,
+            members: controller.workspaceMembers,
+          ),
         ),
       ),
     );
@@ -679,7 +682,7 @@ class _ActionTile extends StatelessWidget {
 // Member List
 
 class _MemberList extends StatelessWidget {
-  final WorkspaceController controller;
+  final WorkspaceDetailController controller;
   const _MemberList({required this.controller});
 
   @override
@@ -729,7 +732,7 @@ class _MemberList extends StatelessWidget {
 // Phase & Task List
 
 class _PhaseTaskList extends StatelessWidget {
-  final WorkspaceController controller;
+  final WorkspaceDetailController controller;
   final String workspaceId;
 
   const _PhaseTaskList(

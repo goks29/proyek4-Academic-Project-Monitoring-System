@@ -21,6 +21,16 @@ class SubmissionService {
         .toList();
   }
 
+  Future<List<SubmissionModel>> getSubmissionsByTaskId(String taskId) async {
+    final response = await _client
+        .from('submissions')
+        .select()
+        .eq('task_id', taskId);
+    return (response as List<dynamic>)
+        .map((json) => SubmissionModel.fromJson(json))
+        .toList();
+  }
+
   /// Mengambil riwayat submission berdasarkan task_id, urut terbaru dulu.
   Future<List<SubmissionModel>> getSubmissionsByTask(String taskId) async {
     final response = await _client
@@ -102,7 +112,6 @@ class SubmissionService {
     return SubmissionModel.fromJson(response);
   }
 
-  /// Mengirimkan data submission baru ke database cloud (tanpa file).
   Future<SubmissionModel> createSubmission(SubmissionModel submission) async {
     final response = await _client
         .from('submissions')
@@ -118,6 +127,17 @@ class SubmissionService {
     await _client
         .from('submissions')
         .update({'status': status, 'lecturer_feedback': feedback})
+        .eq('id', submissionId);
+  }
+
+  Future<void> updateSubmissionReview(String submissionId, String status, String feedback, String lecturerId) async {
+    await _client
+        .from('submissions')
+        .update({
+          'status': status,
+          'lecturer_feedback': feedback,
+          'lecturer_id': lecturerId,
+        })
         .eq('id', submissionId);
   }
 }

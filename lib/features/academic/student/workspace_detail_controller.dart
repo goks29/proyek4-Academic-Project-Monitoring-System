@@ -69,7 +69,7 @@ class WorkspaceDetailController extends ChangeNotifier {
         _errorMessage = 'Proyek tidak ditemukan dengan kode tersebut.';
         return false;
       }
-      await _service.linkWorkspaceToProject(workspaceId, project.id);
+      await _service.linkWorkspaceToProject(workspaceId, project.joinCode);
       return true;
     } catch (e) {
       _errorMessage =
@@ -109,8 +109,6 @@ class WorkspaceDetailController extends ChangeNotifier {
         phaseName: phaseName,
         sortOrder: sortOrder,
         status: 'pending',
-        isLocked: true,
-        requireEvidence: true,
         clientCreatedAt: DateTime.now(),
       );
       final saved = await _phaseService.createPhase(newPhase);
@@ -171,8 +169,6 @@ class WorkspaceDetailController extends ChangeNotifier {
           phaseName: entry.phaseName,
           sortOrder: entry.sortOrder,
           status: 'pending',
-          isLocked: true,
-          requireEvidence: true,
           clientCreatedAt: DateTime.now(),
         );
         final savedPhase = await _phaseService.createPhase(newPhase);

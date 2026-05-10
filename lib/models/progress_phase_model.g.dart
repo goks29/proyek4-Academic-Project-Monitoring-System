@@ -23,17 +23,15 @@ class ProgressPhaseModelAdapter extends TypeAdapter<ProgressPhaseModel> {
       sortOrder: fields[3] as int,
       status: fields[4] as String,
       lecturerFeedback: fields[5] as String?,
-      requireEvidence: fields[6] as bool,
-      isLocked: fields[7] as bool,
-      clientCreatedAt: fields[8] as DateTime,
-      serverReceivedAt: fields[9] as DateTime?,
+      clientCreatedAt: fields[6] as DateTime,
+      serverReceivedAt: fields[7] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProgressPhaseModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -47,12 +45,8 @@ class ProgressPhaseModelAdapter extends TypeAdapter<ProgressPhaseModel> {
       ..writeByte(5)
       ..write(obj.lecturerFeedback)
       ..writeByte(6)
-      ..write(obj.requireEvidence)
-      ..writeByte(7)
-      ..write(obj.isLocked)
-      ..writeByte(8)
       ..write(obj.clientCreatedAt)
-      ..writeByte(9)
+      ..writeByte(7)
       ..write(obj.serverReceivedAt);
   }
 

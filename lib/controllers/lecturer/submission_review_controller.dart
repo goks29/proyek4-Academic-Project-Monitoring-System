@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../../models/submission_model.dart';
 import '../../repositories/submission_repository.dart';
 
-/// Controller untuk meninjau hasil pengumpulan tugas (submission) oleh dosen.
 class SubmissionReviewController extends ChangeNotifier {
   final SubmissionRepository _repository;
 
@@ -12,14 +11,13 @@ class SubmissionReviewController extends ChangeNotifier {
 
   SubmissionReviewController(this._repository);
 
-  /// Mengambil daftar submission berdasarkan ID fase.
-  Future<void> fetchSubmissions(String phaseId) async {
+  Future<void> fetchSubmissions(String taskId) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      submissions = await _repository.getSubmissions(phaseId);
+      submissions = await _repository.getSubmissionsByTaskId(taskId);
     } catch (e) {
       errorMessage = e.toString();
     } finally {
@@ -28,29 +26,28 @@ class SubmissionReviewController extends ChangeNotifier {
     }
   }
 
-  /// Memperbarui status peninjauan submission dan memberikan catatan feedback.
-  Future<void> reviewSubmission(String submissionId, String status, String feedback) async {
+  Future<void> reviewSubmission(String submissionId, String status, String feedback, String lecturerId) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      await _repository.reviewSubmission(submissionId, status, feedback);
-      
+      await _repository.reviewSubmission(submissionId, status, feedback, lecturerId);
+
       final index = submissions.indexWhere((s) => s.id == submissionId);
       if (index != -1) {
-         submissions[index] = SubmissionModel(
-            id: submissions[index].id,
-            phaseId: submissions[index].phaseId,
-            studentId: submissions[index].studentId,
-            submittedAt: submissions[index].submittedAt,
-            evidenceFileUrl: submissions[index].evidenceFileUrl,
-            studentNotes: submissions[index].studentNotes,
-            status: status,
-            lecturerFeedback: feedback,
-            lecturerId: submissions[index].lecturerId,
-            serverReceivedAt: submissions[index].serverReceivedAt,
-         );
+        submissions[index] = SubmissionModel(
+          id: submissions[index].id,
+          taskId: submissions[index].taskId,
+          studentId: submissions[index].studentId,
+          submittedAt: submissions[index].submittedAt,
+          evidenceFileUrl: submissions[index].evidenceFileUrl,
+          studentNotes: submissions[index].studentNotes,
+          status: status,
+          lecturerFeedback: feedback,
+          lecturerId: lecturerId,
+          serverReceivedAt: submissions[index].serverReceivedAt,
+        );
       }
     } catch (e) {
       errorMessage = e.toString();

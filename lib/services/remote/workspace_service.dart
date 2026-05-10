@@ -209,6 +209,56 @@ class WorkspaceService {
     }
   }
 
+  Future<List<WorkspaceModel>> getWorkspaces() async {
+    final response = await _supabaseClient.from('workspaces').select();
+    return (response as List<dynamic>)
+        .map((json) => WorkspaceModel.fromJson(json))
+        .toList();
+  }
+
+  Future<List<WorkspaceModel>> getWorkspacesByJoinCode(String joinCode) async {
+    final response = await _supabaseClient
+        .from('workspaces')
+        .select()
+        .eq('join_code', joinCode);
+    return (response as List<dynamic>)
+        .map((json) => WorkspaceModel.fromJson(json))
+        .toList();
+  }
+
+  Future<WorkspaceModel> createWorkspaceModel(WorkspaceModel workspace) async {
+    final response = await _supabaseClient
+        .from('workspaces')
+        .insert(workspace.toJson())
+        .select()
+        .single();
+    return WorkspaceModel.fromJson(response);
+  }
+
+  Future<void> joinProject(String workspaceId, String joinCode) async {
+    await _supabaseClient
+        .from('workspaces')
+        .update({'join_code': joinCode})
+        .eq('id', workspaceId);
+  }
+
+  Future<void> updateWorkspace(String workspaceId, Map<String, dynamic> data) async {
+    await _supabaseClient
+        .from('workspaces')
+        .update(data)
+        .eq('id', workspaceId);
+  }
+
+  Future<void> updateTopicStatus(String workspaceId, String status, String? feedback) async {
+    await _supabaseClient
+        .from('workspaces')
+        .update({
+          'status': status,
+          'lecturer_feedback': feedback,
+        })
+        .eq('id', workspaceId);
+  }
+
   /// Menghubungkan WORKSPACES ke PROJECT dosen via join_code.
   Future<void> linkWorkspaceToProject(
     String workspaceId,

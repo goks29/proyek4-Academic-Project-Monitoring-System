@@ -18,7 +18,7 @@ class SubmissionModelAdapter extends TypeAdapter<SubmissionModel> {
     };
     return SubmissionModel(
       id: fields[0] as String,
-      phaseId: fields[1] as String,
+      taskId: fields[1] as String,
       studentId: fields[2] as String,
       submittedAt: fields[3] as DateTime,
       evidenceFileUrl: fields[4] as String?,
@@ -27,6 +27,7 @@ class SubmissionModelAdapter extends TypeAdapter<SubmissionModel> {
       lecturerFeedback: fields[7] as String?,
       lecturerId: fields[8] as String?,
       serverReceivedAt: fields[9] as DateTime?,
+
     );
   }
 
@@ -37,7 +38,7 @@ class SubmissionModelAdapter extends TypeAdapter<SubmissionModel> {
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.phaseId)
+      ..write(obj.taskId)
       ..writeByte(2)
       ..write(obj.studentId)
       ..writeByte(3)

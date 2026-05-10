@@ -32,34 +32,48 @@ class WorkspaceModel extends HiveObject{
   @HiveField(8)
   DateTime? serverReceivedAt;
 
+  @HiveField(9)
+  String? joinCode;
+
+  @HiveField(10)
+  String? status;
+
+  @HiveField(11)
+  String? lecturerFeedback;
+
   /// Nama project dari tabel `projects`. Tidak disimpan ke Hive (transient),
   /// diisi saat fetch dari cloud.
   String? projectName;
 
   WorkspaceModel({
     required this.id,
-    required this.projectId,
+    this.projectId = '',
+    this.joinCode,
     required this.teamName,
     this.topicName,
     this.topicDescription,
     required this.progressionMode,
+    this.status,
+    this.lecturerFeedback,
     required this.isCompleted,
     required this.clientCreatedAt,
     this.serverReceivedAt,
     this.projectName,
   });
 
-  /// Membuat instance WorkspaceModel dari format JSON Supabase.
   factory WorkspaceModel.fromJson(Map<String, dynamic> json) {
     // Ambil nama project dari join table jika tersedia
     final projectData = json['projects'] as Map<String, dynamic>?;
     return WorkspaceModel(
       id: json['id'] as String,
       projectId: json['project_id'] as String? ?? '',
+      joinCode: json['join_code'] as String?,
       teamName: json['team_name'] as String,
       topicName: json['topic_name'] as String?,
       topicDescription: json['topic_description'] as String?,
-      progressionMode: json['progression_mode'] as String,
+      progressionMode: json['progression_mode'] as String? ?? 'strict',
+      status: json['status'] as String? ?? 'pending',
+      lecturerFeedback: json['lecturer_feedback'] as String?,
       isCompleted: json['is_completed'] as bool? ?? false,
       clientCreatedAt: DateTime.parse(json['client_created_at'] as String),
       serverReceivedAt: json['server_received_at'] != null
@@ -80,6 +94,9 @@ class WorkspaceModel extends HiveObject{
       'is_completed': isCompleted,
       'client_created_at': clientCreatedAt.toIso8601String(),
     };
+    if (joinCode != null) data['join_code'] = joinCode;
+    if (status != null) data['status'] = status;
+    if (lecturerFeedback != null) data['lecturer_feedback'] = lecturerFeedback;
     // Hanya sertakan project_id jika sudah diisi (setelah join project dosen)
     if (projectId.isNotEmpty) data['project_id'] = projectId;
     if (topicName != null) data['topic_name'] = topicName;

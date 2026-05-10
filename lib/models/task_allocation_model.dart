@@ -27,18 +27,24 @@ class TaskAllocationModel {
   final String taskDescription;
 
   @HiveField(4)
-  final bool isDone;
+  final int percentage;
 
   @HiveField(5)
-  final String status;
+  final bool requireEvidence;
 
   @HiveField(6)
-  final String? lecturerFeedback;
+  final bool isDone;
 
   @HiveField(7)
-  final DateTime clientCreatedAt;
+  final String status;
 
   @HiveField(8)
+  final String? lecturerFeedback;
+
+  @HiveField(9)
+  final DateTime clientCreatedAt;
+
+  @HiveField(10)
   final DateTime? serverReceivedAt;
 
   /// Persentase progress pengerjaan (0–100).
@@ -50,6 +56,8 @@ class TaskAllocationModel {
     required this.phaseId,
     required this.studentId,
     required this.taskDescription,
+    this.percentage = 0,
+    this.requireEvidence = true,
     this.isDone = false,
     required this.status,
     this.lecturerFeedback,
@@ -65,6 +73,8 @@ class TaskAllocationModel {
       phaseId: json['phase_id'] as String,
       studentId: json['student_id'] as String,
       taskDescription: json['task_description'] as String,
+      percentage: json['percentage'] as int? ?? 0,
+      requireEvidence: json['require_evidence'] as bool? ?? true,
       isDone: json['is_done'] as bool? ?? false,
       status: json['status'] as String,
       lecturerFeedback: json['lecturer_feedback'] as String?,
@@ -82,6 +92,8 @@ class TaskAllocationModel {
       'phase_id': phaseId,
       'student_id': studentId,
       'task_description': taskDescription,
+      'percentage': percentage,
+      'require_evidence': requireEvidence,
       'is_done': isDone,
       'status': status,
       'lecturer_feedback': lecturerFeedback,

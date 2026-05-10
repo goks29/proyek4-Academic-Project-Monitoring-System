@@ -4,7 +4,8 @@ import 'package:academic_project_monitoring_system/features/academic/student/wor
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'workspace_home_view.dart';
-import 'workspace_detail_view.dart'; 
+import 'workspace_detail_view.dart';
+import 'workspace_detail_controller.dart';
 
 class HomePage extends StatefulWidget{
   @override
@@ -253,7 +254,10 @@ class _HomePageState extends State<HomePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => WorkspaceDetailView(workspace: workspace),
+                                builder: (context) => ChangeNotifierProvider(
+                                  create: (_) => WorkspaceDetailController(),
+                                  child: WorkspaceDetailView(workspace: workspace),
+                                ),
                               ),
                             ).then((_) {
                               context.read<WorkspaceController>().fetchMyWorkspaces();
@@ -276,7 +280,11 @@ class _HomePageState extends State<HomePage> {
                                           style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold ,fontSize: 20)
                                         ),
                                         Text(
-                                          "Kelompok ${workspace.projectName}",
+                                          "Kelompok ${workspace.topicName}",
+                                          style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        ),
+                                        Text(
+                                          "Tugas ${workspace.projectName}",
                                           style: const TextStyle(color: Colors.black, fontSize: 13),
                                         ),
                                       ],

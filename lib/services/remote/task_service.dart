@@ -54,4 +54,28 @@ class TaskService {
         .update({'is_done': isDone})
         .eq('id', taskId);
   }
+
+  Future<void> updateTask(String taskId, Map<String, dynamic> data) async {
+    await _client.from('task_allocations').update(data).eq('id', taskId);
+  }
+
+  Future<void> updateTaskDoneStatus(String taskId, bool isDone) async {
+    await _client
+        .from('task_allocations')
+        .update({'is_done': isDone})
+        .eq('id', taskId);
+  }
+
+  Future<void> updateTaskApprovalStatus(String taskId, String status, {String? feedback}) async {
+    final data = <String, dynamic>{'status': status};
+    if (feedback != null) data['lecturer_feedback'] = feedback;
+    await _client.from('task_allocations').update(data).eq('id', taskId);
+  }
+
+  Future<void> updateRequireEvidence(String taskId, bool requireEvidence) async {
+    await _client
+        .from('task_allocations')
+        .update({'require_evidence': requireEvidence})
+        .eq('id', taskId);
+  }
 }

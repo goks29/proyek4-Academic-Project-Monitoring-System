@@ -19,10 +19,13 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
     return WorkspaceModel(
       id: fields[0] as String,
       projectId: fields[1] as String,
+      joinCode: fields[9] as String?,
       teamName: fields[2] as String,
       topicName: fields[3] as String?,
       topicDescription: fields[4] as String?,
       progressionMode: fields[5] as String,
+      status: fields[10] as String?,
+      lecturerFeedback: fields[11] as String?,
       isCompleted: fields[6] as bool,
       clientCreatedAt: fields[7] as DateTime,
       serverReceivedAt: fields[8] as DateTime?,
@@ -32,7 +35,7 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
   @override
   void write(BinaryWriter writer, WorkspaceModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +53,13 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
       ..writeByte(7)
       ..write(obj.clientCreatedAt)
       ..writeByte(8)
-      ..write(obj.serverReceivedAt);
+      ..write(obj.serverReceivedAt)
+      ..writeByte(9)
+      ..write(obj.joinCode)
+      ..writeByte(10)
+      ..write(obj.status)
+      ..writeByte(11)
+      ..write(obj.lecturerFeedback);
   }
 
   @override

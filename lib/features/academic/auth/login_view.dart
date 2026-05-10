@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'login_controller.dart';
 import 'package:academic_project_monitoring_system/features/academic/student/student_view.dart';
-
+import 'package:academic_project_monitoring_system/features/academic/lecturer/view/lecturer_view.dart';
 class LoginView extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -174,11 +174,11 @@ class LoginView extends StatelessWidget {
         (route) => false,
       );
     } else if (role == 'lecturer') {
-      // Navigator.pushAndRemoveUntil(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => LecturerView()),
-      //   (route) => false,
-      // );
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LecturerView()),
+        (route) => false,
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Role tidak dikenal")),

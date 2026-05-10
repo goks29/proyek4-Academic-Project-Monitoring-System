@@ -21,18 +21,20 @@ class TaskAllocationModelAdapter extends TypeAdapter<TaskAllocationModel> {
       phaseId: fields[1] as String,
       studentId: fields[2] as String,
       taskDescription: fields[3] as String,
-      isDone: fields[4] as bool,
-      status: fields[5] as String,
-      lecturerFeedback: fields[6] as String?,
-      clientCreatedAt: fields[7] as DateTime,
-      serverReceivedAt: fields[8] as DateTime?,
+      percentage: fields[4] as int,
+      requireEvidence: fields[5] as bool,
+      isDone: fields[6] as bool,
+      status: fields[7] as String,
+      lecturerFeedback: fields[8] as String?,
+      clientCreatedAt: fields[9] as DateTime,
+      serverReceivedAt: fields[10] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, TaskAllocationModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -42,14 +44,18 @@ class TaskAllocationModelAdapter extends TypeAdapter<TaskAllocationModel> {
       ..writeByte(3)
       ..write(obj.taskDescription)
       ..writeByte(4)
-      ..write(obj.isDone)
+      ..write(obj.percentage)
       ..writeByte(5)
-      ..write(obj.status)
+      ..write(obj.requireEvidence)
       ..writeByte(6)
-      ..write(obj.lecturerFeedback)
+      ..write(obj.isDone)
       ..writeByte(7)
-      ..write(obj.clientCreatedAt)
+      ..write(obj.status)
       ..writeByte(8)
+      ..write(obj.lecturerFeedback)
+      ..writeByte(9)
+      ..write(obj.clientCreatedAt)
+      ..writeByte(10)
       ..write(obj.serverReceivedAt);
   }
 
