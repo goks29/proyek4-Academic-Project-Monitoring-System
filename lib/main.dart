@@ -54,6 +54,8 @@ import 'package:academic_project_monitoring_system/repositories/workspace_reposi
 // --- CONTROLLERS ---
 import 'package:academic_project_monitoring_system/features/academic/auth/login_controller.dart';
 import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/workspace_detail_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/workspace_task_controller.dart';
 import 'package:academic_project_monitoring_system/controllers/lecturer/comment_controller.dart';
 import 'package:academic_project_monitoring_system/controllers/lecturer/phase_approval_controller.dart';
 import 'package:academic_project_monitoring_system/controllers/lecturer/progress_dashboard_controller.dart';
@@ -142,9 +144,13 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        // Auth & Student
+        // Auth
         ChangeNotifierProvider(create: (_) => LoginController()..checkSession()),
+
+        // Student Controllers
         ChangeNotifierProvider(create: (_) => WorkspaceController()),
+        ChangeNotifierProvider(create: (_) => WorkspaceDetailController()),
+        ChangeNotifierProvider(create: (_) => WorkspaceTaskController()),
 
         // Lecturer Controllers
         ChangeNotifierProvider(create: (_) => ProjectController(projectRepo)),

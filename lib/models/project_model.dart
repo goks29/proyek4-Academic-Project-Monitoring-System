@@ -64,7 +64,6 @@ class ProjectModel {
       'title': title,
       'description': description,
       'final_submission_info': finalSubmissionInfo,
-      'is_active': isActive,
     };
   }
 }

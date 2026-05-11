@@ -103,13 +103,17 @@ class WorkspaceService {
     try {
       final response = await _supabaseClient
           .from('workspaces')
-          .select()
+          .select('*, projects(title)') // <--- Tambah JOIN sekalian agar dapet nama project
           .eq('id', workspaceId)
           .maybeSingle();
 
-      if (response == null) return null;
+      if (response == null) {
+        debugPrint('getWorkspaceById: response is null (RLS?)');
+        return null;
+      }
       return WorkspaceModel.fromJson(response);
     } catch (e) {
+      debugPrint('getWorkspaceById ERROR: $e');
       return null;
     }
   }
@@ -148,7 +152,9 @@ class WorkspaceService {
           .select('*, users!workspace_members_student_id_fkey(*)')
           .eq('workspace_id', workspaceId);
 
-      final members = (response as List).map((data) {
+      final members = (response as List)
+          .where((data) => data['users'] != null)
+          .map((data) {
         return UserModel.fromJson(data['users']);
       }).toList();
       var box = await Hive.openBox<UserModel>('workspace_members_users');
@@ -264,10 +270,15 @@ class WorkspaceService {
     String workspaceId,
     String projectId,
   ) async {
-    await _supabaseClient
+    final response = await _supabaseClient
         .from('workspaces')
         .update({'project_id': projectId})
-        .eq('id', workspaceId);
+        .eq('id', workspaceId)
+        .select();
+        
+    if ((response as List).isEmpty) {
+      throw Exception('Update gagal (kemungkinan Row-Level Security menolak akses)');
+    }
     var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
     final localWs = box.get(workspaceId);
     if (localWs != null) {

@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'workspace_detail_controller.dart';
 import 'phase_task_setup_page.dart';
+import 'workspace_task_view.dart'; 
+import 'workspace_task_controller.dart'; 
 
 
 class WorkspaceDetailView extends StatefulWidget {
@@ -44,7 +46,7 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
   @override
   Widget build(BuildContext context) {
     final ctrl = context.watch<WorkspaceDetailController>();
-    final ws = widget.workspace;
+    final ws = ctrl.currentWorkspace ?? widget.workspace;
 
     return Scaffold(
       backgroundColor: const Color.fromRGBO(243, 244, 246, 1),
@@ -104,7 +106,7 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
                     // Phase & Task 
                     const _SectionHeader(title: 'Progress Phase & Task'),
                     const SizedBox(height: 12),
-                    _PhaseTaskList(controller: ctrl, workspaceId: ws.id),
+                    _PhaseTaskList(controller: ctrl, workspace: ws,),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -365,6 +367,9 @@ class _LeaderActionsGrid extends StatelessWidget {
                   : controller.errorMessage ?? 'Gagal.'),
               backgroundColor: ok ? Colors.green : Colors.redAccent,
             ));
+            if (ok) {
+              await controller.loadWorkspaceData(workspace.id);
+            }
           }
         },
       ),
@@ -423,183 +428,14 @@ class _LeaderActionsGrid extends StatelessWidget {
                       ? Colors.green
                       : Colors.redAccent,
                 ));
+                if (controller.errorMessage == null) {
+                  await controller.loadWorkspaceData(workspace.id);
+                }
               }
             },
             child: const Text('Ajukan', style: TextStyle(color: Colors.white)),
           ),
         ],
-      ),
-    );
-  }
-
-  // Dialog: Tambah Phase 
-  void _showCreatePhaseDialog(BuildContext context) {
-    final nameCtrl = TextEditingController();
-    final orderCtrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: const [
-            Icon(Icons.playlist_add_rounded, color: Colors.purple),
-            SizedBox(width: 8),
-            Text('Tambah Phase', style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(
-                  labelText: 'Nama Phase', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: orderCtrl,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                  labelText: 'Urutan (sort order)', border: OutlineInputBorder()),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Batal')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-            onPressed: () async {
-              final name = nameCtrl.text.trim();
-              final order = int.tryParse(orderCtrl.text) ?? 1;
-              if (name.isEmpty) return;
-              Navigator.pop(ctx);
-              await controller.createPhase(workspace.id, name, order);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(controller.errorMessage == null
-                      ? 'Phase berhasil diajukan ke dosen!'
-                      : controller.errorMessage!),
-                  backgroundColor: controller.errorMessage == null
-                      ? Colors.green
-                      : Colors.redAccent,
-                ));
-              }
-            },
-            child:
-                const Text('Ajukan', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Dialog: Alokasi Task ──
-  void _showCreateTaskDialog(BuildContext context) {
-    final members = controller.workspaceMembers;
-    String? selectedStudentId = members.isNotEmpty ? members.first.id : null;
-    final taskCtrl = TextEditingController();
-
-    if (controller.allPhases.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Buat phase terlebih dahulu sebelum mengalokasikan task.'),
-            backgroundColor: Colors.orange),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: const [
-              Icon(Icons.assignment_ind_rounded, color: Colors.blueAccent),
-              SizedBox(width: 8),
-              Text('Alokasi Task',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Dropdown pilih phase
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                      labelText: 'Phase', border: OutlineInputBorder()),
-                  items: controller.allPhases
-                      .map((p) => DropdownMenuItem(
-                            value: p.id,
-                            child: Text(p.phaseName,
-                                overflow: TextOverflow.ellipsis),
-                          ))
-                      .toList(),
-                  onChanged: (_) {},
-                  value: controller.allPhases.first.id,
-                ),
-                const SizedBox(height: 12),
-                // Dropdown pilih anggota
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                      labelText: 'Anggota', border: OutlineInputBorder()),
-                  value: selectedStudentId,
-                  items: members
-                      .map((m) => DropdownMenuItem(
-                            value: m.id,
-                            child: Text(m.fullName,
-                                overflow: TextOverflow.ellipsis),
-                          ))
-                      .toList(),
-                  onChanged: (v) =>
-                      setDialogState(() => selectedStudentId = v),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: taskCtrl,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                      labelText: 'Deskripsi Task',
-                      border: OutlineInputBorder()),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Batal')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent),
-              onPressed: () async {
-                if (taskCtrl.text.trim().isEmpty ||
-                    selectedStudentId == null) return;
-                final phaseId = controller.allPhases.first.id;
-                Navigator.pop(ctx);
-                await controller.createTaskAllocation(
-                    phaseId, selectedStudentId!, taskCtrl.text.trim());
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(controller.errorMessage == null
-                        ? 'Task berhasil dialokasikan!'
-                        : controller.errorMessage!),
-                    backgroundColor: controller.errorMessage == null
-                        ? Colors.green
-                        : Colors.redAccent,
-                  ));
-                }
-              },
-              child: const Text('Simpan',
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -733,15 +569,18 @@ class _MemberList extends StatelessWidget {
 
 class _PhaseTaskList extends StatelessWidget {
   final WorkspaceDetailController controller;
-  final String workspaceId;
+  final WorkspaceModel workspace; 
 
-  const _PhaseTaskList(
-      {required this.controller, required this.workspaceId});
+  const _PhaseTaskList({
+    required this.controller,
+    required this.workspace,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Ambil phase berdasarkan workspace.id
     final phases = controller.allPhases
-        .where((p) => p.workspaceId == workspaceId)
+        .where((p) => p.workspaceId == workspace.id)
         .toList();
 
     if (phases.isEmpty) {
@@ -783,6 +622,25 @@ class _PhaseTaskList extends StatelessWidget {
                 : tasks
                     .map((task) => ListTile(
                           dense: true,
+                          // TAMBAHAN: onTap untuk navigasi ke halaman Task Detail
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>ChangeNotifierProvider(
+                                  create: (context) =>WorkspaceTaskController(),
+                                  child: WorkspaceTaskView(
+                                    workspace: workspace,
+                                    task: task, // Oper object Task-nya ke sini
+                                  ),
+                                ),
+                              ),
+                            ).then((_) {
+                              // Opsional: Refresh data workspace saat user pencet 'Back'
+                              // Biar kalau progress task-nya nambah, bar di depannya ikut update
+                              controller.loadWorkspaceData(workspace.id);
+                            });
+                          },
                           leading: Icon(
                             task.isDone
                                 ? Icons.check_circle

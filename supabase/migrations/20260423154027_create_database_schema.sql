@@ -75,6 +75,7 @@ CREATE TABLE "task_allocations" (
   "status" approval_status DEFAULT 'pending',
   "lecturer_feedback" text,
   "is_done" boolean DEFAULT false,
+  "progress" integer DEFAULT 0,
   "client_created_at" timestamptz NOT NULL,
   "server_received_at" timestamptz DEFAULT now()
 );

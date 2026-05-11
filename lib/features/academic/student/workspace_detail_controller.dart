@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:hive/hive.dart';
 import 'package:academic_project_monitoring_system/models/progress_phase_model.dart';
 import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
+import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/user_model.dart';
 import 'package:academic_project_monitoring_system/services/remote/phase_service.dart';
 import 'package:academic_project_monitoring_system/services/remote/project_service.dart';
@@ -20,6 +22,7 @@ class WorkspaceDetailController extends ChangeNotifier {
   List<ProgressPhaseModel> _allPhases = [];
   List<TaskAllocationModel> _allTask = [];
   List<UserModel> _workspaceMembers = [];
+  WorkspaceModel? _currentWorkspace;
   bool _isCurrentUserLeader = false;
   bool _isLoading = false;
   String? _errorMessage;
@@ -27,6 +30,7 @@ class WorkspaceDetailController extends ChangeNotifier {
   List<ProgressPhaseModel> get allPhases => _allPhases;
   List<TaskAllocationModel> get allTask => _allTask;
   List<UserModel> get workspaceMembers => _workspaceMembers;
+  WorkspaceModel? get currentWorkspace => _currentWorkspace;
   bool get isCurrentUserLeader => _isCurrentUserLeader;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -43,11 +47,20 @@ class WorkspaceDetailController extends ChangeNotifier {
         _service.fetchTasksByWorkspaces(workspaceId),
         _service.fetchWorkspacesMember(workspaceId),
         _service.checkIsLeader(workspaceId),
+        _service.getWorkspaceById(workspaceId),
       ]);
       _allPhases = results[0] as List<ProgressPhaseModel>;
       _allTask = results[1] as List<TaskAllocationModel>;
       _workspaceMembers = results[2] as List<UserModel>;
       _isCurrentUserLeader = results[3] as bool;
+      
+      WorkspaceModel? fetchedWs = results[4] as WorkspaceModel?;
+      if (fetchedWs == null) {
+        // Fallback ke Hive
+        final box = await Hive.openBox<WorkspaceModel>('workspaces');
+        fetchedWs = box.get(workspaceId);
+      }
+      _currentWorkspace = fetchedWs;
     } catch (e) {
       _errorMessage = 'Gagal memuat data workspace: ${e.toString()}';
     } finally {
