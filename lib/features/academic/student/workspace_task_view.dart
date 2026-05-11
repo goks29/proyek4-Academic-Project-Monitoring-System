@@ -87,6 +87,7 @@ class TaskDetailCard extends StatelessWidget {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -165,6 +166,7 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
     final ctrl = context.watch<WorkspaceTaskController>();
 
     return Card(
+      color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -261,6 +263,7 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
     final ctrl = context.watch<WorkspaceTaskController>();
 
     return Card(
+      color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
