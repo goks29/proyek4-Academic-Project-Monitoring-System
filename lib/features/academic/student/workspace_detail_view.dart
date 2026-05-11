@@ -598,6 +598,12 @@ class _PhaseTaskList extends StatelessWidget {
     return Column(
       children: phases.map((phase) {
         final tasks = controller.getTasksByPhase(phase.id);
+        double progressDecimal = 0;
+        if(tasks.isNotEmpty) {
+          int totalProgress = tasks.fold(0, (sum, item) => sum + item.progress);
+          progressDecimal = totalProgress / (tasks.length * 100);
+        }
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -606,11 +612,29 @@ class _PhaseTaskList extends StatelessWidget {
             tilePadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             leading: _PhaseStatusBadge(status: phase.status),
-            title: Text(phase.phaseName,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text('Status: ${phase.status}',
-                style: const TextStyle(fontSize: 12)),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(phase.phaseName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value: progressDecimal,
+                    backgroundColor: Colors.grey[200],
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'Status: ${phase.status} (${(progressDecimal * 100).toInt()}%)',
+                style: const TextStyle(fontSize: 12),
+              ),  
+            ),
             children: tasks.isEmpty
                 ? [
                     const Padding(
