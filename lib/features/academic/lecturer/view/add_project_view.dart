@@ -47,20 +47,32 @@ class _AddProjectViewState extends State<AddProjectView> {
     final lecturerId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
 
     // Gunakan fungsi createProject milik temanmu
-    await projectCtrl.createProject(
+    final success = await projectCtrl.createProject(
       lecturerId,
       _titleController.text,
       _descController.text,
       _infoController.text,
     );
 
-    // Setelah dibuat, projectCtrl.projects otomatis ter-update! Proyek terbaru ada di urutan paling belakang.
-    final newProject = projectCtrl.projects.last;
+    if (success) {
+      // Setelah dibuat, projectCtrl.projects otomatis ter-update! Proyek terbaru ada di urutan paling belakang.
+      final newProject = projectCtrl.projects.last;
 
-    setState(() {
-      _isLoading = false;
-      _generatedCode = newProject.joinCode;
-    });
+      setState(() {
+        _isLoading = false;
+        _generatedCode = newProject.joinCode;
+      });
+    } else {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(projectCtrl.errorMessage ?? "Gagal membuat proyek"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   // ... (Sisa fungsi build() di bawahnya BIAKAN SAMA PERSIS seperti sebelumnya)

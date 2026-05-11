@@ -37,7 +37,7 @@ class ProjectController extends ChangeNotifier {
   }
 
   /// Membuat proyek baru dengan kode akses acak.
-  Future<void> createProject(String lecturerId, String title, String description, String? submissionInfo) async {
+  Future<bool> createProject(String lecturerId, String title, String description, String? submissionInfo) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -55,8 +55,10 @@ class ProjectController extends ChangeNotifier {
 
       final createdProject = await _repository.createProject(newProject);
       projects.add(createdProject);
+      return true;
     } catch (e) {
       errorMessage = e.toString();
+      return false;
     } finally {
       isLoading = false;
       notifyListeners();
