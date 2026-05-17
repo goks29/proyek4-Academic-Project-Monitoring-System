@@ -225,8 +225,8 @@ class WorkspaceService {
   Future<List<WorkspaceModel>> getWorkspacesByJoinCode(String joinCode) async {
     final response = await _supabaseClient
         .from('workspaces')
-        .select()
-        .eq('join_code', joinCode);
+        .select('*, projects!inner(join_code, title)')
+        .eq('projects.join_code', joinCode);
     return (response as List<dynamic>)
         .map((json) => WorkspaceModel.fromJson(json))
         .toList();

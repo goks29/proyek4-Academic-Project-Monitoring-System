@@ -92,8 +92,6 @@ class TaskAllocationModel {
       'phase_id': phaseId,
       'student_id': studentId,
       'task_description': taskDescription,
-      'percentage': percentage,
-      'require_evidence': requireEvidence,
       'is_done': isDone,
       'status': status,
       'lecturer_feedback': lecturerFeedback,

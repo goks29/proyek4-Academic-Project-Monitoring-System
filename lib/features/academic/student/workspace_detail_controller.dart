@@ -7,7 +7,6 @@ import 'package:academic_project_monitoring_system/models/task_allocation_model.
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/user_model.dart';
 import 'package:academic_project_monitoring_system/services/remote/phase_service.dart';
-import 'package:academic_project_monitoring_system/services/remote/project_service.dart';
 import 'package:academic_project_monitoring_system/services/remote/task_service.dart';
 import 'package:academic_project_monitoring_system/services/remote/workspace_service.dart';
 
@@ -76,13 +75,29 @@ class WorkspaceDetailController extends ChangeNotifier {
     _setLoading(true);
     _errorMessage = null;
     try {
-      final project = await ProjectService(Supabase.instance.client)
-          .getProjectByJoinCode(joinCode);
-      if (project == null) {
+      // Ambil UUID dan title dari tabel projects
+      final response = await Supabase.instance.client
+          .from('projects')
+          .select('id, title')
+          .eq('join_code', joinCode)
+          .maybeSingle();
+
+      if (response == null) {
         _errorMessage = 'Proyek tidak ditemukan dengan kode tersebut.';
         return false;
       }
-      await _service.linkWorkspaceToProject(workspaceId, project.joinCode);
+
+      final projectId = response['id'] as String;
+      final projectTitle = response['title'] as String;
+      await _service.linkWorkspaceToProject(workspaceId, projectId);
+      
+      // Update state lokal seketika agar UI langsung responsif
+      if (_currentWorkspace != null) {
+        _currentWorkspace!.projectId = projectId;
+        _currentWorkspace!.projectName = projectTitle;
+        notifyListeners();
+      }
+
       return true;
     } catch (e) {
       _errorMessage =
