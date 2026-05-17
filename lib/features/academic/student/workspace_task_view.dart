@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
 import 'package:academic_project_monitoring_system/models/submission_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'workspace_task_controller.dart'; 
 
 
@@ -33,6 +34,8 @@ class _WorkspaceTaskViewState extends State<WorkspaceTaskView> {
   @override
   Widget build(BuildContext context) {
     final ctrl = context.watch<WorkspaceTaskController>();
+    final String? currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final bool isOwner = currentUserId == widget.task.studentId;
 
     return Scaffold(
       backgroundColor: const Color.fromRGBO(243, 244, 246, 1),
@@ -56,9 +59,15 @@ class _WorkspaceTaskViewState extends State<WorkspaceTaskView> {
                     children: [
                       TaskDetailCard(task: ctrl.task ?? widget.task),
                       const SizedBox(height: 20),
-                      ProgressSliderCard(taskId: widget.task.id),
+                      ProgressSliderCard(
+                        taskId: widget.task.id,
+                        isOwner: isOwner,
+                      ),
                       const SizedBox(height: 20),
-                      EvidenceUploadCard(task: ctrl.task ?? widget.task),
+                      EvidenceUploadCard(
+                        task: ctrl.task ?? widget.task,
+                        isOwner: isOwner,
+                      ),
                       const SizedBox(height: 24),
                       const Text(
                         "Riwayat Pengumpulan",
@@ -144,7 +153,8 @@ class TaskDetailCard extends StatelessWidget {
 // progress slider card
 class ProgressSliderCard extends StatefulWidget {
   final String taskId;
-  const ProgressSliderCard({super.key, required this.taskId});
+  final bool isOwner;
+  const ProgressSliderCard({super.key, required this.taskId, required this.isOwner});
 
   @override
   State<ProgressSliderCard> createState() => _ProgressSliderCardState();
@@ -157,16 +167,12 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
   @override
   void initState() {
     super.initState();
-    // Nilai awal diambil di initState, lalu didChangeDependencies
-    // akan memperbarui setelah loadTask() selesai.
     _currentValue = 0;
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Sinkronkan slider dengan nilai progress terbaru dari controller
-    // hanya jika user belum mengubah slider secara manual.
     if (!_hasChanged) {
       final latestProgress =
           context.read<WorkspaceTaskController>().task?.progress ?? 0;
@@ -204,12 +210,14 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
               divisions: 10,
               activeColor: Colors.blueAccent,
               label: "${_currentValue.toInt()}%",
-              onChanged: (val) {
-                setState(() {
-                  _currentValue = val;
-                  _hasChanged = true;
-                });
-              },
+              onChanged: widget.isOwner 
+                ? (val) {
+                    setState(() {
+                      _currentValue = val;
+                      _hasChanged = true;
+                    });
+                  } 
+                : null,
             ),
             const SizedBox(height: 10),
             SizedBox(
@@ -221,7 +229,7 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   disabledBackgroundColor: Colors.grey[300], 
                 ),
-                onPressed: (!_hasChanged || ctrl.isSavingProgress)
+                onPressed: (!widget.isOwner || !_hasChanged || ctrl.isSavingProgress)
                     ? null
                     : () async {
                         final ok = await context.read<WorkspaceTaskController>().updateProgress(widget.taskId, _currentValue.toInt());
@@ -247,7 +255,8 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
 // upload card
 class EvidenceUploadCard extends StatefulWidget {
   final TaskAllocationModel task;
-  const EvidenceUploadCard({super.key, required this.task});
+  final bool isOwner;
+  const EvidenceUploadCard({super.key, required this.task, required this.isOwner});
 
   @override
   State<EvidenceUploadCard> createState() => _EvidenceUploadCardState();
@@ -289,7 +298,7 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
             const Text("Upload Bukti Pengerjaan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 16),
             GestureDetector(
-              onTap: _pickImage,
+              onTap: widget.isOwner ? _pickImage : null,
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 30),
@@ -318,6 +327,7 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
             const SizedBox(height: 16),
             TextField(
               controller: _notesController,
+              enabled: widget.isOwner,
               maxLines: 2,
               decoration: InputDecoration(
                 hintText: "Tulis catatan pengerjaan di sini...",
@@ -334,7 +344,7 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
                   backgroundColor: Colors.green,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: (_selectedFile == null || ctrl.isSavingEvidence)
+                onPressed: (!widget.isOwner|| _selectedFile == null || ctrl.isSavingEvidence)
                     ? null
                     : () async {
                         final ok = await context.read<WorkspaceTaskController>().submitEvidence(
