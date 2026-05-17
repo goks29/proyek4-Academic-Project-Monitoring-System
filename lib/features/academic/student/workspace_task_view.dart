@@ -105,7 +105,7 @@ class TaskDetailCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: isDone ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                    color: isDone ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -123,7 +123,7 @@ class TaskDetailCard extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Colors.blueAccent.withOpacity(0.2),
+                  backgroundColor: Colors.blueAccent.withValues(alpha: 0.2),
                   radius: 16,
                   child: const Icon(Icons.person, size: 18, color: Colors.blueAccent),
                 ),
@@ -152,13 +152,28 @@ class ProgressSliderCard extends StatefulWidget {
 
 class _ProgressSliderCardState extends State<ProgressSliderCard> {
   double _currentValue = 0;
-  bool _hasChanged = false; 
+  bool _hasChanged = false;
 
   @override
   void initState() {
     super.initState();
-    final initialProgress = context.read<WorkspaceTaskController>().task?.progress ?? 0;
-    _currentValue = initialProgress.toDouble();
+    // Nilai awal diambil di initState, lalu didChangeDependencies
+    // akan memperbarui setelah loadTask() selesai.
+    _currentValue = 0;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Sinkronkan slider dengan nilai progress terbaru dari controller
+    // hanya jika user belum mengubah slider secara manual.
+    if (!_hasChanged) {
+      final latestProgress =
+          context.read<WorkspaceTaskController>().task?.progress ?? 0;
+      if (latestProgress.toDouble() != _currentValue) {
+        setState(() => _currentValue = latestProgress.toDouble());
+      }
+    }
   }
 
   @override
@@ -206,7 +221,7 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   disabledBackgroundColor: Colors.grey[300], 
                 ),
-                onPressed: (!_hasChanged || ctrl.isSaving)
+                onPressed: (!_hasChanged || ctrl.isSavingProgress)
                     ? null
                     : () async {
                         final ok = await context.read<WorkspaceTaskController>().updateProgress(widget.taskId, _currentValue.toInt());
@@ -214,10 +229,10 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Progress berhasil diupdate!"), backgroundColor: Colors.green));
                           setState(() => _hasChanged = false);
                         } else if (!ok && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ctrl.errorMessage ?? "Gagal"), backgroundColor: Colors.red));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ctrl.errorMessage ?? "Gagal menyimpan progress"), backgroundColor: Colors.red));
                         }
                       },
-                child: ctrl.isSaving 
+                child: ctrl.isSavingProgress
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Text("Simpan Progress", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
@@ -279,9 +294,9 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 30),
                 decoration: BoxDecoration(
-                  color: Colors.blueAccent.withOpacity(0.05),
+                  color: Colors.blueAccent.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blueAccent.withOpacity(0.5), style: BorderStyle.solid, width: 2),
+                  border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.5), style: BorderStyle.solid, width: 2),
                 ),
                 child: Column(
                   children: [
@@ -319,11 +334,12 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
                   backgroundColor: Colors.green,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: (_selectedFile == null || ctrl.isSaving)
+                onPressed: (_selectedFile == null || ctrl.isSavingEvidence)
                     ? null
                     : () async {
                         final ok = await context.read<WorkspaceTaskController>().submitEvidence(
                           taskId: widget.task.id,
+                          phaseId: widget.task.phaseId,
                           studentId: widget.task.studentId,
                           file: _selectedFile!,
                           notes: _notesController.text.trim(),
@@ -331,12 +347,17 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
                         if (ok && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bukti berhasil dikirim!"), backgroundColor: Colors.green));
                           setState(() {
-                            _selectedFile = null; 
-                            _notesController.clear(); 
+                            _selectedFile = null;
+                            _notesController.clear();
                           });
+                        } else if (!ok && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(context.read<WorkspaceTaskController>().errorMessage ?? "Gagal mengirim bukti"),
+                            backgroundColor: Colors.red,
+                          ));
                         }
                       },
-                child: ctrl.isSaving
+                child: ctrl.isSavingEvidence
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Text("Kirim Bukti", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
@@ -397,7 +418,7 @@ class SubmissionTimelineList extends StatelessWidget {
                 // Ikon Lampiran File/Teks
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.1), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: Colors.blueAccent.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: Icon(hasFile ? Icons.image : Icons.text_snippet, color: Colors.blueAccent),
                 ),
                 const SizedBox(width: 12),
@@ -426,9 +447,9 @@ class SubmissionTimelineList extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.05),
+                            color: Colors.red.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red.withOpacity(0.2))
+                            border: Border.all(color: Colors.red.withValues(alpha: 0.2))
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,7 +474,7 @@ class SubmissionTimelineList extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8)
                   ),
                   child: Text(

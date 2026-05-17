@@ -16,13 +16,17 @@ class WorkspaceTaskController extends ChangeNotifier {
   TaskAllocationModel? _task;
   List<SubmissionModel> _submissions = [];
   bool _isLoading = false;
-  bool _isSaving = false;
+  bool _isSavingProgress = false;
+  bool _isSavingEvidence = false;
   String? _errorMessage;
 
   TaskAllocationModel? get task => _task;
   List<SubmissionModel> get submissions => _submissions;
   bool get isLoading => _isLoading;
-  bool get isSaving => _isSaving;
+  bool get isSavingProgress => _isSavingProgress;
+  bool get isSavingEvidence => _isSavingEvidence;
+  /// Convenience getter: true jika ada operasi simpan apapun sedang berjalan.
+  bool get isSaving => _isSavingProgress || _isSavingEvidence;
   String? get errorMessage => _errorMessage;
 
   // ── Load ──────────────────────────────────────────────────────────────────
@@ -53,7 +57,7 @@ class WorkspaceTaskController extends ChangeNotifier {
   // ── Update progress ────────────────────────────────────────────────────────
 
   Future<bool> updateProgress(String taskId, int progress) async {
-    _isSaving = true;
+    _isSavingProgress = true;
     _errorMessage = null;
     notifyListeners();
     try {
@@ -77,7 +81,7 @@ class WorkspaceTaskController extends ChangeNotifier {
       notifyListeners();
       return false;
     } finally {
-      _isSaving = false;
+      _isSavingProgress = false;
       notifyListeners();
     }
   }
@@ -86,16 +90,18 @@ class WorkspaceTaskController extends ChangeNotifier {
 
   Future<bool> submitEvidence({
     required String taskId,
+    required String phaseId,
     required String studentId,
     required XFile file,
     required String notes,
   }) async {
-    _isSaving = true;
+    _isSavingEvidence = true;
     _errorMessage = null;
     notifyListeners();
     try {
       final submission = await _submissionService.uploadEvidenceAndSubmit(
         taskId: taskId,
+        phaseId: phaseId,
         studentId: studentId,
         file: file,
         notes: notes,
@@ -108,7 +114,7 @@ class WorkspaceTaskController extends ChangeNotifier {
       notifyListeners();
       return false;
     } finally {
-      _isSaving = false;
+      _isSavingEvidence = false;
       notifyListeners();
     }
   }

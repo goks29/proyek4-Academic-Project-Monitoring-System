@@ -66,6 +66,7 @@ class SubmissionService {
   /// Mengembalikan [SubmissionModel] yang tersimpan di cloud.
   Future<SubmissionModel> uploadEvidenceAndSubmit({
     required String taskId,
+    required String phaseId,
     required String studentId,
     required XFile file,
     required String notes,
@@ -93,6 +94,7 @@ class SubmissionService {
     // 2. Insert submission dengan URL file
     final now = DateTime.now();
     final payload = {
+      'phase_id': phaseId,
       'task_id': taskId,
       'student_id': studentId,
       'submitted_at': now.toIso8601String(),
