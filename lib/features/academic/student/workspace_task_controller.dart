@@ -90,7 +90,6 @@ class WorkspaceTaskController extends ChangeNotifier {
 
   Future<bool> submitEvidence({
     required String taskId,
-    required String phaseId,
     required String studentId,
     required XFile file,
     required String notes,
@@ -101,7 +100,6 @@ class WorkspaceTaskController extends ChangeNotifier {
     try {
       final submission = await _submissionService.uploadEvidenceAndSubmit(
         taskId: taskId,
-        phaseId: phaseId,
         studentId: studentId,
         file: file,
         notes: notes,

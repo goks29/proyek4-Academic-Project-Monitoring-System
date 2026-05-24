@@ -349,7 +349,6 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
                     : () async {
                         final ok = await context.read<WorkspaceTaskController>().submitEvidence(
                           taskId: widget.task.id,
-                          phaseId: widget.task.phaseId,
                           studentId: widget.task.studentId,
                           file: _selectedFile!,
                           notes: _notesController.text.trim(),

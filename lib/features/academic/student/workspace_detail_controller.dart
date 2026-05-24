@@ -75,10 +75,10 @@ class WorkspaceDetailController extends ChangeNotifier {
     _setLoading(true);
     _errorMessage = null;
     try {
-      // Ambil UUID dan title dari tabel projects
+      // Ambil title dari tabel projects via join_code
       final response = await Supabase.instance.client
           .from('projects')
-          .select('id, title')
+          .select('join_code, title')
           .eq('join_code', joinCode)
           .maybeSingle();
 
@@ -87,13 +87,12 @@ class WorkspaceDetailController extends ChangeNotifier {
         return false;
       }
 
-      final projectId = response['id'] as String;
       final projectTitle = response['title'] as String;
-      await _service.linkWorkspaceToProject(workspaceId, projectId);
+      await _service.linkWorkspaceToProject(workspaceId, joinCode);
       
       // Update state lokal seketika agar UI langsung responsif
       if (_currentWorkspace != null) {
-        _currentWorkspace!.projectId = projectId;
+        _currentWorkspace!.joinCode = joinCode;
         _currentWorkspace!.projectName = projectTitle;
         notifyListeners();
       }

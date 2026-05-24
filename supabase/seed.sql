@@ -47,28 +47,28 @@ INSERT INTO "public"."users" ("id", "full_name", "email", "password", "role") VA
 -- ==========================================
 -- 3. PROJECTS
 -- ==========================================
-INSERT INTO "public"."projects" ("id", "lecturer_id", "title", "description", "join_code") VALUES
-('a1000000-0000-0000-0000-000000000000', 'd05e0001-0000-0000-0000-000000000000', 'Pengembangan Aplikasi Web', 'Tugas Besar Semester 4 - Mode Strict', 'WEB-STRICT'),
-('a2000000-0000-0000-0000-000000000000', 'd05e0002-0000-0000-0000-000000000000', 'Pengembangan Aplikasi Mobile', 'Tugas Besar Semester 4 - Mode Flexible', 'MOB-FLEX');
+INSERT INTO "public"."projects" ("join_code", "lecturer_id", "title", "description") VALUES
+('WEB-STRICT', 'd05e0001-0000-0000-0000-000000000000', 'Pengembangan Aplikasi Web', 'Tugas Besar Semester 4 - Mode Strict'),
+('MOB-FLEX', 'd05e0002-0000-0000-0000-000000000000', 'Pengembangan Aplikasi Mobile', 'Tugas Besar Semester 4 - Mode Flexible');
 
 -- ==========================================
 -- 4. WORKSPACES (5 Tim x 2 Project)
 -- ==========================================
 -- Project Web (Strict)
-INSERT INTO "public"."workspaces" ("id", "project_id", "team_name", "topic_name", "progression_mode", "client_created_at") VALUES
-('e1000001-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Tim Satu', 'Sistem E-Commerce UMKM', 'strict', now()),
-('e1000002-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Tim Dua', 'Manajemen Keuangan Mahasiswa', 'strict', now()),
-('e1000003-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Tim Tiga', 'Chatbot Layanan Publik', 'strict', now()),
-('e1000004-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Tim Empat', 'Sistem Inventaris Gudang', 'strict', now()),
-('e1000005-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Tim Lima', 'Booking Service Kendaraan', 'strict', now());
+INSERT INTO "public"."workspaces" ("id", "join_code", "team_name", "topic_name", "progression_mode", "client_created_at") VALUES
+('e1000001-0000-0000-0000-000000000000', 'WEB-STRICT', 'Tim Satu', 'Sistem E-Commerce UMKM', 'strict', now()),
+('e1000002-0000-0000-0000-000000000000', 'WEB-STRICT', 'Tim Dua', 'Manajemen Keuangan Mahasiswa', 'strict', now()),
+('e1000003-0000-0000-0000-000000000000', 'WEB-STRICT', 'Tim Tiga', 'Chatbot Layanan Publik', 'strict', now()),
+('e1000004-0000-0000-0000-000000000000', 'WEB-STRICT', 'Tim Empat', 'Sistem Inventaris Gudang', 'strict', now()),
+('e1000005-0000-0000-0000-000000000000', 'WEB-STRICT', 'Tim Lima', 'Booking Service Kendaraan', 'strict', now());
 
 -- Project Mobile (Flexible)
-INSERT INTO "public"."workspaces" ("id", "project_id", "team_name", "topic_name", "progression_mode", "client_created_at") VALUES
-('e2000001-0000-0000-0000-000000000000', 'a2000000-0000-0000-0000-000000000000', 'Tim Satu', 'Mobile Shop App', 'flexible', now()),
-('e2000002-0000-0000-0000-000000000000', 'a2000000-0000-0000-0000-000000000000', 'Tim Dua', 'Finance Tracker Mobile', 'flexible', now()),
-('e2000003-0000-0000-0000-000000000000', 'a2000000-0000-0000-0000-000000000000', 'Tim Tiga', 'Smart Assistant Mobile', 'flexible', now()),
-('e2000004-0000-0000-0000-000000000000', 'a2000000-0000-0000-0000-000000000000', 'Tim Empat', 'Inventory Scan App', 'flexible', now()),
-('e2000005-0000-0000-0000-000000000000', 'a2000000-0000-0000-0000-000000000000', 'Tim Lima', 'Vehicle Booking App', 'flexible', now());
+INSERT INTO "public"."workspaces" ("id", "join_code", "team_name", "topic_name", "progression_mode", "client_created_at") VALUES
+('e2000001-0000-0000-0000-000000000000', 'MOB-FLEX', 'Tim Satu', 'Mobile Shop App', 'flexible', now()),
+('e2000002-0000-0000-0000-000000000000', 'MOB-FLEX', 'Tim Dua', 'Finance Tracker Mobile', 'flexible', now()),
+('e2000003-0000-0000-0000-000000000000', 'MOB-FLEX', 'Tim Tiga', 'Smart Assistant Mobile', 'flexible', now()),
+('e2000004-0000-0000-0000-000000000000', 'MOB-FLEX', 'Tim Empat', 'Inventory Scan App', 'flexible', now()),
+('e2000005-0000-0000-0000-000000000000', 'MOB-FLEX', 'Tim Lima', 'Vehicle Booking App', 'flexible', now());
 
 -- ==========================================
 -- 5. WORKSPACE MEMBERS (Tetap per kelompok)

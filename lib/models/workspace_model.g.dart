@@ -18,8 +18,7 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
     };
     return WorkspaceModel(
       id: fields[0] as String,
-      projectId: fields[1] as String,
-      joinCode: fields[9] as String?,
+      joinCode: fields[1] as String?,
       teamName: fields[2] as String,
       topicName: fields[3] as String?,
       topicDescription: fields[4] as String?,
@@ -35,11 +34,11 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
   @override
   void write(BinaryWriter writer, WorkspaceModel obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.projectId)
+      ..write(obj.joinCode)
       ..writeByte(2)
       ..write(obj.teamName)
       ..writeByte(3)
@@ -54,8 +53,6 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
       ..write(obj.clientCreatedAt)
       ..writeByte(8)
       ..write(obj.serverReceivedAt)
-      ..writeByte(9)
-      ..write(obj.joinCode)
       ..writeByte(10)
       ..write(obj.status)
       ..writeByte(11)

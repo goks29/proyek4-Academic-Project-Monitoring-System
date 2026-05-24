@@ -38,7 +38,6 @@ class TopicApprovalController extends ChangeNotifier {
       if (index != -1) {
         workspaces[index] = WorkspaceModel(
           id: workspaces[index].id,
-          projectId: workspaces[index].projectId,
           joinCode: workspaces[index].joinCode,
           teamName: workspaces[index].teamName,
           topicName: workspaces[index].topicName,

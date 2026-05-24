@@ -36,6 +36,7 @@ CREATE TABLE "workspaces" (
   "team_name" varchar(255) NOT NULL,
   "topic_name" varchar(255),
   "topic_description" text,
+  "progression_mode" varchar(20) DEFAULT 'strict',
   "status" approval_status DEFAULT 'pending',
   "lecturer_feedback" text,
   "is_completed" boolean DEFAULT false,

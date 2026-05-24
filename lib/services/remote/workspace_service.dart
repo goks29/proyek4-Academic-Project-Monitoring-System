@@ -17,7 +17,7 @@ class WorkspaceService {
 
   /// Buat WORKSPACE
   Future<String> createWorkspace({
-    String projectId = '',
+    String? joinCode,
     required String teamName,
     required String creatorId,
     String? topicName,
@@ -27,7 +27,7 @@ class WorkspaceService {
 
     final newWorkspace = WorkspaceModel(
       id: workspaceId,
-      projectId: projectId,
+      joinCode: joinCode,
       teamName: teamName,
       topicName: topicName,
       topicDescription: topicDescription,
@@ -268,11 +268,11 @@ class WorkspaceService {
   /// Menghubungkan WORKSPACES ke PROJECT dosen via join_code.
   Future<void> linkWorkspaceToProject(
     String workspaceId,
-    String projectId,
+    String joinCode,
   ) async {
     final response = await _supabaseClient
         .from('workspaces')
-        .update({'project_id': projectId})
+        .update({'join_code': joinCode})
         .eq('id', workspaceId)
         .select();
         
@@ -282,7 +282,7 @@ class WorkspaceService {
     var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
     final localWs = box.get(workspaceId);
     if (localWs != null) {
-      localWs.projectId = projectId;
+      localWs.joinCode = joinCode;
       await localWs.save();
     }
   }

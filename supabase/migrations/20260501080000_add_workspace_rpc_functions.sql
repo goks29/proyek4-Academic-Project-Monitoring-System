@@ -10,11 +10,10 @@
 -- ============================================================
 CREATE OR REPLACE FUNCTION get_project_by_join_code(p_join_code TEXT)
 RETURNS TABLE (
-  id             uuid,
+  join_code      varchar,
   lecturer_id    uuid,
   title          varchar,
   description    text,
-  join_code      varchar,
   final_submission_info text,
   created_at     timestamptz
 )
@@ -25,11 +24,10 @@ AS $$
 BEGIN
   RETURN QUERY
     SELECT
-      p.id,
+      p.join_code,
       p.lecturer_id,
       p.title,
       p.description,
-      p.join_code,
       p.final_submission_info,
       p.created_at
     FROM projects p
@@ -44,8 +42,7 @@ GRANT EXECUTE ON FUNCTION get_project_by_join_code(TEXT) TO authenticated;
 
 
 -- FUNGSI 2: Buat workspace sekaligus set ketua (atomic transaction)
--- Mengatasi masalah project_id NOT NULL: workspace dibuat langsung
--- dengan project_id yang sudah valid dari join_code.
+-- Workspace langsung dihubungkan ke project via join_code.
 -- ============================================================
 CREATE OR REPLACE FUNCTION create_workspace_and_join_project(
   p_join_code        TEXT,
@@ -55,8 +52,8 @@ CREATE OR REPLACE FUNCTION create_workspace_and_join_project(
   p_client_created_at timestamptz DEFAULT now()
 )
 RETURNS TABLE (
-  workspace_id uuid,
-  project_id   uuid,
+  workspace_id  uuid,
+  project_join_code varchar,
   project_title varchar
 )
 LANGUAGE plpgsql
@@ -75,11 +72,11 @@ BEGIN
     RAISE EXCEPTION 'PROJECT_NOT_FOUND: Proyek dengan join code "%" tidak ditemukan.', p_join_code;
   END IF;
 
-  -- 2. Insert workspace dengan project_id yang sudah valid
-  INSERT INTO workspaces (id, project_id, team_name, topic_name, topic_description, progression_mode, is_completed, client_created_at)
+  -- 2. Insert workspace dengan join_code yang sudah valid
+  INSERT INTO workspaces (id, join_code, team_name, topic_name, topic_description, progression_mode, is_completed, client_created_at)
   VALUES (
     v_workspace_id,
-    v_project.id,
+    v_project.join_code,
     p_team_name,
     p_topic_name,
     p_topic_description,
@@ -93,7 +90,7 @@ BEGIN
   VALUES (v_member_id, v_workspace_id, auth.uid(), true);
 
   -- 4. Kembalikan hasilnya
-  RETURN QUERY SELECT v_workspace_id, v_project.id, v_project.title;
+  RETURN QUERY SELECT v_workspace_id, v_project.join_code, v_project.title;
 END;
 $$;
 
@@ -109,8 +106,8 @@ CREATE OR REPLACE FUNCTION link_workspace_to_project_by_code(
   p_join_code    TEXT
 )
 RETURNS TABLE (
-  project_id    uuid,
-  project_title varchar
+  project_join_code varchar,
+  project_title     varchar
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -136,10 +133,10 @@ BEGIN
     RAISE EXCEPTION 'FORBIDDEN: Hanya ketua workspace yang bisa menghubungkan ke project.';
   END IF;
 
-  -- 3. Update project_id di workspace
-  UPDATE workspaces SET project_id = v_project.id WHERE id = p_workspace_id;
+  -- 3. Update join_code di workspace
+  UPDATE workspaces SET join_code = v_project.join_code WHERE id = p_workspace_id;
 
-  RETURN QUERY SELECT v_project.id, v_project.title;
+  RETURN QUERY SELECT v_project.join_code, v_project.title;
 END;
 $$;
 

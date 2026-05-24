@@ -1,16 +1,14 @@
 -- ============================================================
--- Migration: Buat project_id di tabel workspaces menjadi nullable
+-- Migration: Update RLS policies untuk mendukung workspace
+-- tanpa project (join_code IS NULL).
 -- Alasan: Mahasiswa bisa membuat workspace terlebih dahulu tanpa
--- harus langsung join ke project dosen. project_id bisa diisi
+-- harus langsung join ke project dosen. join_code bisa diisi
 -- kemudian via linkWorkspaceToProject ketika ketua sudah punya
 -- join_code dari dosen.
 -- ============================================================
 
--- Hapus NOT NULL constraint dari project_id
-ALTER TABLE "workspaces" ALTER COLUMN "project_id" DROP NOT NULL;
-
 -- Update RLS workspace_update: tambahkan kondisi untuk workspace
--- yang belum terhubung ke project (project_id IS NULL) agar
+-- yang belum terhubung ke project (join_code IS NULL) agar
 -- ketua tetap bisa update (misal: mengisi topik, mengubah nama tim)
 DROP POLICY IF EXISTS "workspace_update" ON "workspaces";
 CREATE POLICY "workspace_update" ON "workspaces" FOR UPDATE TO authenticated
@@ -25,10 +23,10 @@ USING (
   OR
   -- Dosen pemilik project bisa update jika workspace sudah terhubung
   (
-    workspaces.project_id IS NOT NULL
+    workspaces.join_code IS NOT NULL
     AND EXISTS (
       SELECT 1 FROM projects
-      WHERE id = workspaces.project_id
+      WHERE join_code = workspaces.join_code
         AND lecturer_id = auth.uid()
     )
   )
@@ -48,10 +46,10 @@ USING (
   OR
   -- Dosen bisa lihat workspace yang terhubung ke projectnya
   (
-    workspaces.project_id IS NOT NULL
+    workspaces.join_code IS NOT NULL
     AND EXISTS (
       SELECT 1 FROM projects
-      WHERE id = workspaces.project_id
+      WHERE join_code = workspaces.join_code
         AND lecturer_id = auth.uid()
     )
   )

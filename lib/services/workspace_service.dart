@@ -12,11 +12,11 @@ class WorkspaceService {
   final SupabaseClient _client;
 
   WorkspaceService(this._client);
-  Future<List<WorkspaceModel>> getWorkspacesByProject(String projectId) async {
+  Future<List<WorkspaceModel>> getWorkspacesByProject(String joinCode) async {
     final response = await _client
         .from('workspaces')
         .select()
-        .eq('project_id', projectId); // Filter berdasarkan ID Proyek
+        .eq('join_code', joinCode); // Filter berdasarkan join_code Proyek
         
     return (response as List<dynamic>)
         .map((json) => WorkspaceModel.fromJson(json))

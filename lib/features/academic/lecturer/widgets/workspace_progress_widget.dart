@@ -84,7 +84,7 @@ class WorkspaceProgressWidget extends StatelessWidget {
         // Buat model workspace sementara untuk lemparan ke halaman detail fase
         final dummyWorkspace = WorkspaceModel(
           id: workspaceId, teamName: teamName, status: 'pending', clientCreatedAt: DateTime.now(),
-          projectId: '', progressionMode: 'strict', isCompleted: false,
+          progressionMode: 'strict', isCompleted: false,
         );
 
         Navigator.push(

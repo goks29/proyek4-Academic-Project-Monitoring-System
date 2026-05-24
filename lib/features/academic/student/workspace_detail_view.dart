@@ -203,9 +203,9 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(height: 6),
           _InfoRow(
               icon: Icons.folder_outlined,
-              text: ws.projectId.isEmpty
+              text: (ws.joinCode == null || ws.joinCode!.isEmpty)
                   ? 'Belum terhubung ke project dosen'
-                  : 'Project: ${ws.projectName ?? ws.projectId}'),
+                  : 'Project: ${ws.projectName ?? ws.joinCode}'),
           const SizedBox(height: 4),
           _InfoRow(
               icon: Icons.topic_outlined,
@@ -278,7 +278,7 @@ class _LeaderActionsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final alreadyLinked = workspace.projectId.isNotEmpty;
+    final alreadyLinked = workspace.joinCode != null && workspace.joinCode!.isNotEmpty;
 
     return GridView.count(
       crossAxisCount: 2,

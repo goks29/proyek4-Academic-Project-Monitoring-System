@@ -5,11 +5,10 @@ part 'workspace_model.g.dart';
 /// Entity representation for the [WorkspaceModel] table.
 @HiveType(typeId: 6)
 class WorkspaceModel extends HiveObject{
-  @HiveField(0)
-  late String id;
-
+  /// join_code menghubungkan workspace ke project dosen.
+  /// Null/empty jika belum terhubung ke project.
   @HiveField(1)
-  late String projectId;
+  String? joinCode;
 
   @HiveField(2)
   late String teamName;
@@ -32,8 +31,8 @@ class WorkspaceModel extends HiveObject{
   @HiveField(8)
   DateTime? serverReceivedAt;
 
-  @HiveField(9)
-  String? joinCode;
+  @HiveField(0)
+  late String id;
 
   @HiveField(10)
   String? status;
@@ -47,7 +46,6 @@ class WorkspaceModel extends HiveObject{
 
   WorkspaceModel({
     required this.id,
-    this.projectId = '',
     this.joinCode,
     required this.teamName,
     this.topicName,
@@ -66,7 +64,6 @@ class WorkspaceModel extends HiveObject{
     final projectData = json['projects'] as Map<String, dynamic>?;
     return WorkspaceModel(
       id: json['id'] as String,
-      projectId: json['project_id'] as String? ?? '',
       joinCode: json['join_code'] as String?,
       teamName: json['team_name'] as String,
       topicName: json['topic_name'] as String?,
@@ -94,11 +91,9 @@ class WorkspaceModel extends HiveObject{
       'is_completed': isCompleted,
       'client_created_at': clientCreatedAt.toIso8601String(),
     };
-    if (joinCode != null) data['join_code'] = joinCode;
+    if (joinCode != null && joinCode!.isNotEmpty) data['join_code'] = joinCode;
     if (status != null) data['status'] = status;
     if (lecturerFeedback != null) data['lecturer_feedback'] = lecturerFeedback;
-    // Hanya sertakan project_id jika sudah diisi (setelah join project dosen)
-    if (projectId.isNotEmpty) data['project_id'] = projectId;
     if (topicName != null) data['topic_name'] = topicName;
     if (topicDescription != null) data['topic_description'] = topicDescription;
     return data;

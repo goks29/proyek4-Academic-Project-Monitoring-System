@@ -10,16 +10,6 @@ class SubmissionService {
 
   SubmissionService(this._client);
 
-  /// Mengambil daftar submission berdasarkan ID fase.
-  Future<List<SubmissionModel>> getSubmissions(String phaseId) async {
-    final response = await _client
-        .from('submissions')
-        .select()
-        .eq('phase_id', phaseId);
-    return (response as List<dynamic>)
-        .map((json) => SubmissionModel.fromJson(json))
-        .toList();
-  }
 
   Future<List<SubmissionModel>> getSubmissionsByTaskId(String taskId) async {
     final response = await _client
@@ -66,7 +56,6 @@ class SubmissionService {
   /// Mengembalikan [SubmissionModel] yang tersimpan di cloud.
   Future<SubmissionModel> uploadEvidenceAndSubmit({
     required String taskId,
-    required String phaseId,
     required String studentId,
     required XFile file,
     required String notes,
@@ -94,7 +83,6 @@ class SubmissionService {
     // 2. Insert submission dengan URL file
     final now = DateTime.now();
     final payload = {
-      'phase_id': phaseId,
       'task_id': taskId,
       'student_id': studentId,
       'submitted_at': now.toIso8601String(),

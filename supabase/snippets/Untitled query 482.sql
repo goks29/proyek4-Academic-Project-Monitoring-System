@@ -14,7 +14,7 @@ USING (
   EXISTS (
     SELECT 1
     FROM workspaces w
-    JOIN projects p ON p.id = w.project_id
+    JOIN projects p ON p.join_code = w.join_code
     WHERE w.id = workspace_members.workspace_id
       AND p.lecturer_id = auth.uid()
   )
