@@ -54,7 +54,7 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
             Expanded(
               child: TabBarView(
                 children: [
-                  WorkspaceProgressWidget(workspaceId: widget.workspace.id, teamName: widget.workspace.teamName),
+                  WorkspaceProgressWidget(workspace: widget.workspace),
                   SingleChildScrollView(child: WorkspaceMembersWidget(workspace: widget.workspace)),
                 ],
               ),

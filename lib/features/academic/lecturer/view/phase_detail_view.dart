@@ -120,16 +120,18 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-            builder: (context) => PhaseCommentWidget(phase: widget.phase),
-          );
-        },
-        icon: const Icon(Icons.forum_outlined), label: const Text("Diskusi", style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.indigo, foregroundColor: Colors.white, elevation: 4,
-      ),
+      floatingActionButton: widget.workspace.isCompleted 
+        ? null // Menghilangkan tombol
+        : FloatingActionButton.extended(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+                builder: (context) => PhaseCommentWidget(phase: widget.phase),
+              );
+            },
+            icon: const Icon(Icons.forum_outlined), label: const Text("Diskusi", style: TextStyle(fontWeight: FontWeight.bold)),
+            backgroundColor: Colors.indigo, foregroundColor: Colors.white, elevation: 4,
+          ),
       
       bottomNavigationBar: FutureBuilder<Map<String, dynamic>>(
         future: _phaseDataFuture,
@@ -148,6 +150,20 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
   }
 
   Widget _buildBottomActionBar(BuildContext context, bool hasPendingSubmissions, bool isPhaseReviewed, bool hasSubmissions) {
+    if (widget.workspace.isCompleted) {
+      return Container(
+        padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))]),
+        child: SafeArea(
+          child: Row(
+            children: [
+              Icon(Icons.lock_outline, size: 18, color: Colors.grey.shade600), const SizedBox(width: 8),
+              Expanded(child: Text("Proyek ditutup. Akses modifikasi dikunci.", style: TextStyle(color: Colors.grey.shade700, fontSize: 13, fontWeight: FontWeight.bold))),
+            ],
+          ),
+        ),
+      );
+    }
+    
     if (isPhaseReviewed) {
       return Container(
         padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))]),

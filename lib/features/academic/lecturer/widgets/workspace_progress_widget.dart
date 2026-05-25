@@ -4,22 +4,19 @@ import 'package:provider/provider.dart';
 import '../../../../models/progress_phase_model.dart';
 import '../../../../controllers/lecturer/phase_approval_controller.dart';
 import '../view/phase_detail_view.dart';
-// Note: Kita butuh model Workspace dummy untuk dilempar ke layar detail
 import '../../../../models/workspace_model.dart'; 
 
 class WorkspaceProgressWidget extends StatelessWidget {
-  final String workspaceId;
-  final String teamName;
+  // ---> PERBAIKAN: Langsung minta data Workspace asli secara utuh <---
+  final WorkspaceModel workspace;
 
   const WorkspaceProgressWidget({
     super.key,
-    required this.workspaceId,
-    required this.teamName,
+    required this.workspace,
   });
 
   @override
   Widget build(BuildContext context) {
-    // ---> KUNCI PROVIDER: Pantau perubahan data Fase <---
     final phaseCtrl = context.watch<PhaseApprovalController>();
 
     if (phaseCtrl.isLoading) {
@@ -56,45 +53,26 @@ class WorkspaceProgressWidget extends StatelessWidget {
     IconData statusIcon;
     
     switch (phase.status.toLowerCase()) {
-      case 'approved':
-      case 'accepted':
-      case 'selesai':
-      case 'completed':
-        statusColor = Colors.green.shade600;
-        statusIcon = Icons.check_circle;
-        break;
-      case 'rejected':
-      case 'revisi':
-        statusColor = Colors.red.shade600;
-        statusIcon = Icons.cancel;
-        break;
-      case 'pending':
-      case 'menunggu':
-      case 'review':
-        statusColor = Colors.orange.shade600;
-        statusIcon = Icons.hourglass_top_rounded;
-        break;
+      case 'approved': case 'accepted': case 'selesai': case 'completed':
+        statusColor = Colors.green.shade600; statusIcon = Icons.check_circle; break;
+      case 'rejected': case 'revisi':
+        statusColor = Colors.red.shade600; statusIcon = Icons.cancel; break;
+      case 'pending': case 'menunggu': case 'review':
+        statusColor = Colors.orange.shade600; statusIcon = Icons.hourglass_top_rounded; break;
       default:
-        statusColor = Colors.grey.shade500;
-        statusIcon = Icons.radio_button_unchecked;
+        statusColor = Colors.grey.shade500; statusIcon = Icons.radio_button_unchecked;
     }
 
     return InkWell(
       onTap: () {
-        // Buat model workspace sementara untuk lemparan ke halaman detail fase
-        final dummyWorkspace = WorkspaceModel(
-          id: workspaceId, teamName: teamName, status: 'pending', clientCreatedAt: DateTime.now(),
-          progressionMode: 'strict', isCompleted: false,
-        );
-
+        // ---> PERBAIKAN: Hapus dummy! Langsung kirim workspace asli <---
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PhaseDetailView(phase: phase, workspace: dummyWorkspace),
+            builder: (context) => PhaseDetailView(phase: phase, workspace: workspace),
           ),
         ).then((_) {
-            // Tarik ulang data fase jika kembali dari detail (barangkali dosen baru saja ACC fase)
-            context.read<PhaseApprovalController>().fetchPhases(workspaceId);
+            context.read<PhaseApprovalController>().fetchPhases(workspace.id);
         });
       },
       borderRadius: BorderRadius.circular(16),
@@ -112,11 +90,7 @@ class WorkspaceProgressWidget extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
-                  child: Icon(statusIcon, color: statusColor, size: 20),
-                ),
+                Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle), child: Icon(statusIcon, color: statusColor, size: 20)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -128,32 +102,18 @@ class WorkspaceProgressWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                  child: Text(
-                    phase.status.toUpperCase(),
-                    style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                ),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)), child: Text(phase.status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold))),
               ],
             ),
             if (phase.lecturerFeedback != null && phase.lecturerFeedback!.isNotEmpty) ...[
               const SizedBox(height: 16),
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                width: double.infinity, padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.blue.shade100)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Icon(Icons.comment_outlined, size: 14, color: Colors.blue.shade700),
-                        const SizedBox(width: 6),
-                        Text("Catatan Dosen:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue.shade800)),
-                      ],
-                    ),
+                    Row(children: [Icon(Icons.comment_outlined, size: 14, color: Colors.blue.shade700), const SizedBox(width: 6), Text("Catatan Dosen:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue.shade800))]),
                     const SizedBox(height: 6),
                     Text(phase.lecturerFeedback!, style: TextStyle(fontSize: 13, color: Colors.blue.shade900)),
                   ],

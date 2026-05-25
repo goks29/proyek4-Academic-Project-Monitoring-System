@@ -138,7 +138,32 @@ class WorkspaceHeaderWidget extends StatelessWidget {
               ),
             ),
           ],
-          if (hasTopic && isPending) ...[
+
+          if (workspace.isCompleted) ...[
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100, 
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300)
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.lock_outline, size: 16, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Text(
+                    "PROYEK TELAH DITUTUP (Read-Only)", 
+                    style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ] 
+          // Jika belum selesai, baru tampilkan tombol ACC/TOLAK
+          else if (hasTopic && isPending) ...[
             const SizedBox(height: 16),
             if (topicCtrl.isLoading)
               const Center(child: CircularProgressIndicator(color: Colors.indigo))
