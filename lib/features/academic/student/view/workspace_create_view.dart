@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/controller/workspace_controller.dart';
 import 'package:provider/provider.dart';
-// import 'workspace_controller.dart'; 
+// import '../controller/workspace_controller.dart'; 
 
 class WorkspaceCreateView extends StatefulWidget {
   @override

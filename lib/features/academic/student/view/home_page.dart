@@ -1,11 +1,11 @@
 import 'package:academic_project_monitoring_system/features/academic/auth/login_controller.dart';
 import 'package:academic_project_monitoring_system/features/academic/auth/login_view.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/controller/workspace_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'workspace_home_view.dart';
 import 'workspace_detail_view.dart';
-import 'workspace_detail_controller.dart';
+import '../controller/workspace_detail_controller.dart';
 
 class HomePage extends StatefulWidget{
   @override

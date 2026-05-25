@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
-import 'workspace_detail_controller.dart';
+import '../controller/workspace_detail_controller.dart';
 import 'phase_task_setup_page.dart';
 import 'workspace_task_view.dart'; 
-import 'workspace_task_controller.dart'; 
+import '../controller/workspace_task_controller.dart'; 
 
 
 class WorkspaceDetailView extends StatefulWidget {
@@ -646,22 +646,24 @@ class _PhaseTaskList extends StatelessWidget {
                 : tasks
                     .map((task) => ListTile(
                           dense: true,
-                          // TAMBAHAN: onTap untuk navigasi ke halaman Task Detail
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>ChangeNotifierProvider(
-                                  create: (context) =>WorkspaceTaskController(),
+                                builder: (context) => MultiProvider(
+                                  providers: [
+                                    ChangeNotifierProvider.value(value: controller),
+                                    ChangeNotifierProvider(
+                                      create: (context) => WorkspaceTaskController(),
+                                    ),
+                                  ],
                                   child: WorkspaceTaskView(
                                     workspace: workspace,
-                                    task: task, // Oper object Task-nya ke sini
+                                    task: task, 
                                   ),
                                 ),
                               ),
                             ).then((_) {
-                              // Opsional: Refresh data workspace saat user pencet 'Back'
-                              // Biar kalau progress task-nya nambah, bar di depannya ikut update
                               controller.loadWorkspaceData(workspace.id);
                             });
                           },
