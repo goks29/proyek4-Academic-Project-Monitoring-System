@@ -48,11 +48,14 @@ class _WorkspaceTaskViewState extends State<WorkspaceTaskView> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
-      body: ctrl.isLoading
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: ctrl.isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
           : ctrl.errorMessage != null && ctrl.task == null
               ? Center(child: Text(ctrl.errorMessage!))
               : SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,6 +81,7 @@ class _WorkspaceTaskViewState extends State<WorkspaceTaskView> {
                     ],
                   ),
                 ),
+      ),
     );
   }
 }
@@ -235,10 +239,10 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
                       : () async {
                           final ok = await context.read<WorkspaceTaskController>().updateProgress(widget.taskId, _currentValue.toInt());
                           if (ok && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Progress berhasil diupdate!"), backgroundColor: Colors.green));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Progress berhasil diupdate!"), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
                             setState(() => _hasChanged = false);
                           } else if (!ok && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ctrl.errorMessage ?? "Gagal menyimpan progress"), backgroundColor: Colors.red));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ctrl.errorMessage ?? "Gagal menyimpan progress"), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
                           }
                         },
                   child: ctrl.isSavingProgress
@@ -360,7 +364,7 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
                             notes: _notesController.text.trim(),
                           );
                           if (ok && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bukti berhasil dikirim!"), backgroundColor: Colors.green));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bukti berhasil dikirim!"), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
                             setState(() {
                               _selectedFile = null;
                               _notesController.clear();

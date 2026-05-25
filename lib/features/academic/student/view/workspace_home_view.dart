@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'workspace_create_view.dart';
 import 'workspace_join_view.dart';
 
@@ -23,6 +24,7 @@ class _WorkspaceViewState extends State<WorkspaceHomeView> {
         ),  
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -64,7 +66,7 @@ class _WorkspaceViewState extends State<WorkspaceHomeView> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
+                  CupertinoPageRoute(
                     builder: (context) => WorkspaceCreateView(),
                   )
                 );
@@ -80,7 +82,7 @@ class _WorkspaceViewState extends State<WorkspaceHomeView> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
+                  CupertinoPageRoute(
                     builder: (context) => WorkspaceJoinView(),
                   )
                 );

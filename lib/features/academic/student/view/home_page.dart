@@ -2,6 +2,7 @@ import 'package:academic_project_monitoring_system/features/academic/auth/login_
 import 'package:academic_project_monitoring_system/features/academic/auth/login_view.dart';
 import 'package:academic_project_monitoring_system/features/academic/student/controller/workspace_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'workspace_home_view.dart';
 import 'workspace_detail_view.dart';
@@ -44,21 +45,24 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(width: 8),
                 //header : bagian nama (kiri)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Halo, ${loginController.currentUser?.fullName}",
-                      style: TextStyle(
-                        color: Colors.blueAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 25,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Halo, ${loginController.currentUser?.fullName}",
+                        style: TextStyle(
+                          color: Colors.blueAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-        
-                Spacer(),
+                const SizedBox(width: 8),
 
                 //header : bagian indikator dan gambar profil kosong (kanan)
                 Container(
@@ -92,49 +96,69 @@ class _HomePageState extends State<HomePage> {
 
                 // Logout
                 IconButton(
-                  icon: Icon(Icons.logout_outlined),
+                  icon: const Icon(Icons.logout_outlined),
                   onPressed: () {
-                    showDialog(
+                    showModalBottomSheet(
                       context: context,
-                      builder: (BuildContext dialogContext) {
-                        return AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadiusGeometry.circular(20),
-                          ),
-                          title: const Text(
-                            "Apakah kamu yakin ingin logout?", style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(dialogContext);
-                              },
-                              child: const Text("Batal", style: TextStyle(color: Colors.grey)),
-                            ),
-
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadiusGeometry.circular(8),
-                                )
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      builder: (BuildContext sheetContext) {
+                        return Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                "Logout",
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                               ),
-                              onPressed: () async {
-                                Navigator.pop(dialogContext);
-                                final login = context.read<LoginController>();
-                                await login.handleLogout();
+                              const SizedBox(height: 12),
+                              const Text(
+                                "Apakah kamu yakin ingin logout?",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 24),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: () => Navigator.pop(sheetContext),
+                                      style: OutlinedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                      ),
+                                      child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                      ),
+                                      onPressed: () async {
+                                        Navigator.pop(sheetContext);
+                                        final login = context.read<LoginController>();
+                                        await login.handleLogout();
 
-                                if (context.mounted) {
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => LoginView()),
-                                    (route) => false
-                                  );
-                                }
-                              },
-                              child: const Text("Keluar", style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
+                                        if (context.mounted) {
+                                          Navigator.pushAndRemoveUntil(
+                                            context,
+                                            CupertinoPageRoute(builder: (context) => LoginView()),
+                                            (route) => false
+                                          );
+                                        }
+                                      },
+                                      child: const Text("Keluar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         );
                       }
                     );
@@ -148,6 +172,7 @@ class _HomePageState extends State<HomePage> {
       ),
       //body
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding : EdgeInsets.all(16.0),
         child : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,25 +234,21 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 12),
 
-            Builder(
-              builder: (context) {
-                if (workspaceController.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (workspaceController.myWorkspaces.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsetsGeometry.all(20.0),
-                      child: Text(
-                        "Belum ada project yang dibuat.",
-                        style: TextStyle(color: Colors.grey[600]),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: workspaceController.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : workspaceController.myWorkspaces.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(
+                          "Belum ada project yang dibuat.",
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
                       ),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
+                    )
+                  : ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: workspaceController.myWorkspaces.length,
@@ -255,7 +276,7 @@ class _HomePageState extends State<HomePage> {
                             // Navigasi ke WorkspaceDetailView saat diklik
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              CupertinoPageRoute(
                                 builder: (context) => ChangeNotifierProvider(
                                   create: (_) => WorkspaceDetailController(),
                                   child: WorkspaceDetailView(workspace: workspace),
@@ -274,22 +295,52 @@ class _HomePageState extends State<HomePage> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "${workspace.teamName}",
-                                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold ,fontSize: 20)
-                                        ),
-                                        Text(
-                                          "Kelompok ${workspace.topicName}",
-                                          style: const TextStyle(color: Colors.black, fontSize: 13),
-                                        ),
-                                        Text(
-                                          "Tugas ${workspace.projectName}",
-                                          style: const TextStyle(color: Colors.black, fontSize: 13),
-                                        ),
-                                      ],
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "${workspace.teamName}",
+                                            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold ,fontSize: 20),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.topic_outlined, size: 14, color: Colors.blueAccent),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  workspace.topicName != null && workspace.topicName!.isNotEmpty 
+                                                    ? workspace.topicName! 
+                                                    : "Topik belum diajukan",
+                                                  style: TextStyle(color: Colors.grey[800], fontSize: 13),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.folder_outlined, size: 14, color: Colors.orange),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  workspace.projectName != null && workspace.projectName!.isNotEmpty 
+                                                    ? workspace.projectName! 
+                                                    : "Belum terhubung ke project",
+                                                  style: TextStyle(color: Colors.grey[800], fontSize: 13),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                     const Icon(Icons.arrow_right_rounded, color: Colors.grey)
                                   ],
@@ -342,8 +393,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     );
                   },
-                );
-              }
+                )
             )
           ],
         ),
@@ -357,7 +407,7 @@ class _HomePageState extends State<HomePage> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
+            CupertinoPageRoute(
               builder: (context) => WorkspaceHomeView(),
             ),
           ).then((_) {

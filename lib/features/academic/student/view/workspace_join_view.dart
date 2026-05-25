@@ -54,7 +54,7 @@ class _WorkspaceJoinViewState extends State<WorkspaceJoinView> {
 
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: color),
+      SnackBar(content: Text(message), backgroundColor: color, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
     );
   }
 
@@ -71,6 +71,7 @@ class _WorkspaceJoinViewState extends State<WorkspaceJoinView> {
         ),  
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
