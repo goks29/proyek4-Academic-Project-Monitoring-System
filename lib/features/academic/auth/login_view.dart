@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'login_controller.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/student_view.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/view/student_view.dart';
 import 'package:academic_project_monitoring_system/features/academic/lecturer/view/lecturer_view.dart';
 class LoginView extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();

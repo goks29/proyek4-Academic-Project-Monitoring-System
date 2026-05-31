@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 // --- VIEWS ---
 import 'package:academic_project_monitoring_system/features/academic/auth/login_view.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/student_view.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/view/student_view.dart';
 import 'package:academic_project_monitoring_system/features/academic/lecturer/view/lecturer_view.dart';
 
 // --- MODELS ---
@@ -55,9 +55,9 @@ import 'package:academic_project_monitoring_system/repositories/workspace_reposi
 
 // --- CONTROLLERS ---
 import 'package:academic_project_monitoring_system/features/academic/auth/login_controller.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/workspace_detail_controller.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/workspace_task_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/controller/workspace_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/controller/workspace_detail_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/controller/workspace_task_controller.dart';
 import 'package:academic_project_monitoring_system/controllers/lecturer/comment_controller.dart';
 import 'package:academic_project_monitoring_system/controllers/lecturer/phase_approval_controller.dart';
 import 'package:academic_project_monitoring_system/controllers/lecturer/progress_dashboard_controller.dart';

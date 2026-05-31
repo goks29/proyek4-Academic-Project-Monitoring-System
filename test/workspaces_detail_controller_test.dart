@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:hive/hive.dart';
 import 'dart:io';
-import 'package:academic_project_monitoring_system/features/academic/student/workspace_detail_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/controller/workspace_detail_controller.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/progress_phase_model.dart';
 import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';

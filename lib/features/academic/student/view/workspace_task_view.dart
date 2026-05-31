@@ -7,8 +7,8 @@ import 'package:academic_project_monitoring_system/models/submission_model.dart'
 import 'package:academic_project_monitoring_system/models/pending_submission_model.dart';
 import 'package:academic_project_monitoring_system/core/offline/connectivity_monitor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'workspace_task_controller.dart'; 
-
+import '../controller/workspace_task_controller.dart'; 
+import '../controller/workspace_detail_controller.dart'; 
 
 class WorkspaceTaskView extends StatefulWidget {
   final WorkspaceModel workspace;
@@ -54,11 +54,14 @@ class _WorkspaceTaskViewState extends State<WorkspaceTaskView> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
-      body: ctrl.isLoading
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: ctrl.isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
           : ctrl.errorMessage != null && ctrl.task == null
               ? Center(child: Text(ctrl.errorMessage!))
               : SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,11 +97,11 @@ class _WorkspaceTaskViewState extends State<WorkspaceTaskView> {
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
-                      // Oper data submissions dari controller ke UI Timeline
                       SubmissionTimelineList(submissions: ctrl.submissions),
                     ],
                   ),
                 ),
+      ),
     );
   }
 }
@@ -112,6 +115,7 @@ class TaskDetailCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isDone = task.isDone;
+    final ctrl_detail = context.watch<WorkspaceDetailController>();
 
     return Card(
       color: Colors.white,
@@ -158,7 +162,7 @@ class TaskDetailCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  "Petugas ID: ${task.studentId.substring(0, 5)}...",
+                  "Nama Petugas: ${ctrl_detail.getStudentName(task.studentId)}",
                   style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
                 ),
               ],
@@ -239,32 +243,35 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
                   } 
                 : null,
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              height: 45,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  disabledBackgroundColor: Colors.grey[300], 
+            if (widget.isOwner) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    disabledBackgroundColor: Colors.grey[300], 
+                  ),
+                  onPressed: (!_hasChanged || ctrl.isSavingProgress)
+                      ? null
+                      : () async {
+                          final ok = await context.read<WorkspaceTaskController>().updateProgress(widget.taskId, _currentValue.toInt());
+                          if (ok && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Progress berhasil diupdate!"), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
+                            setState(() => _hasChanged = false);
+                          } else if (!ok && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ctrl.errorMessage ?? "Gagal menyimpan progress"), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
+                          }
+                        },
+                  child: ctrl.isSavingProgress
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text("Simpan Progress", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
-                onPressed: (!widget.isOwner || !_hasChanged || ctrl.isSavingProgress || ctrl.isDeadlinePassed)
-                    ? null
-                    : () async {
-                        final ok = await context.read<WorkspaceTaskController>().updateProgress(widget.taskId, _currentValue.toInt());
-                        if (ok && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Progress berhasil diupdate!"), backgroundColor: Colors.green));
-                          setState(() => _hasChanged = false);
-                        } else if (!ok && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ctrl.errorMessage ?? "Gagal menyimpan progress"), backgroundColor: Colors.red));
-                        }
-                      },
-                child: ctrl.isSavingProgress
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text("Simpan Progress", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+
               ),
-            )
+            ],
           ],
         ),
       ),
@@ -305,96 +312,100 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
   @override
   Widget build(BuildContext context) {
     final ctrl = context.watch<WorkspaceTaskController>();
+    
+    if (!widget.isOwner) {
+      return const SizedBox.shrink();
+    }
 
     return Card(
       color: Colors.white,
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Upload Bukti Pengerjaan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: widget.isOwner ? _pickImage : null,
-              child: Container(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Upload Bukti Pengerjaan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: widget.isOwner ? _pickImage : null,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 30),
+                  decoration: BoxDecoration(
+                    color: Colors.blueAccent.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.5), style: BorderStyle.solid, width: 2),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(_selectedFile == null ? Icons.cloud_upload_outlined : Icons.check_circle, size: 40, color: Colors.blueAccent),
+                      const SizedBox(height: 10),
+                      Text(
+                        _selectedFile == null ? "Tap untuk pilih gambar bukti" : "File siap diupload",
+                        style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                      ),
+                      if (_selectedFile != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(_selectedFile!.name, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        )
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _notesController,
+                enabled: widget.isOwner,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: "Tulis catatan pengerjaan di sini...",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.all(16)
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 30),
-                decoration: BoxDecoration(
-                  color: Colors.blueAccent.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.5), style: BorderStyle.solid, width: 2),
+                height: 45,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: (!widget.isOwner|| _selectedFile == null || ctrl.isSavingEvidence)
+                      ? null
+                      : () async {
+                          final ok = await context.read<WorkspaceTaskController>().submitEvidence(
+                            taskId: widget.task.id,
+                            studentId: widget.task.studentId,
+                            file: _selectedFile!,
+                            notes: _notesController.text.trim(),
+                          );
+                          if (ok && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bukti berhasil dikirim!"), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
+                            setState(() {
+                              _selectedFile = null;
+                              _notesController.clear();
+                            });
+                          } else if (!ok && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(context.read<WorkspaceTaskController>().errorMessage ?? "Gagal mengirim bukti"),
+                              backgroundColor: Colors.red,
+                            ));
+                          }
+                        },
+                  child: ctrl.isSavingEvidence
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text("Kirim Bukti", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
-                child: Column(
-                  children: [
-                    Icon(_selectedFile == null ? Icons.cloud_upload_outlined : Icons.check_circle, size: 40, color: Colors.blueAccent),
-                    const SizedBox(height: 10),
-                    Text(
-                      _selectedFile == null ? "Tap untuk pilih gambar bukti" : "File siap diupload",
-                      style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold),
-                    ),
-                    if (_selectedFile != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(_selectedFile!.name, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                      )
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _notesController,
-              enabled: widget.isOwner,
-              maxLines: 2,
-              decoration: InputDecoration(
-                hintText: "Tulis catatan pengerjaan di sini...",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                contentPadding: const EdgeInsets.all(16)
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 45,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: (!widget.isOwner|| _selectedFile == null || ctrl.isSavingEvidence || ctrl.isDeadlinePassed)
-                    ? null
-                    : () async {
-                        final ok = await context.read<WorkspaceTaskController>().submitEvidence(
-                          taskId: widget.task.id,
-                          studentId: widget.task.studentId,
-                          file: _selectedFile!,
-                          notes: _notesController.text.trim(),
-                        );
-                        if (ok && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bukti berhasil dikirim!"), backgroundColor: Colors.green));
-                          setState(() {
-                            _selectedFile = null;
-                            _notesController.clear();
-                          });
-                        } else if (!ok && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(context.read<WorkspaceTaskController>().errorMessage ?? "Gagal mengirim bukti"),
-                            backgroundColor: Colors.red,
-                          ));
-                        }
-                      },
-                child: ctrl.isSavingEvidence
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text("Kirim Bukti", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         ),
-      ),
-    );
+      );
   }
 }
 

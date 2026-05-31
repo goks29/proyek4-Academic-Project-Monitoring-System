@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/controller/workspace_controller.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
 import 'package:academic_project_monitoring_system/services/remote/workspace_service.dart';

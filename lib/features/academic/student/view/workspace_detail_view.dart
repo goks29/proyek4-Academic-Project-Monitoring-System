@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
-import 'workspace_detail_controller.dart';
+import '../controller/workspace_detail_controller.dart';
 import 'phase_task_setup_page.dart';
 import 'workspace_task_view.dart'; 
-import 'workspace_task_controller.dart'; 
+import '../controller/workspace_task_controller.dart'; 
 import 'package:academic_project_monitoring_system/core/offline/offline_submission_manager.dart';
 
 
@@ -72,9 +73,11 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
           ),
         ],
       ),
-      body: ctrl.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: ctrl.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
               onRefresh: () => ctrl.loadWorkspaceData(ws.id),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -113,6 +116,7 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
                 ),
               ),
             ),
+      ),
     );
   }
 
@@ -155,9 +159,7 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
                       Clipboard.setData(ClipboardData(text: workspaceId));
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('ID kelompok disalin!'),
-                            backgroundColor: Colors.green),
+                        SnackBar(content: Text('ID kelompok disalin!'), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                       );
                     },
                   ),
@@ -328,7 +330,7 @@ class _LeaderActionsGrid extends StatelessWidget {
     }
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      CupertinoPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: controller,
           child: PhaseTaskSetupPage(
@@ -347,9 +349,15 @@ class _LeaderActionsGrid extends StatelessWidget {
   // Dialog: Join Project Dosen
   void _showJoinProjectDialog(BuildContext context) {
     final ctrl = TextEditingController();
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => _InputDialog(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: _InputDialog(
         title: 'Join Project Dosen',
         icon: Icons.link_rounded,
         iconColor: Colors.teal,
@@ -374,6 +382,7 @@ class _LeaderActionsGrid extends StatelessWidget {
           }
         },
       ),
+      ),
     );
   }
 
@@ -381,62 +390,93 @@ class _LeaderActionsGrid extends StatelessWidget {
   void _showSubmitTopicDialog(BuildContext context) {
     final topicCtrl = TextEditingController(text: workspace.topicName);
     final descCtrl = TextEditingController(text: workspace.topicDescription);
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: const [
-            Icon(Icons.topic_rounded, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('Ajukan Topik', style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          left: 24, right: 24, top: 24,
         ),
-        content: Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: const [
+                Icon(Icons.topic_rounded, color: Colors.orange, size: 28),
+                SizedBox(width: 12),
+                Text('Ajukan Topik', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+              ],
+            ),
+            const SizedBox(height: 20),
             TextField(
               controller: topicCtrl,
-              decoration: const InputDecoration(
-                  labelText: 'Nama Topik', border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                  labelText: 'Nama Topik', 
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             TextField(
               controller: descCtrl,
               maxLines: 3,
-              decoration: const InputDecoration(
-                  labelText: 'Deskripsi Topik', border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                  labelText: 'Deskripsi Topik', 
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Batal', style: TextStyle(color: Colors.grey))),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () async {
+                      if (topicCtrl.text.trim().isEmpty) return;
+                      Navigator.pop(ctx);
+                      await controller.submitTopic(
+                          workspace.id, topicCtrl.text.trim(), descCtrl.text.trim());
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(controller.errorMessage == null
+                              ? 'Topik berhasil diajukan!'
+                              : controller.errorMessage!),
+                          backgroundColor: controller.errorMessage == null
+                              ? Colors.green
+                              : Colors.redAccent,
+                          behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                        ));
+                        if (controller.errorMessage == null) {
+                          await controller.loadWorkspaceData(workspace.id);
+                        }
+                      }
+                    },
+                    child: const Text('Ajukan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
           ],
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Batal')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            onPressed: () async {
-              if (topicCtrl.text.trim().isEmpty) return;
-              Navigator.pop(ctx);
-              await controller.submitTopic(
-                  workspace.id, topicCtrl.text.trim(), descCtrl.text.trim());
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(controller.errorMessage == null
-                      ? 'Topik berhasil diajukan!'
-                      : controller.errorMessage!),
-                  backgroundColor: controller.errorMessage == null
-                      ? Colors.green
-                      : Colors.redAccent,
-                ));
-                if (controller.errorMessage == null) {
-                  await controller.loadWorkspaceData(workspace.id);
-                }
-              }
-            },
-            child: const Text('Ajukan', style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
   }
@@ -656,28 +696,30 @@ class _PhaseTaskList extends StatelessWidget {
                 : tasks
                     .map((task) => ListTile(
                           dense: true,
-                          // TAMBAHAN: onTap untuk navigasi ke halaman Task Detail
                           onTap: () {
-                            final offlineManager = context.read<OfflineSubmissionManager>();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => ChangeNotifierProvider(
-                                  create: (context) {
-                                    final ctrl = WorkspaceTaskController();
-                                    ctrl.setOfflineManager(offlineManager);
-                                    return ctrl;
-                                  },
+                              CupertinoPageRoute(
+                                builder: (context) => MultiProvider(
+                                  providers: [
+                                    ChangeNotifierProvider.value(value: controller),
+                                    ChangeNotifierProvider(
+                                      create: (context) {
+                                        final ctrl = WorkspaceTaskController();
+                                        ctrl.setOfflineManager(context.read<OfflineSubmissionManager>());
+                                        return ctrl;
+                                      },
+                                    ),
+                                  ],
                                   child: WorkspaceTaskView(
                                     workspace: workspace,
                                     task: task,
                                     phaseDeadline: phase.deadline,
+
                                   ),
                                 ),
                               ),
                             ).then((_) {
-                              // Opsional: Refresh data workspace saat user pencet 'Back'
-                              // Biar kalau progress task-nya nambah, bar di depannya ikut update
                               controller.loadWorkspaceData(workspace.id);
                             });
                           },
@@ -835,33 +877,57 @@ class _InputDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Row(
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: iconColor),
-          const SizedBox(width: 8),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Icon(icon, color: iconColor, size: 28),
+              const SizedBox(width: 12),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: inputController,
+            decoration: InputDecoration(
+              hintText: hintText,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Batal', style: TextStyle(color: Colors.grey))),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: iconColor,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: onSubmit,
+                  child: Text(submitLabel,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
-      content: TextField(
-        controller: inputController,
-        decoration: InputDecoration(
-          hintText: hintText,
-          border: const OutlineInputBorder(),
-        ),
-      ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal')),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: iconColor),
-          onPressed: onSubmit,
-          child: Text(submitLabel,
-              style: const TextStyle(color: Colors.white)),
-        ),
-      ],
     );
   }
 }

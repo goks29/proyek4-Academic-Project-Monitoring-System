@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:academic_project_monitoring_system/features/academic/student/workspace_controller.dart';
+import 'package:academic_project_monitoring_system/features/academic/student/controller/workspace_controller.dart';
 import 'package:provider/provider.dart';
-// import 'workspace_controller.dart'; 
+// import '../controller/workspace_controller.dart'; 
 
 class WorkspaceCreateView extends StatefulWidget {
   @override
@@ -47,6 +47,7 @@ class _WorkspaceViewState extends State<WorkspaceCreateView> {
       ),
     //body
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Container(
           width: double.infinity, 
@@ -163,27 +164,32 @@ class _WorkspaceViewState extends State<WorkspaceCreateView> {
 
                             if (errorMsg != null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(errorMsg), backgroundColor: Colors.red),
+                                SnackBar(content: Text(errorMsg), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                               );
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Data Berhasil Dibuat!"), backgroundColor: Colors.green),
+                                SnackBar(content: Text("Data Berhasil Dibuat!"), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                               );
                               Navigator.pop(context);
                             }
                           }
                         },
-                      child: workspaceController.isLoading
-                        ? const SizedBox(
-                            height: 24, width: 24,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3)
-                          )
-                        : const Text(
-                          "Tambah Kelompok",
-                          style: TextStyle(
-                            color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: workspaceController.isLoading
+                          ? const SizedBox(
+                              key: ValueKey('loading'),
+                              height: 24, width: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3)
+                            )
+                          : const Text(
+                            "Tambah Kelompok",
+                            key: ValueKey('text'),
+                            style: TextStyle(
+                              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        )
+                      )
                     ),
                   )
                 ],
