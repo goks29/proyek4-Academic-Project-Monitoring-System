@@ -6,6 +6,7 @@ import 'package:academic_project_monitoring_system/models/progress_phase_model.d
 import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/user_model.dart';
+import 'package:academic_project_monitoring_system/models/workspace_member_model.dart';
 import 'package:academic_project_monitoring_system/services/remote/phase_service.dart';
 import 'package:academic_project_monitoring_system/services/remote/task_service.dart';
 import 'package:academic_project_monitoring_system/services/remote/workspace_service.dart';
@@ -13,10 +14,18 @@ import 'package:academic_project_monitoring_system/services/remote/workspace_ser
 /// Controller untuk WorkspaceDetailView (di-scope per-route).
 /// Menangani semua operasi detail workspace: phase, task, members, topik.
 class WorkspaceDetailController extends ChangeNotifier {
-  final WorkspaceService _service = WorkspaceService(Supabase.instance.client);
-  final PhaseService _phaseService = PhaseService(Supabase.instance.client);
-  final TaskService _taskService = TaskService(Supabase.instance.client);
+  final WorkspaceService _service;
+  final PhaseService _phaseService;
+  final TaskService _taskService;
   final Uuid _uuid = const Uuid();
+
+  WorkspaceDetailController({
+    WorkspaceService? service,
+    PhaseService? phaseService,
+    TaskService? taskService,
+  })  : _service = service ?? WorkspaceService(Supabase.instance.client),
+        _phaseService = phaseService ?? PhaseService(Supabase.instance.client),
+        _taskService = taskService ?? TaskService(Supabase.instance.client);
 
   List<ProgressPhaseModel> _allPhases = [];
   List<TaskAllocationModel> _allTask = [];
@@ -41,25 +50,86 @@ class WorkspaceDetailController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
-      final results = await Future.wait([
-        _phaseService.getPhases(workspaceId),
-        _service.fetchTasksByWorkspaces(workspaceId),
-        _service.fetchWorkspacesMember(workspaceId),
-        _service.checkIsLeader(workspaceId),
-        _service.getWorkspaceById(workspaceId),
-      ]);
-      _allPhases = results[0] as List<ProgressPhaseModel>;
-      _allTask = results[1] as List<TaskAllocationModel>;
-      _workspaceMembers = results[2] as List<UserModel>;
-      _isCurrentUserLeader = results[3] as bool;
-      
-      WorkspaceModel? fetchedWs = results[4] as WorkspaceModel?;
+      // 1. Load Workspace
+      WorkspaceModel? fetchedWs;
+      try {
+        fetchedWs = await _service.getWorkspaceById(workspaceId);
+        if (fetchedWs != null) {
+          final box = await Hive.openBox<WorkspaceModel>('workspaces');
+          await box.put(workspaceId, fetchedWs);
+        }
+      } catch (_) {}
+
       if (fetchedWs == null) {
-        // Fallback ke Hive
         final box = await Hive.openBox<WorkspaceModel>('workspaces');
         fetchedWs = box.get(workspaceId);
       }
       _currentWorkspace = fetchedWs;
+
+      // 2. Load Phases
+      List<ProgressPhaseModel> fetchedPhases = [];
+      try {
+        fetchedPhases = await _phaseService.getPhases(workspaceId);
+        final phaseBox = await Hive.openBox<ProgressPhaseModel>('phases_box');
+        for (var p in fetchedPhases) {
+          await phaseBox.put(p.id, p);
+        }
+      } catch (_) {
+        final phaseBox = await Hive.openBox<ProgressPhaseModel>('phases_box');
+        fetchedPhases = phaseBox.values.where((p) => p.workspaceId == workspaceId).toList();
+        fetchedPhases.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      }
+      _allPhases = fetchedPhases;
+
+      // 3. Load Tasks
+      List<TaskAllocationModel> fetchedTasks = [];
+      try {
+        fetchedTasks = await _service.fetchTasksByWorkspaces(workspaceId);
+        final taskBox = await Hive.openBox<TaskAllocationModel>('tasks_box');
+        for (var t in fetchedTasks) {
+          await taskBox.put(t.id, t);
+        }
+      } catch (_) {
+        final taskBox = await Hive.openBox<TaskAllocationModel>('tasks_box');
+        final phaseIds = _allPhases.map((p) => p.id).toSet();
+        fetchedTasks = taskBox.values.where((t) => phaseIds.contains(t.phaseId)).toList();
+      }
+      _allTask = fetchedTasks;
+
+      // 4. Load Members
+      List<UserModel> fetchedMembers = [];
+      try {
+        fetchedMembers = await _service.fetchWorkspacesMember(workspaceId);
+      } catch (_) {}
+
+      if (fetchedMembers.isEmpty) {
+        final memberBox = await Hive.openBox<WorkspaceMemberModel>('workspace_members_box');
+        final userBox = await Hive.openBox<UserModel>('workspace_members_users');
+        final memberEntries = memberBox.values.where((m) => m.workspaceId == workspaceId).toList();
+        final studentIds = memberEntries.map((m) => m.studentId).toSet();
+        fetchedMembers = userBox.values.where((u) => studentIds.contains(u.id)).toList();
+      }
+      _workspaceMembers = fetchedMembers;
+
+      // 5. Load Leader status
+      bool isLeader = false;
+      try {
+        isLeader = await _service.checkIsLeader(workspaceId);
+      } catch (_) {}
+
+      if (!isLeader) {
+        final currentUser = Supabase.instance.client.auth.currentUser;
+        if (currentUser != null) {
+          final memberBox = await Hive.openBox<WorkspaceMemberModel>('workspace_members_box');
+          final localMember = memberBox.values.firstWhere(
+            (m) => m.workspaceId == workspaceId && m.studentId == currentUser.id,
+            orElse: () => WorkspaceMemberModel(id: '', workspaceId: workspaceId, studentId: currentUser.id, isLeader: false),
+          );
+          isLeader = localMember.isLeader;
+        }
+      }
+      _isCurrentUserLeader = isLeader;
+
     } catch (e) {
       _errorMessage = 'Gagal memuat data workspace: ${e.toString()}';
     } finally {
@@ -182,6 +252,7 @@ class WorkspaceDetailController extends ChangeNotifier {
             ({
               String phaseName,
               int sortOrder,
+              DateTime? deadline,
               List<({String studentId, String taskDescription})> tasks
             })>
         phaseEntries,
@@ -197,6 +268,7 @@ class WorkspaceDetailController extends ChangeNotifier {
           sortOrder: entry.sortOrder,
           status: 'pending',
           clientCreatedAt: DateTime.now(),
+          deadline: entry.deadline,
         );
         final savedPhase = await _phaseService.createPhase(newPhase);
         _allPhases.add(savedPhase);
@@ -245,5 +317,20 @@ class WorkspaceDetailController extends ChangeNotifier {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
   }
 }

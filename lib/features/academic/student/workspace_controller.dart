@@ -1,18 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 import 'package:hive/hive.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/workspace_member_model.dart';
+import 'package:academic_project_monitoring_system/models/progress_phase_model.dart';
+import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
 import 'package:academic_project_monitoring_system/services/remote/workspace_service.dart';
 
 /// Controller global (didaftarkan di main.dart) yang hanya mengelola
 /// daftar workspace milik user. Operasi detail workspace ada di
 /// [WorkspaceDetailController] (scoped per-route).
 class WorkspaceController extends ChangeNotifier {
-  final WorkspaceService _service =
-      WorkspaceService(Supabase.instance.client);
-  final Uuid _uuid = const Uuid();
+  final WorkspaceService _service;
+  WorkspaceController({
+    WorkspaceService? service
+  }) : _service = service ?? WorkspaceService(Supabase.instance.client);
 
   List<WorkspaceModel> _myWorkspaces = [];
   bool _isLoading = false;
@@ -66,7 +68,22 @@ class WorkspaceController extends ChangeNotifier {
       }
       if (shouldNotify) notifyListeners();
     } catch (e) {
-      workspaceProgress[workspaceId] = 0.0;
+      try {
+        final phaseBox = await Hive.openBox<ProgressPhaseModel>('phases_box');
+        final taskBox = await Hive.openBox<TaskAllocationModel>('tasks_box');
+        final workspacePhases = phaseBox.values.where((p) => p.workspaceId == workspaceId).map((p) => p.id).toSet();
+        final localTasks = taskBox.values.where((t) => workspacePhases.contains(t.phaseId)).toList();
+        
+        if (localTasks.isEmpty) {
+          workspaceProgress[workspaceId] = 0.0;
+        } else {
+          double totalProgress = localTasks.fold(0.0, (sum, task) => sum + task.progress.toDouble());
+          workspaceProgress[workspaceId] = totalProgress / localTasks.length;
+        }
+      } catch (_) {
+        workspaceProgress[workspaceId] = 0.0;
+      }
+      if (shouldNotify) notifyListeners();
     }
   }
 
@@ -150,15 +167,42 @@ class WorkspaceController extends ChangeNotifier {
   Future<void> fetchUserTaskStats({bool shouldNotify = true}) async {
     final currentUser = Supabase.instance.client.auth.currentUser;
     if (currentUser == null) return;
-    final response = await Supabase.instance.client
-        .from('task_allocations')
-        .select('is_done')
-        .eq('student_id', currentUser.id);
-    
-    final tasks = response as List<dynamic>;
-    totalSelesai = tasks.where((t) => t['is_done'] == true).length;
-    totalTertunda = tasks.where((t) => t['is_done'] == false).length;
+    try {
+      final response = await Supabase.instance.client
+          .from('task_allocations')
+          .select('is_done')
+          .eq('student_id', currentUser.id);
+      
+      final tasks = response as List<dynamic>;
+      totalSelesai = tasks.where((t) => t['is_done'] == true).length;
+      totalTertunda = tasks.where((t) => t['is_done'] == false).length;
+    } catch (e) {
+      try {
+        final box = await Hive.openBox<TaskAllocationModel>('tasks_box');
+        final localTasks = box.values.where((t) => t.studentId == currentUser.id).toList();
+        totalSelesai = localTasks.where((t) => t.isDone == true).length;
+        totalTertunda = localTasks.where((t) => t.isDone == false).length;
+      } catch (_) {
+        totalSelesai = 0;
+        totalTertunda = 0;
+      }
+    }
     
     if (shouldNotify) notifyListeners();
+  }
+
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
   }
 }

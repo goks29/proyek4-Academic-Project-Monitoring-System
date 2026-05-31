@@ -38,6 +38,9 @@ class ProgressPhaseModel {
   @HiveField(7)
   final DateTime? serverReceivedAt;
 
+  @HiveField(8)
+  final DateTime? deadline;
+
   ProgressPhaseModel({
     required this.id,
     required this.workspaceId,
@@ -47,6 +50,7 @@ class ProgressPhaseModel {
     this.lecturerFeedback,
     required this.clientCreatedAt,
     this.serverReceivedAt,
+    this.deadline,
   });
 
   /// Membuat instance ProgressPhaseModel dari format JSON Supabase.
@@ -62,6 +66,9 @@ class ProgressPhaseModel {
       serverReceivedAt: json['server_received_at'] != null 
           ? DateTime.parse(json['server_received_at'] as String) 
           : null,
+      deadline: json['deadline'] != null
+          ? DateTime.parse(json['deadline'] as String)
+          : null,
     );
   }
 
@@ -74,6 +81,7 @@ class ProgressPhaseModel {
       'status': status,
       'lecturer_feedback': lecturerFeedback,
       'client_created_at': clientCreatedAt.toIso8601String(),
+      if (deadline != null) 'deadline': deadline!.toIso8601String(),
     };
   }
 }

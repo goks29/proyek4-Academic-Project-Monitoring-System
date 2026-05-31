@@ -20,6 +20,8 @@ import 'package:academic_project_monitoring_system/models/task_allocation_model.
 import 'package:academic_project_monitoring_system/models/user_model.dart';
 import 'package:academic_project_monitoring_system/models/workspace_member_model.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
+import 'package:academic_project_monitoring_system/models/session_token_model.dart';
+import 'package:academic_project_monitoring_system/models/pending_submission_model.dart';
 
 // --- SERVICES (REMOTE) ---
 import 'package:academic_project_monitoring_system/services/remote/comment_service.dart';
@@ -64,6 +66,14 @@ import 'package:academic_project_monitoring_system/controllers/lecturer/submissi
 import 'package:academic_project_monitoring_system/controllers/lecturer/task_approval_controller.dart';
 import 'package:academic_project_monitoring_system/controllers/lecturer/topic_approval_controller.dart';
 
+// --- OFFLINE / SYNC ---
+import 'package:academic_project_monitoring_system/core/offline/connectivity_monitor.dart';
+import 'package:academic_project_monitoring_system/core/offline/monotonic_clock_service.dart';
+import 'package:academic_project_monitoring_system/core/offline/session_token_manager.dart';
+import 'package:academic_project_monitoring_system/core/offline/offline_submission_manager.dart';
+import 'package:academic_project_monitoring_system/core/sync/sync_manager.dart';
+import 'package:academic_project_monitoring_system/services/local/sync_action_local_service.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -87,6 +97,9 @@ Future<void> main() async {
   Hive.registerAdapter(ProgressPhaseModelAdapter());
   Hive.registerAdapter(SubmissionModelAdapter());
   Hive.registerAdapter(CommentModelAdapter());
+  // Adapter baru untuk offline submission
+  Hive.registerAdapter(SessionTokenModelAdapter());
+  Hive.registerAdapter(PendingSubmissionModelAdapter());
 
   // Buka semua box
   final projectBox = await Hive.openBox<ProjectModel>('projects_box');
@@ -97,6 +110,9 @@ Future<void> main() async {
   final taskBox = await Hive.openBox<TaskAllocationModel>('tasks_box');
   final submissionBox = await Hive.openBox<SubmissionModel>('submissions_box');
   final commentBox = await Hive.openBox<CommentModel>('comments_box');
+  // Box baru untuk offline submission
+  final pendingSubmissionBox = await Hive.openBox<PendingSubmissionModel>('pending_submissions_box');
+  final syncActionBox = await Hive.openBox<SyncActionModel>('sync_actions_box');
 
   // 3. Inisialisasi Supabase
   await Supabase.initialize(
@@ -140,17 +156,54 @@ Future<void> main() async {
     CommentLocalService(commentBox),
   );
 
-  // 5. Jalankan App
+  // 5. Setup Offline Submission Infrastructure
+  final clockService = MonotonicClockService();
+  final tokenManager = SessionTokenManager(supabaseClient, clockService);
+  final connectivityMonitor = ConnectivityMonitor();
+  
+  final offlineSubmissionManager = OfflineSubmissionManager(
+    client: supabaseClient,
+    connectivity: connectivityMonitor,
+    tokenManager: tokenManager,
+    clock: clockService,
+    pendingBox: pendingSubmissionBox,
+  );
+
+  final syncManager = SyncManager(
+    supabaseClient,
+    SyncActionLocalService(syncActionBox),
+    offlineSubmissionManager: offlineSubmissionManager,
+  );
+
+  // Auto-sync saat kembali online
+  connectivityMonitor.onBackOnline = () async {
+    try {
+      await tokenManager.getValidToken();
+    } catch (_) {}
+    syncManager.syncAll();
+  };
+
+  // 6. Jalankan App
   runApp(
     MultiProvider(
       providers: [
         // Auth
         ChangeNotifierProvider(create: (_) => LoginController()..checkSession()),
 
+        // Connectivity & Offline
+        ChangeNotifierProvider.value(value: connectivityMonitor),
+        Provider<OfflineSubmissionManager>.value(value: offlineSubmissionManager),
+        Provider<SessionTokenManager>.value(value: tokenManager),
+        Provider<SyncManager>.value(value: syncManager),
+
         // Student Controllers
         ChangeNotifierProvider(create: (_) => WorkspaceController()),
         ChangeNotifierProvider(create: (_) => WorkspaceDetailController()),
-        ChangeNotifierProvider(create: (_) => WorkspaceTaskController()),
+        ChangeNotifierProvider(create: (ctx) {
+          final ctrl = WorkspaceTaskController();
+          ctrl.setOfflineManager(offlineSubmissionManager);
+          return ctrl;
+        }),
 
         // Lecturer Controllers
         ChangeNotifierProvider(create: (_) => ProjectController(projectRepo)),

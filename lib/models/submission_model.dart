@@ -44,6 +44,18 @@ class SubmissionModel {
   @HiveField(9)
   final DateTime? serverReceivedAt;
 
+  @HiveField(10)
+  final String? fileHash;
+
+  @HiveField(11)
+  final DateTime? estimatedSubmitAt;
+
+  @HiveField(12)
+  final String? syncNonce;
+
+  @HiveField(13)
+  final String syncStatus; // 'direct', 'pending_sync', 'synced', 'rejected'
+
   SubmissionModel({
     required this.id,
     required this.taskId,
@@ -55,6 +67,10 @@ class SubmissionModel {
     this.lecturerFeedback,
     this.lecturerId,
     this.serverReceivedAt,
+    this.fileHash,
+    this.estimatedSubmitAt,
+    this.syncNonce,
+    this.syncStatus = 'direct',
   });
 
   /// Membuat instance SubmissionModel dari format JSON Supabase.
@@ -72,6 +88,12 @@ class SubmissionModel {
       serverReceivedAt: json['server_received_at'] != null 
           ? DateTime.parse(json['server_received_at'] as String) 
           : null,
+      fileHash: json['file_hash'] as String?,
+      estimatedSubmitAt: json['estimated_submit_at'] != null
+          ? DateTime.parse(json['estimated_submit_at'] as String)
+          : null,
+      syncNonce: json['sync_nonce'] as String?,
+      syncStatus: json['sync_status'] as String? ?? 'direct',
     );
   }
 
@@ -86,6 +108,10 @@ class SubmissionModel {
       'status': status,
       'lecturer_feedback': lecturerFeedback,
       'lecturer_id': lecturerId,
+      if (fileHash != null) 'file_hash': fileHash,
+      if (estimatedSubmitAt != null) 'estimated_submit_at': estimatedSubmitAt!.toIso8601String(),
+      if (syncNonce != null) 'sync_nonce': syncNonce,
+      'sync_status': syncStatus,
     };
   }
 }

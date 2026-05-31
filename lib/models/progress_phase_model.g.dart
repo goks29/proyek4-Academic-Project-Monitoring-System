@@ -25,13 +25,14 @@ class ProgressPhaseModelAdapter extends TypeAdapter<ProgressPhaseModel> {
       lecturerFeedback: fields[5] as String?,
       clientCreatedAt: fields[6] as DateTime,
       serverReceivedAt: fields[7] as DateTime?,
+      deadline: fields[8] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProgressPhaseModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -47,7 +48,9 @@ class ProgressPhaseModelAdapter extends TypeAdapter<ProgressPhaseModel> {
       ..writeByte(6)
       ..write(obj.clientCreatedAt)
       ..writeByte(7)
-      ..write(obj.serverReceivedAt);
+      ..write(obj.serverReceivedAt)
+      ..writeByte(8)
+      ..write(obj.deadline);
   }
 
   @override

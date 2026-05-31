@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:supabase/supabase.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   // We need to load dotenv manually

@@ -7,6 +7,7 @@ import 'workspace_detail_controller.dart';
 import 'phase_task_setup_page.dart';
 import 'workspace_task_view.dart'; 
 import 'workspace_task_controller.dart'; 
+import 'package:academic_project_monitoring_system/core/offline/offline_submission_manager.dart';
 
 
 class WorkspaceDetailView extends StatefulWidget {
@@ -630,10 +631,19 @@ class _PhaseTaskList extends StatelessWidget {
             ),
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                'Status: ${phase.status} (${(progressDecimal * 100).toInt()}%)',
-                style: const TextStyle(fontSize: 12),
-              ),  
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Status: ${phase.status} (${(progressDecimal * 100).toInt()}%)',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  if (phase.deadline != null) ...[
+                    const SizedBox(height: 4),
+                    _PhaseDeadlineLabel(deadline: phase.deadline!),
+                  ],
+                ],
+              ),
             ),
             children: tasks.isEmpty
                 ? [
@@ -648,14 +658,20 @@ class _PhaseTaskList extends StatelessWidget {
                           dense: true,
                           // TAMBAHAN: onTap untuk navigasi ke halaman Task Detail
                           onTap: () {
+                            final offlineManager = context.read<OfflineSubmissionManager>();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>ChangeNotifierProvider(
-                                  create: (context) =>WorkspaceTaskController(),
+                                builder: (context) => ChangeNotifierProvider(
+                                  create: (context) {
+                                    final ctrl = WorkspaceTaskController();
+                                    ctrl.setOfflineManager(offlineManager);
+                                    return ctrl;
+                                  },
                                   child: WorkspaceTaskView(
                                     workspace: workspace,
-                                    task: task, // Oper object Task-nya ke sini
+                                    task: task,
+                                    phaseDeadline: phase.deadline,
                                   ),
                                 ),
                               ),
@@ -711,6 +727,60 @@ class _PhaseStatusBadge extends StatelessWidget {
       height: 10,
       decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
+  }
+}
+
+class _PhaseDeadlineLabel extends StatelessWidget {
+  final DateTime deadline;
+  const _PhaseDeadlineLabel({required this.deadline});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final isPassed = now.isAfter(deadline);
+    final remaining = deadline.difference(now);
+    final isUrgent = !isPassed && remaining.inHours < 24;
+
+    final Color color;
+    final IconData icon;
+    if (isPassed) {
+      color = Colors.red;
+      icon = Icons.lock_clock;
+    } else if (isUrgent) {
+      color = Colors.orange;
+      icon = Icons.warning_amber_rounded;
+    } else {
+      color = Colors.grey.shade600;
+      icon = Icons.schedule;
+    }
+
+    return Row(
+      children: [
+        Icon(icon, size: 12, color: color),
+        const SizedBox(width: 4),
+        Text(
+          isPassed
+              ? 'Deadline terlewati: ${_formatDate(deadline)}'
+              : 'Deadline: ${_formatDate(deadline)}',
+          style: TextStyle(
+            fontSize: 11,
+            color: color,
+            fontWeight: isPassed || isUrgent ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDate(DateTime dt) {
+    final localDt = dt.toLocal();
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return '${localDt.day} ${months[localDt.month - 1]} ${localDt.year}, '
+        '${localDt.hour.toString().padLeft(2, '0')}:'
+        '${localDt.minute.toString().padLeft(2, '0')}';
   }
 }
 

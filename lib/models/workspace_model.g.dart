@@ -35,8 +35,6 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
   void write(BinaryWriter writer, WorkspaceModel obj) {
     writer
       ..writeByte(11)
-      ..writeByte(0)
-      ..write(obj.id)
       ..writeByte(1)
       ..write(obj.joinCode)
       ..writeByte(2)
@@ -53,6 +51,8 @@ class WorkspaceModelAdapter extends TypeAdapter<WorkspaceModel> {
       ..write(obj.clientCreatedAt)
       ..writeByte(8)
       ..write(obj.serverReceivedAt)
+      ..writeByte(0)
+      ..write(obj.id)
       ..writeByte(10)
       ..write(obj.status)
       ..writeByte(11)

@@ -20,6 +20,7 @@ class _PhaseEntry {
   final TextEditingController nameCtrl;
   final TextEditingController orderCtrl;
   final List<_TaskEntry> tasks;
+  DateTime? deadline;
 
   _PhaseEntry(int defaultOrder)
       : nameCtrl = TextEditingController(),
@@ -115,6 +116,7 @@ class _PhaseTaskSetupPageState extends State<PhaseTaskSetupPage> {
       return (
         phaseName: p.nameCtrl.text.trim(),
         sortOrder: int.tryParse(p.orderCtrl.text) ?? (_phases.indexOf(p) + 1),
+        deadline: p.deadline,
         tasks: validTasks.map((t) => (
           studentId: t.studentId!,
           taskDescription: t.descCtrl.text.trim(),
@@ -381,6 +383,17 @@ class _PhaseCard extends StatelessWidget {
                   ],
                 ),
 
+                const SizedBox(height: 12),
+
+                // Deadline picker
+                _DeadlinePicker(
+                  deadline: phaseEntry.deadline,
+                  onChanged: (date) {
+                    phaseEntry.deadline = date;
+                    onChanged();
+                  },
+                ),
+
                 const SizedBox(height: 16),
 
                 // Label task
@@ -543,5 +556,98 @@ class _TaskRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ─────────────────────── Deadline Picker ───────────────────────
+
+class _DeadlinePicker extends StatelessWidget {
+  final DateTime? deadline;
+  final ValueChanged<DateTime?> onChanged;
+
+  const _DeadlinePicker({
+    required this.deadline,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => _pickDeadline(context),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade400),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.event,
+              color: deadline != null ? Colors.blueAccent : Colors.grey,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                deadline != null
+                    ? 'Deadline: ${_formatDate(deadline!)}'
+                    : 'Set Deadline (opsional)',
+                style: TextStyle(
+                  color: deadline != null ? Colors.black87 : Colors.grey,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            if (deadline != null)
+              GestureDetector(
+                onTap: () => onChanged(null),
+                child: const Icon(Icons.close, size: 16, color: Colors.grey),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickDeadline(BuildContext context) async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: deadline ?? now.add(const Duration(days: 7)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+      helpText: 'Pilih tanggal deadline',
+    );
+
+    if (date == null) return;
+
+    if (!context.mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: deadline != null 
+          ? TimeOfDay.fromDateTime(deadline!)
+          : const TimeOfDay(hour: 23, minute: 59),
+      helpText: 'Pilih jam deadline',
+    );
+
+    if (time == null) return;
+
+    final combined = DateTime(
+      date.year, date.month, date.day,
+      time.hour, time.minute,
+    );
+    onChanged(combined);
+  }
+
+  String _formatDate(DateTime dt) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}, '
+        '${dt.hour.toString().padLeft(2, '0')}:'
+        '${dt.minute.toString().padLeft(2, '0')}';
   }
 }

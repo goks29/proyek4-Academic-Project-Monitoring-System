@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
 import 'package:academic_project_monitoring_system/models/submission_model.dart';
+import 'package:academic_project_monitoring_system/models/pending_submission_model.dart';
+import 'package:academic_project_monitoring_system/core/offline/connectivity_monitor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'workspace_task_controller.dart'; 
 
@@ -11,11 +13,13 @@ import 'workspace_task_controller.dart';
 class WorkspaceTaskView extends StatefulWidget {
   final WorkspaceModel workspace;
   final TaskAllocationModel task;
+  final DateTime? phaseDeadline;
 
   const WorkspaceTaskView({
     super.key,
     required this.workspace,
     required this.task,
+    this.phaseDeadline,
   });
 
   @override
@@ -27,7 +31,9 @@ class _WorkspaceTaskViewState extends State<WorkspaceTaskView> {
   void initState() {
     super.initState();
     Future.microtask(() async {
-      await context.read<WorkspaceTaskController>().loadTask(widget.task);
+      final ctrl = context.read<WorkspaceTaskController>();
+      ctrl.setPhaseDeadline(widget.phaseDeadline);
+      await ctrl.loadTask(widget.task);
     });
   }
 
@@ -57,6 +63,10 @@ class _WorkspaceTaskViewState extends State<WorkspaceTaskView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Offline status banner
+                      _OfflineStatusBanner(),
+                      // Deadline banner
+                      _DeadlineBanner(),
                       TaskDetailCard(task: ctrl.task ?? widget.task),
                       const SizedBox(height: 20),
                       ProgressSliderCard(
@@ -68,6 +78,16 @@ class _WorkspaceTaskViewState extends State<WorkspaceTaskView> {
                         task: ctrl.task ?? widget.task,
                         isOwner: isOwner,
                       ),
+                      // Pending sync section
+                      if (ctrl.hasPendingSync) ...[
+                        const SizedBox(height: 24),
+                        const Text(
+                          "Menunggu Sinkronisasi",
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
+                        ),
+                        const SizedBox(height: 8),
+                        _PendingSyncList(pendingSubmissions: ctrl.pendingSubmissions),
+                      ],
                       const SizedBox(height: 24),
                       const Text(
                         "Riwayat Pengumpulan",
@@ -210,7 +230,7 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
               divisions: 10,
               activeColor: Colors.blueAccent,
               label: "${_currentValue.toInt()}%",
-              onChanged: widget.isOwner 
+              onChanged: (widget.isOwner && !ctrl.isDeadlinePassed)
                 ? (val) {
                     setState(() {
                       _currentValue = val;
@@ -229,7 +249,7 @@ class _ProgressSliderCardState extends State<ProgressSliderCard> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   disabledBackgroundColor: Colors.grey[300], 
                 ),
-                onPressed: (!widget.isOwner || !_hasChanged || ctrl.isSavingProgress)
+                onPressed: (!widget.isOwner || !_hasChanged || ctrl.isSavingProgress || ctrl.isDeadlinePassed)
                     ? null
                     : () async {
                         final ok = await context.read<WorkspaceTaskController>().updateProgress(widget.taskId, _currentValue.toInt());
@@ -344,7 +364,7 @@ class _EvidenceUploadCardState extends State<EvidenceUploadCard> {
                   backgroundColor: Colors.green,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: (!widget.isOwner|| _selectedFile == null || ctrl.isSavingEvidence)
+                onPressed: (!widget.isOwner|| _selectedFile == null || ctrl.isSavingEvidence || ctrl.isDeadlinePassed)
                     ? null
                     : () async {
                         final ok = await context.read<WorkspaceTaskController>().submitEvidence(
@@ -446,7 +466,7 @@ class SubmissionTimelineList extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         // Memotong format DateTime jadi cuma YYYY-MM-DD HH:MM
-                        "Dikirim: ${sub.submittedAt.toString().substring(0, 16)}", 
+                        "Dikirim: ${sub.submittedAt.toLocal().toString().substring(0, 16)}", 
                         style: const TextStyle(fontSize: 12, color: Colors.grey)
                       ),
                       
@@ -497,5 +517,288 @@ class SubmissionTimelineList extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+// ─────────────────────── Offline Status Banner ───────────────────────
+
+class _OfflineStatusBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Coba ambil ConnectivityMonitor dari Provider tree
+    final connectivity = context.watch<ConnectivityMonitor>();
+    
+    if (connectivity.isOnline) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.wifi_off, color: Colors.orange.shade700, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Mode Offline',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Pengumpulan tugas akan disimpan lokal dan dikirim saat online kembali.',
+                  style: TextStyle(
+                    color: Colors.orange.shade700,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────── Pending Sync List ───────────────────────
+
+class _PendingSyncList extends StatelessWidget {
+  final List<PendingSubmissionModel> pendingSubmissions;
+  
+  const _PendingSyncList({required this.pendingSubmissions});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: pendingSubmissions.length,
+      itemBuilder: (context, index) {
+        final pending = pendingSubmissions[index];
+        return Card(
+          color: Colors.orange.withValues(alpha: 0.05),
+          elevation: 1,
+          margin: const EdgeInsets.only(bottom: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.orange.withValues(alpha: 0.3)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.cloud_off, color: Colors.orange, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pending.notes ?? 'Tanpa Catatan',
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Disimpan: ${pending.createdAt.toLocal().toString().substring(0, 16)}',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      Text(
+                        'File: ${pending.fileName}',
+                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                      if (pending.syncError != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Error: ${pending.syncError}',
+                          style: const TextStyle(fontSize: 11, color: Colors.red),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: Colors.orange,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Pending',
+                        style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─────────────────────── Deadline Banner ───────────────────────
+
+class _DeadlineBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final ctrl = context.watch<WorkspaceTaskController>();
+    final deadline = ctrl.phaseDeadline;
+
+    if (deadline == null) return const SizedBox.shrink();
+
+    final now = DateTime.now();
+    final isPassed = now.isAfter(deadline);
+
+    if (isPassed) {
+      // Deadline sudah lewat
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.lock_clock, color: Colors.red, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Deadline Telah Terlewati',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Deadline: ${_formatDateTime(deadline)}. Anda tidak dapat mengupdate progress atau mengumpulkan bukti.',
+                    style: TextStyle(
+                      color: Colors.red.shade400,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Deadline belum lewat — tampilkan countdown
+    final remaining = deadline.difference(now);
+    final remainingText = _formatDuration(remaining);
+
+    // Warna berdasarkan urgensi
+    final isUrgent = remaining.inHours < 24;
+    final color = isUrgent ? Colors.orange : Colors.green;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isUrgent ? Icons.warning_amber_rounded : Icons.schedule,
+            color: color,
+            size: 22,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sisa Waktu: $remainingText',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: color.shade700,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Deadline: ${_formatDateTime(deadline)}',
+                  style: TextStyle(
+                    color: color.shade600,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dt) {
+    final localDt = dt.toLocal();
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return '${localDt.day} ${months[localDt.month - 1]} ${localDt.year}, '
+        '${localDt.hour.toString().padLeft(2, '0')}:'
+        '${localDt.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inDays > 0) {
+      final hours = d.inHours % 24;
+      return '${d.inDays} hari ${hours > 0 ? '$hours jam' : ''}';
+    } else if (d.inHours > 0) {
+      final minutes = d.inMinutes % 60;
+      return '${d.inHours} jam ${minutes > 0 ? '$minutes menit' : ''}';
+    } else {
+      return '${d.inMinutes} menit';
+    }
   }
 }

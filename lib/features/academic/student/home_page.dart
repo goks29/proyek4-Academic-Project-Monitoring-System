@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'workspace_home_view.dart';
 import 'workspace_detail_view.dart';
 import 'workspace_detail_controller.dart';
+import 'package:academic_project_monitoring_system/core/offline/connectivity_monitor.dart';
+import 'package:academic_project_monitoring_system/core/offline/session_token_manager.dart';
 
 class HomePage extends StatefulWidget{
   @override
@@ -16,15 +18,24 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-      context.read<WorkspaceController>().fetchMyWorkspaces()
-    );
+    Future.microtask(() async {
+      try {
+        final connectivity = context.read<ConnectivityMonitor>();
+        if (connectivity.isOnline) {
+          await context.read<SessionTokenManager>().getValidToken();
+        }
+      } catch (_) {}
+      if (mounted) {
+        context.read<WorkspaceController>().fetchMyWorkspaces();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final loginController = context.watch<LoginController>();
     final workspaceController = context.watch<WorkspaceController>();
+    final connectivity = context.watch<ConnectivityMonitor>();
 
     return Scaffold(
       backgroundColor: const Color.fromRGBO(243, 244, 246, 1),
@@ -60,27 +71,31 @@ class _HomePageState extends State<HomePage> {
         
                 Spacer(),
 
-                //header : bagian indikator dan gambar profil kosong (kanan)
+                //header : bagian indikator koneksi dinamis
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: connectivity.isOnline ? Colors.green.shade50 : Colors.red.shade50,
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: connectivity.isOnline ? Colors.green : Colors.red,
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.cloud,
-                        color: Colors.blueAccent,
+                        connectivity.isOnline ? Icons.cloud : Icons.cloud_off,
+                        color: connectivity.isOnline ? Colors.green : Colors.red,
                         size: 16,
                       ),
                       const SizedBox(width: 6),
                       
                       Text(
-                        "ONLINE",
+                        connectivity.isOnline ? "ONLINE" : "OFFLINE",
                         style: TextStyle(
-                          color: Colors.blueAccent,
+                          color: connectivity.isOnline ? Colors.green : Colors.red,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
