@@ -161,7 +161,15 @@ class _LecturerViewState extends State<LecturerView> {
                   ),
                 WorkspaceListWidget(
                   onWorkspaceSelected: (ws) {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => WorkspaceDetailView(workspace: ws))).then((_) => setState(() {}));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WorkspaceDetailView(
+                          workspace: ws,
+                          isProjectClosed: !_selectedProject!.isActive,
+                        ),
+                      ),
+                    ).then((_) => setState(() {}));
                   },
                 ),
               ] else ...[

@@ -1,3 +1,4 @@
+// lib/features/academic/lecturer/widgets/phase_comment_widget.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,7 +8,13 @@ import '../../../../controllers/lecturer/comment_controller.dart';
 
 class PhaseCommentWidget extends StatefulWidget {
   final ProgressPhaseModel phase;
-  const PhaseCommentWidget({super.key, required this.phase});
+  final bool isReadOnly;
+
+  const PhaseCommentWidget({
+    super.key, 
+    required this.phase,
+    this.isReadOnly = false,
+  });
 
   @override
   State<PhaseCommentWidget> createState() => _PhaseCommentWidgetState();
@@ -106,24 +113,36 @@ class _PhaseCommentWidgetState extends State<PhaseCommentWidget> {
                         },
                       ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), color: Colors.white,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _chatController,
-                    decoration: InputDecoration(hintText: "Ketik pesan diskusi...", hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), filled: true, fillColor: Colors.grey.shade100, border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none)),
+          
+          // ---> PENGUNCIAN READ-ONLY DI SINI <---
+          widget.isReadOnly 
+            ? Container(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                color: Colors.white,
+                child: SafeArea(
+                  child: Center(
+                    child: Text("Diskusi dikunci karena proyek telah ditutup.", style: TextStyle(color: Colors.grey.shade500, fontStyle: FontStyle.italic, fontSize: 13)),
                   ),
                 ),
-                const SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundColor: Colors.indigo,
-                  child: IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 18), onPressed: _sendMessage),
+              )
+            : Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), color: Colors.white,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _chatController,
+                        decoration: InputDecoration(hintText: "Ketik pesan diskusi...", hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), filled: true, fillColor: Colors.grey.shade100, border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    CircleAvatar(
+                      backgroundColor: Colors.indigo,
+                      child: IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 18), onPressed: _sendMessage),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
         ],
       ),
     );

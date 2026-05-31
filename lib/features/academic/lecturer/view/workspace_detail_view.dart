@@ -7,10 +7,12 @@ import '../widgets/workspace_progress_widget.dart';
 
 class WorkspaceDetailView extends StatefulWidget {
   final WorkspaceModel workspace;
+  final bool isProjectClosed;
 
   const WorkspaceDetailView({
     super.key,
     required this.workspace,
+    this.isProjectClosed = false,
   });
 
   @override
@@ -40,7 +42,10 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
         body: Column(
           children: [
             const SizedBox(height: 20),
-            WorkspaceHeaderWidget(initialWorkspace: widget.workspace),
+            WorkspaceHeaderWidget(
+              initialWorkspace: widget.workspace,
+              isProjectClosed: widget.isProjectClosed,
+            ),
             const SizedBox(height: 20),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
@@ -54,7 +59,10 @@ class _WorkspaceDetailViewState extends State<WorkspaceDetailView> {
             Expanded(
               child: TabBarView(
                 children: [
-                  WorkspaceProgressWidget(workspace: widget.workspace),
+                  WorkspaceProgressWidget(
+                    workspace: widget.workspace,
+                    isProjectClosed: widget.isProjectClosed,
+                  ),
                   SingleChildScrollView(child: WorkspaceMembersWidget(workspace: widget.workspace)),
                 ],
               ),

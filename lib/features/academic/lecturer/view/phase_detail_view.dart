@@ -19,11 +19,13 @@ import '../widgets/phase_comment_widget.dart';
 class PhaseDetailView extends StatefulWidget {
   final ProgressPhaseModel phase;
   final WorkspaceModel workspace;
+  final bool isProjectClosed;
 
   const PhaseDetailView({
     super.key,
     required this.phase,
     required this.workspace,
+    this.isProjectClosed = false,
   });
 
   @override
@@ -51,7 +53,6 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
   }
 
   Future<Map<String, dynamic>> _fetchPhaseData() async {
-    // ---> KUNCI: Tarik Repository via Provider, bukan instance baru Supabase! <---
     final taskRepo = context.read<TaskRepository>();
     final subRepo = context.read<SubmissionRepository>();
 
@@ -69,6 +70,8 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isClosed = widget.workspace.isCompleted || widget.isProjectClosed;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F9),
       appBar: AppBar(
@@ -101,6 +104,7 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
                 
                 SubmissionListWidget(
                   submissions: submissions,
+                  isReadOnly: isClosed, // ---> TERAPKAN READ-ONLY
                   onSubmissionReviewed: () => setState(() => _phaseDataFuture = _fetchPhaseData()),
                 ),
 
@@ -113,6 +117,7 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
                 
                 TaskListWidget(
                   tasks: tasks,
+                  isReadOnly: isClosed, // ---> TERAPKAN READ-ONLY
                   onTaskReviewed: () => setState(() => _phaseDataFuture = _fetchPhaseData()),
                 ),
               ],
@@ -120,18 +125,19 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
           );
         },
       ),
-      floatingActionButton: widget.workspace.isCompleted 
-        ? null // Menghilangkan tombol
-        : FloatingActionButton.extended(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-                builder: (context) => PhaseCommentWidget(phase: widget.phase),
-              );
-            },
-            icon: const Icon(Icons.forum_outlined), label: const Text("Diskusi", style: TextStyle(fontWeight: FontWeight.bold)),
-            backgroundColor: Colors.indigo, foregroundColor: Colors.white, elevation: 4,
-          ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+            builder: (context) => PhaseCommentWidget(
+              phase: widget.phase,
+              isReadOnly: isClosed, // ---> TERAPKAN READ-ONLY
+            ),
+          );
+        },
+        icon: const Icon(Icons.forum_outlined), label: const Text("Diskusi", style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.indigo, foregroundColor: Colors.white, elevation: 4,
+      ),
       
       bottomNavigationBar: FutureBuilder<Map<String, dynamic>>(
         future: _phaseDataFuture,
@@ -150,7 +156,8 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
   }
 
   Widget _buildBottomActionBar(BuildContext context, bool hasPendingSubmissions, bool isPhaseReviewed, bool hasSubmissions) {
-    if (widget.workspace.isCompleted) {
+    final bool isClosed = widget.workspace.isCompleted || widget.isProjectClosed;
+    if (isClosed) {
       return Container(
         padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))]),
         child: SafeArea(
@@ -247,7 +254,6 @@ class _PhaseDetailViewState extends State<PhaseDetailView> {
                 
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Menyimpan status fase..."), duration: Duration(seconds: 1)));
                 
-                // ---> MENGGUNAKAN PROVIDER CONTROLLER <---
                 try {
                   await context.read<PhaseApprovalController>().approvePhase(
                     widget.phase.id,
