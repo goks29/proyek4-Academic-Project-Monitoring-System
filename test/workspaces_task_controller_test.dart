@@ -11,17 +11,15 @@ import 'package:academic_project_monitoring_system/services/remote/task_service.
 import 'package:academic_project_monitoring_system/services/remote/submission_service.dart';
 import 'package:academic_project_monitoring_system/core/offline/offline_submission_manager.dart';
 
-// ── Mocks ──────────────────────────────────────────────────────────────────
+// Mock //
 
 class MockTaskService extends Mock implements TaskService {}
 class MockSubmissionService extends Mock implements SubmissionService {}
 class MockOfflineSubmissionManager extends Mock implements OfflineSubmissionManager {}
 class MockXFile extends Mock implements XFile {}
-
-// Fake untuk registerFallbackValue
 class FakeTaskAllocationModel extends Fake implements TaskAllocationModel {}
 
-// ── Fake builders ──────────────────────────────────────────────────────────
+// Data Dummy //
 
 TaskAllocationModel _fakeTask({
   String id = 'task-1',
@@ -69,8 +67,6 @@ PendingSubmissionModel _fakePending({String taskId = 'task-1'}) =>
       createdAt: DateTime(2024, 6, 1),
     );
 
-// ── Tests ──────────────────────────────────────────────────────────────────
-
 void main() {
   late WorkspaceTaskController controller;
   late MockTaskService mockTaskService;
@@ -79,8 +75,6 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeTaskAllocationModel());
-
-    // Inisialisasi Hive untuk environment test
     final tempDir = Directory.systemTemp.createTempSync('hive_task_test_');
     Hive.init(tempDir.path);
   });
@@ -97,8 +91,6 @@ void main() {
 
     addTearDown(() => controller.dispose());
   });
-
-  // ── setPhaseDeadline / isDeadlinePassed ────────────────────────────────────
 
   group('setPhaseDeadline / isDeadlinePassed', () {
     test('isDeadlinePassed = false bila deadline null', () {
@@ -122,8 +114,6 @@ void main() {
       expect(notified, true);
     });
   });
-
-  // ── loadTask ───────────────────────────────────────────────────────────────
 
   group('loadTask', () {
     test('memuat task dan submissions dengan sukses', () async {
@@ -183,8 +173,6 @@ void main() {
     });
   });
 
-  // ── updateProgress ─────────────────────────────────────────────────────────
-
   group('updateProgress', () {
     setUp(() async {
       final task = _fakeTask();
@@ -241,8 +229,6 @@ void main() {
       expect(controller.isSavingProgress, false);
     });
   });
-
-  // ── submitEvidence ─────────────────────────────────────────────────────────
 
   group('submitEvidence', () {
     late MockXFile mockFile;
@@ -314,8 +300,6 @@ void main() {
     });
   });
 
-  // ── hasPendingSync ─────────────────────────────────────────────────────────
-
   group('hasPendingSync', () {
     test('mengembalikan false bila tidak ada pending submission', () {
       expect(controller.hasPendingSync, false);
@@ -331,15 +315,11 @@ void main() {
     });
   });
 
-  // ── isSaving convenience getter ────────────────────────────────────────────
-
   group('isSaving', () {
     test('mengembalikan false bila tidak ada operasi simpan berjalan', () {
       expect(controller.isSaving, false);
     });
   });
-
-  // ── dispose ────────────────────────────────────────────────────────────────
 
   group('dispose', () {
     test('tidak throw setelah dispose dipanggil', () {
