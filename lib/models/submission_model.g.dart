@@ -30,7 +30,7 @@ class SubmissionModelAdapter extends TypeAdapter<SubmissionModel> {
       fileHash: fields[10] as String?,
       estimatedSubmitAt: fields[11] as DateTime?,
       syncNonce: fields[12] as String?,
-      syncStatus: fields[13] as String,
+      syncStatus: fields[13] == null ? 'direct' : fields[13] as String,
     );
   }
 

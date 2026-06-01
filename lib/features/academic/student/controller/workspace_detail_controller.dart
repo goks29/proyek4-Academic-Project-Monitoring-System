@@ -33,6 +33,7 @@ class WorkspaceDetailController extends ChangeNotifier {
   WorkspaceModel? _currentWorkspace;
   bool _isCurrentUserLeader = false;
   bool _isLoading = false;
+  String? _leaderId;
   String? _errorMessage;
 
   List<ProgressPhaseModel> get allPhases => _allPhases;
@@ -41,6 +42,7 @@ class WorkspaceDetailController extends ChangeNotifier {
   WorkspaceModel? get currentWorkspace => _currentWorkspace;
   bool get isCurrentUserLeader => _isCurrentUserLeader;
   bool get isLoading => _isLoading;
+  String? get leaderId => _leaderId;
   String? get errorMessage => _errorMessage;
 
   // ── Load ──────────────────────────────────────────────────────────────────
@@ -111,10 +113,12 @@ class WorkspaceDetailController extends ChangeNotifier {
       }
       _workspaceMembers = fetchedMembers;
 
-      // 5. Load Leader status
+      // 5. Load Leader status dan Leader ID
       bool isLeader = false;
+      String? fetchedLeaderId;
       try {
         isLeader = await _service.checkIsLeader(workspaceId);
+        fetchedLeaderId = await _service.getLeaderId(workspaceId);
       } catch (_) {}
 
       if (!isLeader) {
@@ -128,7 +132,20 @@ class WorkspaceDetailController extends ChangeNotifier {
           isLeader = localMember.isLeader;
         }
       }
+      
+      if (fetchedLeaderId == null) {
+        final memberBox = await Hive.openBox<WorkspaceMemberModel>('workspace_members_box');
+        final localLeader = memberBox.values.firstWhere(
+          (m) => m.workspaceId == workspaceId && m.isLeader,
+          orElse: () => WorkspaceMemberModel(id: '', workspaceId: workspaceId, studentId: '', isLeader: false),
+        );
+        if (localLeader.studentId.isNotEmpty) {
+          fetchedLeaderId = localLeader.studentId;
+        }
+      }
+      
       _isCurrentUserLeader = isLeader;
+      _leaderId = fetchedLeaderId;
 
     } catch (e) {
       _errorMessage = 'Gagal memuat data workspace: ${e.toString()}';

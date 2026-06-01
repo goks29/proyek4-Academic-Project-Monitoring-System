@@ -190,6 +190,24 @@ class WorkspaceService {
     }
   }
 
+  /// Ambil ID ketua workspace
+  Future<String?> getLeaderId(String workspaceId) async {
+    try {
+      final response = await _supabaseClient
+          .from('workspace_members')
+          .select('student_id')
+          .eq('workspace_id', workspaceId)
+          .eq('is_leader', true)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return response['student_id'] as String?;
+    } catch (e) {
+      debugPrint('[getLeaderId ERROR] $e');
+      return null;
+    }
+  }
+
   /// Mengajukan TOPIC
   Future<void> updateTopic(
     String workspaceId,

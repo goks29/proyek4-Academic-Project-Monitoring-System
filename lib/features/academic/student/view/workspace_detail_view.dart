@@ -591,8 +591,36 @@ class _MemberList extends StatelessWidget {
                           color: Colors.blueAccent,
                           fontWeight: FontWeight.bold)),
                 ),
-                title: Text(m.fullName,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        m.fullName,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (m.id == controller.leaderId) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blueAccent.withOpacity(0.5)),
+                        ),
+                        child: const Text(
+                          'Ketua',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.blueAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 subtitle: Text(m.email,
                     style: const TextStyle(fontSize: 12)),
               ),

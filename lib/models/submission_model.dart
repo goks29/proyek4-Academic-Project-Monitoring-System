@@ -53,7 +53,7 @@ class SubmissionModel {
   @HiveField(12)
   final String? syncNonce;
 
-  @HiveField(13)
+  @HiveField(13, defaultValue: 'direct')
   final String syncStatus; // 'direct', 'pending_sync', 'synced', 'rejected'
 
   SubmissionModel({
