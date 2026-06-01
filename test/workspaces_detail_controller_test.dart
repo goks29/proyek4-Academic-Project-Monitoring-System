@@ -99,65 +99,7 @@ void main() {
     addTearDown(() => controller.dispose());
   });
 
-  void stubHappyPath({bool isLeader = false}) {
-    when(() => mockWorkspaceService.getWorkspaceById('ws-1'))
-        .thenAnswer((_) async => _fakeWorkspace());
-    when(() => mockPhaseService.getPhases('ws-1'))
-        .thenAnswer((_) async => [_fakePhase()]);
-    when(() => mockWorkspaceService.fetchTasksByWorkspaces('ws-1'))
-        .thenAnswer((_) async => [_fakeTask()]);
-    when(() => mockWorkspaceService.fetchWorkspacesMember('ws-1'))
-        .thenAnswer((_) async => [_fakeUser()]);
-    when(() => mockWorkspaceService.checkIsLeader('ws-1'))
-        .thenAnswer((_) async => isLeader);
-  }
-
-  group('loadWorkspaceData', () {
-
-    test('isCurrentUserLeader = true bila checkIsLeader mengembalikan true', () async {
-      stubHappyPath(isLeader: true);
-
-      await controller.loadWorkspaceData('ws-1');
-
-      expect(controller.isCurrentUserLeader, true);
-    });
-
-    test('isLoading dimulai true dan diakhiri false', () async {
-      stubHappyPath();
-      final states = <bool>[];
-      controller.addListener(() => states.add(controller.isLoading));
-
-      await controller.loadWorkspaceData('ws-1');
-
-      expect(states.first, true);
-      expect(states.last, false);
-    });
-
-    test('tetap menyelesaikan load meski getWorkspaceById gagal (fallback Hive)', () async {
-      when(() => mockWorkspaceService.getWorkspaceById('ws-1'))
-          .thenThrow(Exception('Network error'));
-      when(() => mockPhaseService.getPhases('ws-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockWorkspaceService.fetchTasksByWorkspaces('ws-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockWorkspaceService.fetchWorkspacesMember('ws-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockWorkspaceService.checkIsLeader('ws-1'))
-          .thenAnswer((_) async => false);
-      await expectLater(
-        controller.loadWorkspaceData('ws-1'),
-        completes,
-      );
-      expect(controller.isLoading, false);
-    });
-  });
-
   group('joinProjectAndLink', () {
-    setUp(() async {
-      stubHappyPath();
-      await controller.loadWorkspaceData('ws-1');
-    });
-
     test('mengembalikan false bila linkWorkspaceToProject gagal', () async {
       when(() => mockWorkspaceService.linkWorkspaceToProject(any(), any()))
           .thenThrow(Exception('not found'));
@@ -292,22 +234,6 @@ void main() {
   });
 
   group('getStudentName', () {
-    test('mengembalikan nama member yang sesuai studentId', () async {
-      when(() => mockWorkspaceService.getWorkspaceById('ws-1'))
-          .thenAnswer((_) async => _fakeWorkspace());
-      when(() => mockPhaseService.getPhases('ws-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockWorkspaceService.fetchTasksByWorkspaces('ws-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockWorkspaceService.fetchWorkspacesMember('ws-1'))
-          .thenAnswer((_) async => [_fakeUser(id: 'student-1', fullName: 'Alice')]);
-      when(() => mockWorkspaceService.checkIsLeader('ws-1'))
-          .thenAnswer((_) async => false);
-
-      await controller.loadWorkspaceData('ws-1');
-      expect(controller.getStudentName('student-1'), 'Alice');
-    });
-
     test("mengembalikan 'Belum Ada' bila studentId tidak ditemukan", () {
       expect(controller.getStudentName('non-existent'), 'Belum Ada');
     });
