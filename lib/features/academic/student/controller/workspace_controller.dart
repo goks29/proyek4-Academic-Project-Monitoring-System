@@ -6,6 +6,7 @@ import 'package:academic_project_monitoring_system/models/workspace_member_model
 import 'package:academic_project_monitoring_system/models/progress_phase_model.dart';
 import 'package:academic_project_monitoring_system/models/task_allocation_model.dart';
 import 'package:academic_project_monitoring_system/services/remote/workspace_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Controller global (didaftarkan di main.dart) yang hanya mengelola
 /// daftar workspace milik user. Operasi detail workspace ada di
@@ -97,6 +98,13 @@ class WorkspaceController extends ChangeNotifier {
     _setLoading(true);
     _errorMessage = null;
     try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (!connectivityResult.any((r) => r != ConnectivityResult.none)) {
+        _errorMessage = 'Gagal membuat kelompok. Anda tidak dapat membuat kelompok saat offline.';
+        _setLoading(false);
+        return;
+      }
+
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) {
         _errorMessage = 'User belum login.';
@@ -110,7 +118,7 @@ class WorkspaceController extends ChangeNotifier {
       );
       await fetchMyWorkspaces(onlyLocal: true);
     } catch (e) {
-      _errorMessage = 'Gagal membuat kelompok: ${e.toString()}';
+      _errorMessage = 'Gagal membuat kelompok. Anda tidak dapat membuat kelompok saat offline.';
     } finally {
       _setLoading(false);
     }
@@ -122,6 +130,13 @@ class WorkspaceController extends ChangeNotifier {
     _setLoading(true);
     _errorMessage = null;
     try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (!connectivityResult.any((r) => r != ConnectivityResult.none)) {
+        _errorMessage = 'Gagal bergabung. Anda tidak dapat bergabung kelompok saat offline.';
+        _setLoading(false);
+        return false;
+      }
+
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) {
         _errorMessage = 'User belum login.';
@@ -138,7 +153,7 @@ class WorkspaceController extends ChangeNotifier {
       await fetchMyWorkspaces();
       return true;
     } catch (e) {
-      _errorMessage = 'Gagal bergabung ke workspace: ${e.toString()}';
+      _errorMessage = 'Gagal bergabung. Pastikan ID benar dan Anda tidak sedang offline.';
       return false;
     } finally {
       _setLoading(false);
