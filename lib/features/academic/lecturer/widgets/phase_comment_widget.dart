@@ -22,7 +22,8 @@ class PhaseCommentWidget extends StatefulWidget {
 
 class _PhaseCommentWidgetState extends State<PhaseCommentWidget> {
   final TextEditingController _chatController = TextEditingController();
-  final String _myUserId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
+  // HARDCODE DIHAPUS
+  final String _myUserId = Supabase.instance.client.auth.currentUser?.id ?? "";
 
   @override
   void initState() {
@@ -40,7 +41,7 @@ class _PhaseCommentWidgetState extends State<PhaseCommentWidget> {
 
   Future<void> _sendMessage() async {
     final text = _chatController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || _myUserId.isEmpty) return; // Tambahan handle anti-error _myUserId.isEmpty
 
     final comment = CommentModel(id: '', phaseId: widget.phase.id, userId: _myUserId, commentText: text, clientCreatedAt: DateTime.now());
     await context.read<CommentController>().addComment(comment);
@@ -114,7 +115,6 @@ class _PhaseCommentWidgetState extends State<PhaseCommentWidget> {
                       ),
           ),
           
-          // ---> PENGUNCIAN READ-ONLY DI SINI <---
           widget.isReadOnly 
             ? Container(
                 padding: const EdgeInsets.symmetric(vertical: 24),

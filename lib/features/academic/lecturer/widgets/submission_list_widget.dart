@@ -10,13 +10,13 @@ import '../../../../controllers/lecturer/submission_review_controller.dart';
 class SubmissionListWidget extends StatefulWidget {
   final List<SubmissionModel> submissions;
   final VoidCallback onSubmissionReviewed;
-  final bool isReadOnly; // ---> 1. WAJIB ADA DI SINI
+  final bool isReadOnly;
 
   const SubmissionListWidget({
     super.key,
     required this.submissions,
     required this.onSubmissionReviewed,
-    this.isReadOnly = false, // ---> 2. NILAI DEFAULT
+    this.isReadOnly = false,
   });
 
   @override
@@ -24,7 +24,8 @@ class SubmissionListWidget extends StatefulWidget {
 }
 
 class _SubmissionListWidgetState extends State<SubmissionListWidget> {
-  final String _lecturerId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
+  // HARDCODE DIHAPUS
+  final String _lecturerId = Supabase.instance.client.auth.currentUser?.id ?? "";
   String? _loadingSubmissionId;
 
   final Map<String, String> _optimisticStatus = {};
@@ -47,6 +48,11 @@ class _SubmissionListWidgetState extends State<SubmissionListWidget> {
   }
 
   Future<void> _handleReview(BuildContext context, SubmissionModel submission, bool isApproved) async {
+    if (_lecturerId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Akses ditolak: User belum login.")));
+      return;
+    }
+
     final statusText = isApproved ? 'accepted' : 'rejected';
     final titleText = isApproved ? 'Terima Pengumpulan Ini?' : 'Minta Revisi?';
     final buttonColor = isApproved ? Colors.green.shade600 : Colors.red.shade600;
@@ -145,7 +151,6 @@ class _SubmissionListWidgetState extends State<SubmissionListWidget> {
       itemBuilder: (context, index) {
         final sub = widget.submissions[index];
         
-        // Optimistic UX Update
         final displayStatus = _optimisticStatus[sub.id] ?? sub.status;
         final displayFeedback = _optimisticFeedback[sub.id] ?? sub.lecturerFeedback;
 
@@ -179,7 +184,6 @@ class _SubmissionListWidgetState extends State<SubmissionListWidget> {
                     ),
                   ),
                   
-                  // ---> 3. PENGUNCIAN READ-ONLY DI SINI <---
                   if (isPending && !widget.isReadOnly)
                     if (isLoading)
                       const SizedBox(height: 30, width: 30, child: CircularProgressIndicator(strokeWidth: 2))
