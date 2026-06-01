@@ -44,7 +44,7 @@ class LoginController extends ChangeNotifier {
       return _currentUser != null;
     } catch (e) {
       debugPrint('[LOGIN ERROR] ${e.runtimeType}: $e');
-      _error = "Login Gagal: ${e.toString()}";
+      _error = "Email atau password salah. Silakan coba lagi.";
       return false;
     } finally {
       _isLoading = false;
