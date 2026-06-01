@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../controller/workspace_controller.dart';
+import 'workspace_home_view.dart';
 import 'home_page.dart';
 
 class StudentView extends StatefulWidget{
@@ -9,15 +13,27 @@ class StudentView extends StatefulWidget{
 class _StudentViewState extends State<StudentView> {
   int _currentIndex = 0;
 
+  // Buka halaman tambah workspace atau ganti tab
   void _changeMenu(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    if (index == 1) {
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) => WorkspaceHomeView(),
+        ),
+      ).then((_) {
+        context.read<WorkspaceController>().fetchMyWorkspaces();
+      });
+    } else {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
   }
 
   late final List<Widget> _page = [
     HomePage(),
-    const Center(child: Text("Halaman Tugas")),
+    const SizedBox(), // Placeholder halaman (tidak ditampilkan karena navigasi push)
   ];
 
   @override
@@ -35,8 +51,8 @@ class _StudentViewState extends State<StudentView> {
             label: 'Beranda',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: 'Tugas'
+            icon: Icon(Icons.add_circle_outline),
+            label: 'Tambah'
           )
         ],
       ),

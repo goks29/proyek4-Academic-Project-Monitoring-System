@@ -4,7 +4,6 @@ import 'package:academic_project_monitoring_system/features/academic/student/con
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'workspace_home_view.dart';
 import 'workspace_detail_view.dart';
 import '../controller/workspace_detail_controller.dart';
 import 'package:academic_project_monitoring_system/core/offline/connectivity_monitor.dart';
@@ -412,24 +411,6 @@ class _HomePageState extends State<HomePage> {
             )
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blueAccent,
-        elevation: 4.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            CupertinoPageRoute(
-              builder: (context) => WorkspaceHomeView(),
-            ),
-          ).then((_) {
-            context.read<WorkspaceController>().fetchMyWorkspaces();
-          });
-        },
-        child: const Icon(Icons.add, color: Colors.white,),
       ),
     );
   }

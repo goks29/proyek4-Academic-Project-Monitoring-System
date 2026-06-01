@@ -10,6 +10,7 @@ import 'package:academic_project_monitoring_system/models/workspace_member_model
 import 'package:academic_project_monitoring_system/services/remote/phase_service.dart';
 import 'package:academic_project_monitoring_system/services/remote/task_service.dart';
 import 'package:academic_project_monitoring_system/services/remote/workspace_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Controller untuk WorkspaceDetailView (di-scope per-route).
 /// Menangani semua operasi detail workspace: phase, task, members, topik.
@@ -33,6 +34,7 @@ class WorkspaceDetailController extends ChangeNotifier {
   WorkspaceModel? _currentWorkspace;
   bool _isCurrentUserLeader = false;
   bool _isLoading = false;
+  String? _leaderId;
   String? _errorMessage;
 
   List<ProgressPhaseModel> get allPhases => _allPhases;
@@ -41,6 +43,7 @@ class WorkspaceDetailController extends ChangeNotifier {
   WorkspaceModel? get currentWorkspace => _currentWorkspace;
   bool get isCurrentUserLeader => _isCurrentUserLeader;
   bool get isLoading => _isLoading;
+  String? get leaderId => _leaderId;
   String? get errorMessage => _errorMessage;
 
   // ── Load ──────────────────────────────────────────────────────────────────
@@ -50,9 +53,13 @@ class WorkspaceDetailController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      final isOffline = !connectivityResult.any((r) => r != ConnectivityResult.none);
+
       // 1. Load Workspace
       WorkspaceModel? fetchedWs;
       try {
+        if (isOffline) throw Exception('Offline');
         fetchedWs = await _service.getWorkspaceById(workspaceId);
         if (fetchedWs != null) {
           final box = await Hive.openBox<WorkspaceModel>('workspaces');
@@ -69,7 +76,8 @@ class WorkspaceDetailController extends ChangeNotifier {
       // 2. Load Phases
       List<ProgressPhaseModel> fetchedPhases = [];
       try {
-        fetchedPhases = await _phaseService.getPhases(workspaceId);
+        if (isOffline) throw Exception('Offline');
+        fetchedPhases = await _phaseService.getPhases(workspaceId).timeout(const Duration(seconds: 5));
         final phaseBox = await Hive.openBox<ProgressPhaseModel>('phases_box');
         for (var p in fetchedPhases) {
           await phaseBox.put(p.id, p);
@@ -84,7 +92,8 @@ class WorkspaceDetailController extends ChangeNotifier {
       // 3. Load Tasks
       List<TaskAllocationModel> fetchedTasks = [];
       try {
-        fetchedTasks = await _service.fetchTasksByWorkspaces(workspaceId);
+        if (isOffline) throw Exception('Offline');
+        fetchedTasks = await _service.fetchTasksByWorkspaces(workspaceId).timeout(const Duration(seconds: 5));
         final taskBox = await Hive.openBox<TaskAllocationModel>('tasks_box');
         for (var t in fetchedTasks) {
           await taskBox.put(t.id, t);
@@ -99,7 +108,8 @@ class WorkspaceDetailController extends ChangeNotifier {
       // 4. Load Members
       List<UserModel> fetchedMembers = [];
       try {
-        fetchedMembers = await _service.fetchWorkspacesMember(workspaceId);
+        if (isOffline) throw Exception('Offline');
+        fetchedMembers = await _service.fetchWorkspacesMember(workspaceId).timeout(const Duration(seconds: 5));
       } catch (_) {}
 
       if (fetchedMembers.isEmpty) {
@@ -111,10 +121,13 @@ class WorkspaceDetailController extends ChangeNotifier {
       }
       _workspaceMembers = fetchedMembers;
 
-      // 5. Load Leader status
+      // 5. Load Leader status dan Leader ID
       bool isLeader = false;
+      String? fetchedLeaderId;
       try {
-        isLeader = await _service.checkIsLeader(workspaceId);
+        if (isOffline) throw Exception('Offline');
+        isLeader = await _service.checkIsLeader(workspaceId).timeout(const Duration(seconds: 5));
+        fetchedLeaderId = await _service.getLeaderId(workspaceId).timeout(const Duration(seconds: 5));
       } catch (_) {}
 
       if (!isLeader) {
@@ -128,7 +141,20 @@ class WorkspaceDetailController extends ChangeNotifier {
           isLeader = localMember.isLeader;
         }
       }
+      
+      if (fetchedLeaderId == null) {
+        final memberBox = await Hive.openBox<WorkspaceMemberModel>('workspace_members_box');
+        final localLeader = memberBox.values.firstWhere(
+          (m) => m.workspaceId == workspaceId && m.isLeader,
+          orElse: () => WorkspaceMemberModel(id: '', workspaceId: workspaceId, studentId: '', isLeader: false),
+        );
+        if (localLeader.studentId.isNotEmpty) {
+          fetchedLeaderId = localLeader.studentId;
+        }
+      }
+      
       _isCurrentUserLeader = isLeader;
+      _leaderId = fetchedLeaderId;
 
     } catch (e) {
       _errorMessage = 'Gagal memuat data workspace: ${e.toString()}';

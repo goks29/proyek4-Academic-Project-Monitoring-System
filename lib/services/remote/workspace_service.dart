@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:academic_project_monitoring_system/models/workspace_model.dart';
 import 'package:academic_project_monitoring_system/models/workspace_member_model.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class WorkspaceService {
   final SupabaseClient _supabaseClient;
@@ -67,10 +68,16 @@ class WorkspaceService {
     var box = await Hive.openBox<WorkspaceModel>(_workspaceBoxName);
 
     try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (!connectivityResult.any((r) => r != ConnectivityResult.none)) {
+        return box.values.toList(); // Skip if no connection interface
+      }
+
       final memberResponse = await _supabaseClient
           .from('workspace_members')
           .select('workspace_id')
-          .eq('student_id', currentUser.id);
+          .eq('student_id', currentUser.id)
+          .timeout(const Duration(seconds: 5));
 
       final List<String> workspaceIds = (memberResponse as List)
           .map((row) => row['workspace_id'] as String)
@@ -81,7 +88,8 @@ class WorkspaceService {
       final response = await _supabaseClient
           .from('workspaces')
           .select('*, projects(title)')
-          .inFilter('id', workspaceIds);
+          .inFilter('id', workspaceIds)
+          .timeout(const Duration(seconds: 5));
 
       final cloudData = (response as List<dynamic>)
           .map((json) => WorkspaceModel.fromJson(json))
@@ -101,11 +109,17 @@ class WorkspaceService {
   /// Mencari WORKSPACE berdasarkan ID
   Future<WorkspaceModel?> getWorkspaceById(String workspaceId) async {
     try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (!connectivityResult.any((r) => r != ConnectivityResult.none)) {
+        throw Exception('Offline');
+      }
+
       final response = await _supabaseClient
           .from('workspaces')
           .select('*, projects(title)') // <--- Tambah JOIN sekalian agar dapet nama project
           .eq('id', workspaceId)
-          .maybeSingle();
+          .maybeSingle()
+          .timeout(const Duration(seconds: 5));
 
       if (response == null) {
         debugPrint('getWorkspaceById: response is null (RLS?)');
@@ -187,6 +201,24 @@ class WorkspaceService {
     } catch (e) {
       debugPrint('[checkIsLeader ERROR] $e');
       return false;
+    }
+  }
+
+  /// Ambil ID ketua workspace
+  Future<String?> getLeaderId(String workspaceId) async {
+    try {
+      final response = await _supabaseClient
+          .from('workspace_members')
+          .select('student_id')
+          .eq('workspace_id', workspaceId)
+          .eq('is_leader', true)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return response['student_id'] as String?;
+    } catch (e) {
+      debugPrint('[getLeaderId ERROR] $e');
+      return null;
     }
   }
 
