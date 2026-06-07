@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../models/task_allocation_model.dart';
-import '../../../../controllers/lecturer/task_approval_controller.dart'; // <--- IMPORT CONTROLLER
+import '../../../../controllers/lecturer/task_approval_controller.dart'; 
 
 class TaskListWidget extends StatefulWidget {
   final List<TaskAllocationModel> tasks;
   final VoidCallback onTaskReviewed;
+  final bool isReadOnly;
 
   const TaskListWidget({
-    super.key, 
+    super.key,
     required this.tasks,
     required this.onTaskReviewed,
+    this.isReadOnly = false,
   });
 
   @override
@@ -21,6 +23,9 @@ class TaskListWidget extends StatefulWidget {
 
 class _TaskListWidgetState extends State<TaskListWidget> {
   String? _loadingTaskId;
+
+  final Map<String, String> _optimisticStatus = {};
+  final Map<String, String?> _optimisticFeedback = {};
 
   Future<void> _handleReview(BuildContext context, TaskAllocationModel task, bool isApproved) async {
     final statusText = isApproved ? 'accepted' : 'rejected';
@@ -49,7 +54,10 @@ class _TaskListWidgetState extends State<TaskListWidget> {
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal", style: TextStyle(color: Colors.grey))),
-            ElevatedButton(onPressed: () { FocusManager.instance.primaryFocus?.unfocus(); Navigator.pop(context, true); }, style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white), child: const Text("Simpan")),
+            ElevatedButton(
+              onPressed: () { FocusManager.instance.primaryFocus?.unfocus(); Navigator.pop(context, true); },
+              style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white), child: const Text("Simpan"),
+            ),
           ],
         );
       },
@@ -58,22 +66,20 @@ class _TaskListWidgetState extends State<TaskListWidget> {
     if (confirmed == true && context.mounted) {
       setState(() => _loadingTaskId = task.id);
 
-      // ---> MENGGUNAKAN PROVIDER CONTROLLER <---
-      await context.read<TaskApprovalController>().approveTask(
-        task.id,
-        statusText,
-        feedback: feedbackController.text,
-      );
+      await context.read<TaskApprovalController>().approveTask(task.id, statusText, feedback: feedbackController.text);
 
       if (mounted) {
-        setState(() => _loadingTaskId = null);
+        setState(() {
+          _loadingTaskId = null;
+          _optimisticStatus[task.id] = statusText;
+          _optimisticFeedback[task.id] = feedbackController.text;
+        });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Penilaian tugas tersimpan!"), backgroundColor: Colors.green));
         widget.onTaskReviewed();
       }
     }
   }
 
-  // ... (Sisanya _buildStatusBadge dan build() BIAKAN SAMA PERSIS)
   Widget _buildStatusBadge(String status) {
     Color bg; Color fg; String text;
     switch (status.toLowerCase()) {
@@ -93,7 +99,10 @@ class _TaskListWidgetState extends State<TaskListWidget> {
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final task = widget.tasks[index];
-        final isPending = task.status.toLowerCase() == 'pending';
+        final displayStatus = _optimisticStatus[task.id] ?? task.status;
+        final displayFeedback = _optimisticFeedback[task.id] ?? task.lecturerFeedback;
+
+        final isPending = displayStatus.toLowerCase() == 'pending';
         final isLoading = _loadingTaskId == task.id;
 
         return Container(
@@ -106,31 +115,53 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: Text(task.taskDescription, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87))),
-                  if (!isPending) _buildStatusBadge(task.status),
+                  
+                  // ---> TAMPILKAN BADGE JIKA BUKAN PENDING ATAU SEDANG READ-ONLY <---
+                  if (!isPending || widget.isReadOnly) _buildStatusBadge(displayStatus),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(children: [Icon(task.isDone ? Icons.check_circle : Icons.radio_button_unchecked, color: task.isDone ? Colors.green.shade500 : Colors.grey.shade400, size: 16), const SizedBox(width: 6), Text(task.isDone ? "Sudah Dikerjakan" : "Belum Dikerjakan", style: TextStyle(color: task.isDone ? Colors.green.shade600 : Colors.grey.shade600, fontWeight: task.isDone ? FontWeight.bold : FontWeight.normal, fontSize: 12))]),
+                  Row(
+                    children: [
+                      Icon(task.isDone ? Icons.check_circle : Icons.radio_button_unchecked, color: task.isDone ? Colors.green.shade500 : Colors.grey.shade400, size: 16),
+                      const SizedBox(width: 6),
+                      Text(task.isDone ? "Sudah Dikerjakan" : "Belum Dikerjakan", style: TextStyle(color: task.isDone ? Colors.green.shade600 : Colors.grey.shade600, fontWeight: task.isDone ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
+                    ],
+                  ),
                   Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.indigo.shade50, borderRadius: BorderRadius.circular(6)), child: Text("ID: ${task.studentId.substring(0, 5)}...", style: TextStyle(color: Colors.indigo.shade700, fontSize: 11, fontWeight: FontWeight.bold))),
                 ],
               ),
-              if (!isPending && task.lecturerFeedback != null && task.lecturerFeedback!.isNotEmpty) ...[
+              if (!isPending && displayFeedback != null && displayFeedback.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                Container(width: double.infinity, padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text("Catatan Anda:", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade500)), const SizedBox(height: 4), Text(task.lecturerFeedback!, style: const TextStyle(fontSize: 13, color: Colors.black87))])),
-              ],
-              if (isPending) ...[
-                const SizedBox(height: 16),
-                if (isLoading) const Center(child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2)))
-                else Row(
-                  children: [
-                    Expanded(child: OutlinedButton(onPressed: () => _handleReview(context, task, false), style: OutlinedButton.styleFrom(foregroundColor: Colors.red.shade600, side: BorderSide(color: Colors.red.shade200), padding: const EdgeInsets.symmetric(horizontal: 10), minimumSize: const Size(0, 36), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text("REVISI", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)))),
-                    const SizedBox(width: 12),
-                    Expanded(child: ElevatedButton(onPressed: () => _handleReview(context, task, true), style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade600, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(horizontal: 10), minimumSize: const Size(0, 36), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text("TERIMA", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)))),
-                  ],
+                Container(
+                  width: double.infinity, padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Catatan Anda:", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade500)),
+                      const SizedBox(height: 4), Text(displayFeedback, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                    ],
+                  ),
                 ),
+              ],
+              
+              // ---> PENGUNCIAN READ-ONLY DI SINI <---
+              if (isPending && !widget.isReadOnly) ...[
+                const SizedBox(height: 16),
+                if (isLoading)
+                  const Center(child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2)))
+                else
+                  Row(
+                    children: [
+                      Expanded(child: OutlinedButton(onPressed: () => _handleReview(context, task, false), style: OutlinedButton.styleFrom(foregroundColor: Colors.red.shade600, side: BorderSide(color: Colors.red.shade200), padding: const EdgeInsets.symmetric(horizontal: 10), minimumSize: const Size(0, 36), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text("REVISI", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)))),
+                      const SizedBox(width: 12),
+                      Expanded(child: ElevatedButton(onPressed: () => _handleReview(context, task, true), style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade600, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(horizontal: 10), minimumSize: const Size(0, 36), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text("TERIMA", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)))),
+                    ],
+                  ),
               ],
             ],
           ),

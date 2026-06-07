@@ -9,10 +9,12 @@ import '../../../../models/workspace_model.dart';
 class WorkspaceProgressWidget extends StatelessWidget {
   // ---> PERBAIKAN: Langsung minta data Workspace asli secara utuh <---
   final WorkspaceModel workspace;
+  final bool isProjectClosed;
 
   const WorkspaceProgressWidget({
     super.key,
     required this.workspace,
+    this.isProjectClosed = false,
   });
 
   @override
@@ -69,7 +71,11 @@ class WorkspaceProgressWidget extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PhaseDetailView(phase: phase, workspace: workspace),
+            builder: (context) => PhaseDetailView(
+              phase: phase,
+              workspace: workspace,
+              isProjectClosed: isProjectClosed,
+            ),
           ),
         ).then((_) {
             context.read<PhaseApprovalController>().fetchPhases(workspace.id);

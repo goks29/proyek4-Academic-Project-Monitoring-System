@@ -7,15 +7,26 @@ import '../../../../repositories/workspace_member_repository.dart';
 import '../../../../repositories/user_repository.dart';
 
 // ==========================================
-// WIDGET UNTUK HEADER & VALIDASI TOPIK (SEKARANG PAKAI PROVIDER)
+// WIDGET UNTUK HEADER & VALIDASI TOPIK (STATEFUL & OPTIMISTIC UPDATE)
 // ==========================================
-class WorkspaceHeaderWidget extends StatelessWidget {
+class WorkspaceHeaderWidget extends StatefulWidget {
   final WorkspaceModel initialWorkspace;
+  final bool isProjectClosed;
 
   const WorkspaceHeaderWidget({
     super.key, 
     required this.initialWorkspace,
+    this.isProjectClosed = false,
   });
+
+  @override
+  State<WorkspaceHeaderWidget> createState() => _WorkspaceHeaderWidgetState();
+}
+
+class _WorkspaceHeaderWidgetState extends State<WorkspaceHeaderWidget> {
+  // Variabel untuk Optimistic Update UX
+  String? _optimisticStatus;
+  String? _optimisticFeedback;
 
   void _handleTopicReview(BuildContext context, WorkspaceModel currentWorkspace, bool isApproved) async {
     final statusText = isApproved ? 'accepted' : 'rejected';
@@ -23,7 +34,9 @@ class WorkspaceHeaderWidget extends StatelessWidget {
     final buttonColor = isApproved ? Colors.green.shade600 : Colors.red.shade600;
     
     final TextEditingController feedbackController = TextEditingController();
-    if (currentWorkspace.lecturerFeedback != null) feedbackController.text = currentWorkspace.lecturerFeedback!;
+    if (currentWorkspace.lecturerFeedback != null) {
+      feedbackController.text = currentWorkspace.lecturerFeedback!;
+    }
 
     final bool? confirmed = await showDialog<bool>(
       context: context,
@@ -66,14 +79,20 @@ class WorkspaceHeaderWidget extends StatelessWidget {
       },
     );
 
-    if (confirmed == true && context.mounted) {
-      // PANGGIL FUNGSI APPROVE DARI PROVIDER
+    if (confirmed == true && mounted) {
+      // Panggil API lewat provider
       await context.read<TopicApprovalController>().approveTopic(
         currentWorkspace.id,
         statusText,
         feedbackController.text,
       );
-      if (context.mounted) {
+      
+      if (mounted) {
+        // ---> OPTIMISTIC UPDATE: Ubah UI secara instan <---
+        setState(() {
+          _optimisticStatus = statusText;
+          _optimisticFeedback = feedbackController.text;
+        });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Penilaian topik tersimpan!"), backgroundColor: Colors.green));
       }
     }
@@ -81,17 +100,19 @@ class WorkspaceHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ---> KUNCI PROVIDER: Pantau Workspace secara Real-time! <---
     final topicCtrl = context.watch<TopicApprovalController>();
     
     // Cari data terbaru dari provider, jika tidak ketemu, pakai data inisial
     final workspace = topicCtrl.workspaces.firstWhere(
-      (w) => w.id == initialWorkspace.id, 
-      orElse: () => initialWorkspace
+      (w) => w.id == widget.initialWorkspace.id, 
+      orElse: () => widget.initialWorkspace
     );
 
     final bool hasTopic = workspace.topicName?.isNotEmpty ?? false;
-    final String status = workspace.status?.toLowerCase() ?? 'pending';
+    
+    // ---> GUNAKAN DATA OPTIMISTIS JIKA ADA <---
+    final String status = (_optimisticStatus ?? workspace.status ?? 'pending').toLowerCase();
+    final String? currentFeedback = _optimisticFeedback ?? workspace.lecturerFeedback;
     final bool isPending = status == 'pending';
 
     return Container(
@@ -123,7 +144,9 @@ class WorkspaceHeaderWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(workspace.topicDescription!, style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
           ],
-          if (!isPending && workspace.lecturerFeedback != null && workspace.lecturerFeedback!.isNotEmpty) ...[
+          
+          // Tampilkan feedback dosen
+          if (!isPending && currentFeedback != null && currentFeedback.isNotEmpty) ...[
             const SizedBox(height: 16),
             Container(
               width: double.infinity, padding: const EdgeInsets.all(10),
@@ -133,13 +156,13 @@ class WorkspaceHeaderWidget extends StatelessWidget {
                 children: [
                   Text("Catatan Anda:", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade500)),
                   const SizedBox(height: 4),
-                  Text(workspace.lecturerFeedback!, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                  Text(currentFeedback, style: const TextStyle(fontSize: 13, color: Colors.black87)),
                 ],
               ),
             ),
           ],
 
-          if (workspace.isCompleted) ...[
+          if (workspace.isCompleted || widget.isProjectClosed) ...[
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
@@ -155,7 +178,7 @@ class WorkspaceHeaderWidget extends StatelessWidget {
                   Icon(Icons.lock_outline, size: 16, color: Colors.grey.shade600),
                   const SizedBox(width: 8),
                   Text(
-                    "PROYEK TELAH DITUTUP (Read-Only)", 
+                    "PROYEK TELAH DITUTUP", 
                     style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold, fontSize: 12),
                   ),
                 ],
@@ -209,7 +232,7 @@ class WorkspaceHeaderWidget extends StatelessWidget {
 }
 
 // ==========================================
-// WIDGET LIST ANGGOTA (Masih pakai pola lama untuk sementara)
+// WIDGET LIST ANGGOTA (Dengan Proteksi Null-Safety)
 // ==========================================
 class WorkspaceMembersWidget extends StatelessWidget {
   final WorkspaceModel workspace;
@@ -229,8 +252,9 @@ class WorkspaceMembersWidget extends StatelessWidget {
       final userProfile = await userRepo.getUser(member.studentId);
       detailedMembers.add({
         'role': member.isLeader ? 'Ketua' : 'Anggota',
-        'name': userProfile.fullName,
-        'email': userProfile.email
+        // ---> PERBAIKAN: Cegah Crash karena Null-Safety <---
+        'name': userProfile.fullName ?? 'Mahasiswa Anonim',
+        'email': userProfile.email ?? 'Tidak ada email'
       });
     }
     return detailedMembers;
@@ -251,13 +275,18 @@ class WorkspaceMembersWidget extends StatelessWidget {
           itemBuilder: (context, index) {
             final member = members[index];
             final isLeader = member['role'] == 'Ketua';
+            
+            // Ambil huruf pertama dari nama dengan aman
+            final String nameStr = member['name'] as String;
+            final String firstLetter = nameStr.isNotEmpty ? nameStr.substring(0, 1).toUpperCase() : "?";
+
             return ListTile(
               contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
               leading: CircleAvatar(
                 backgroundColor: isLeader ? Colors.amber.shade100 : Colors.indigo.shade50,
-                child: Text(member['name'].isNotEmpty ? member['name'].substring(0, 1).toUpperCase() : "?", style: TextStyle(color: isLeader ? Colors.amber.shade900 : Colors.indigo.shade700, fontWeight: FontWeight.bold)),
+                child: Text(firstLetter, style: TextStyle(color: isLeader ? Colors.amber.shade900 : Colors.indigo.shade700, fontWeight: FontWeight.bold)),
               ),
-              title: Text(member['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              title: Text(nameStr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               subtitle: Text(member['email'], style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
               trailing: isLeader ? Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(6)), child: Text("Ketua", style: TextStyle(color: Colors.amber.shade800, fontSize: 11, fontWeight: FontWeight.bold))) : null,
             );

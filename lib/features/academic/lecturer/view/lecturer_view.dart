@@ -161,13 +161,21 @@ class _LecturerViewState extends State<LecturerView> {
                   ),
                 WorkspaceListWidget(
                   onWorkspaceSelected: (ws) {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => WorkspaceDetailView(workspace: ws))).then((_) => setState(() {}));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WorkspaceDetailView(
+                          workspace: ws,
+                          isProjectClosed: !_selectedProject!.isActive,
+                        ),
+                      ),
+                    ).then((_) => setState(() {}));
                   },
                 ),
               ] else ...[
                 SearchBarWidget(controller: _searchController, onChanged: (val) => setState(() => _searchQuery = val.toLowerCase())),
                 const SizedBox(height: 25),
-                DashboardStats(activeProjects: projectCtrl.onProgressProjectCount, pendingReviews: 5),
+                DashboardStats(activeProjects: projectCtrl.onProgressProjectCount, pendingReviews: 0), // <-- HARDCODE DIHAPUS (DIGANTI 0)
                 const SizedBox(height: 30),
                 const Text("Daftar Tugas Besar Mahasiswa", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 15),

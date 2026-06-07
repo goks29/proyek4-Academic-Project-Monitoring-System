@@ -1,9 +1,8 @@
-// lib/features/academic/lecturer/add_project_view.dart
 // lib/features/academic/lecturer/view/add_project_view.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../controllers/lecturer/project_controller.dart'; // <--- IMPORT CONTROLLER BARU
+import '../../../../controllers/lecturer/project_controller.dart'; 
 
 // Import Widget
 import '../widgets/project_input_field.dart';
@@ -40,13 +39,19 @@ class _AddProjectViewState extends State<AddProjectView> {
       return;
     }
 
+    // Hapus ID hardcode, gunakan Empty String ("")
+    final lecturerId = Supabase.instance.client.auth.currentUser?.id ?? "";
+    if (lecturerId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Akses ditolak: User belum login.")));
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     // Dapatkan instance ProjectController
     final projectCtrl = context.read<ProjectController>();
-    final lecturerId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
 
-    // Gunakan fungsi createProject milik temanmu
+    // Gunakan fungsi createProject
     final success = await projectCtrl.createProject(
       lecturerId,
       _titleController.text,
@@ -55,7 +60,6 @@ class _AddProjectViewState extends State<AddProjectView> {
     );
 
     if (success) {
-      // Setelah dibuat, projectCtrl.projects otomatis ter-update! Proyek terbaru ada di urutan paling belakang.
       final newProject = projectCtrl.projects.last;
 
       setState(() {
@@ -74,8 +78,6 @@ class _AddProjectViewState extends State<AddProjectView> {
       }
     }
   }
-
-  // ... (Sisa fungsi build() di bawahnya BIAKAN SAMA PERSIS seperti sebelumnya)
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +101,6 @@ class _AddProjectViewState extends State<AddProjectView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Menggunakan Widget Terpisah
               ProjectInputField(
                 label: "JUDUL TUGAS",
                 hint: "Contoh: Sistem Administrasi",
@@ -124,7 +125,6 @@ class _AddProjectViewState extends State<AddProjectView> {
               
               const SizedBox(height: 40),
 
-              // TOMBOL UTAMA
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -144,7 +144,6 @@ class _AddProjectViewState extends State<AddProjectView> {
                 ),
               ),
 
-              // MUNCUL JIKA KODE BERHASIL DIGENERATE
               if (_generatedCode != null) ...[
                 const SizedBox(height: 30),
                 SuccessCodeBox(

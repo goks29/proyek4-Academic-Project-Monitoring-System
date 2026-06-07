@@ -1,3 +1,4 @@
+// lib/features/academic/lecturer/widgets/phase_comment_widget.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,7 +8,13 @@ import '../../../../controllers/lecturer/comment_controller.dart';
 
 class PhaseCommentWidget extends StatefulWidget {
   final ProgressPhaseModel phase;
-  const PhaseCommentWidget({super.key, required this.phase});
+  final bool isReadOnly;
+
+  const PhaseCommentWidget({
+    super.key, 
+    required this.phase,
+    this.isReadOnly = false,
+  });
 
   @override
   State<PhaseCommentWidget> createState() => _PhaseCommentWidgetState();
@@ -15,7 +22,8 @@ class PhaseCommentWidget extends StatefulWidget {
 
 class _PhaseCommentWidgetState extends State<PhaseCommentWidget> {
   final TextEditingController _chatController = TextEditingController();
-  final String _myUserId = Supabase.instance.client.auth.currentUser?.id ?? "d05e0001-0000-0000-0000-000000000000";
+  // HARDCODE DIHAPUS
+  final String _myUserId = Supabase.instance.client.auth.currentUser?.id ?? "";
 
   @override
   void initState() {
@@ -33,7 +41,7 @@ class _PhaseCommentWidgetState extends State<PhaseCommentWidget> {
 
   Future<void> _sendMessage() async {
     final text = _chatController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || _myUserId.isEmpty) return; // Tambahan handle anti-error _myUserId.isEmpty
 
     final comment = CommentModel(id: '', phaseId: widget.phase.id, userId: _myUserId, commentText: text, clientCreatedAt: DateTime.now());
     await context.read<CommentController>().addComment(comment);
@@ -106,24 +114,35 @@ class _PhaseCommentWidgetState extends State<PhaseCommentWidget> {
                         },
                       ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), color: Colors.white,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _chatController,
-                    decoration: InputDecoration(hintText: "Ketik pesan diskusi...", hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), filled: true, fillColor: Colors.grey.shade100, border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none)),
+          
+          widget.isReadOnly 
+            ? Container(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                color: Colors.white,
+                child: SafeArea(
+                  child: Center(
+                    child: Text("Diskusi dikunci karena proyek telah ditutup.", style: TextStyle(color: Colors.grey.shade500, fontStyle: FontStyle.italic, fontSize: 13)),
                   ),
                 ),
-                const SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundColor: Colors.indigo,
-                  child: IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 18), onPressed: _sendMessage),
+              )
+            : Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), color: Colors.white,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _chatController,
+                        decoration: InputDecoration(hintText: "Ketik pesan diskusi...", hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), filled: true, fillColor: Colors.grey.shade100, border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    CircleAvatar(
+                      backgroundColor: Colors.indigo,
+                      child: IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 18), onPressed: _sendMessage),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
         ],
       ),
     );

@@ -1,0 +1,13 @@
+-- Disable Row Level Security (RLS) untuk semua tabel sementara masa development/testing
+ALTER TABLE "users" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "projects" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "workspaces" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "workspace_members" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "progress_phases" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "task_allocations" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "submissions" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "comments" DISABLE ROW LEVEL SECURITY;
+
+-- Tabel dari fitur offline
+ALTER TABLE "submission_nonces" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "app_config" DISABLE ROW LEVEL SECURITY;
