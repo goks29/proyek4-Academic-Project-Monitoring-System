@@ -437,7 +437,7 @@ class SubmissionTimelineList extends StatelessWidget {
         // Atur warna status (Pending/Approved/Rejected)
         Color statusColor = Colors.orange;
         String statusText = "Menunggu";
-        if (sub.status.toLowerCase() == 'approved') {
+        if (sub.status.toLowerCase() == 'approved' || sub.status.toLowerCase() == 'accepted') {
           statusColor = Colors.green;
           statusText = "Diterima";
         } else if (sub.status.toLowerCase() == 'rejected') {

@@ -783,6 +783,7 @@ class _PhaseStatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (status) {
+      case 'accepted':
       case 'approved':
         color = Colors.green;
         break;
@@ -862,6 +863,7 @@ class _TaskStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     Color bg;
     switch (status) {
+      case 'accepted':
       case 'approved':
         bg = Colors.green;
         break;
