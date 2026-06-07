@@ -61,7 +61,8 @@ class LoginController extends ChangeNotifier {
       _currentUser = null;
       _error = null;
     } catch (e) {
-      _error = "Gagal error karena $e";
+      debugPrint('[LOGIN ERROR] ${e.runtimeType}: $e');
+      _error = "Anda tidak bisa login/logout ketika sedang offline";
     } finally {
       _isLoading = false;
       notifyListeners();
